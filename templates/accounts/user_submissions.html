@@ -1,0 +1,228 @@
+<head>
+  <style>
+    .long input {
+      width: 100%;
+    }
+
+    .deco a:link,
+    .deco a:visited {
+      background-color: #F0F0F0;
+      color: #337ac1;
+      text-align: center;
+      text-decoration: none;
+      border: 1px solid #337ac1;
+      border-radius: 12px;
+    }
+
+    .deco a:hover,
+    .deco a:active {
+      background-color: #337ac1;
+      color: white;
+    }
+
+    .loading_delete,
+    .loading_close {
+      display: none;
+      max-height: 30px;
+    }
+
+    .error_div {
+      display: none;
+    }
+
+    .linkbtn {
+      width: 105px;
+    }
+  </style>
+</head>
+{% extends "home/base.html" %}
+{% load static %}
+
+
+{% block content %}
+<div class="row regForm">
+  <!-- description column -->
+  <div class="col-md-3 col-md-offset-1">
+
+    <div class="col-md-12 regPanel panel panel-primary">
+      <div class="panel-body">
+        <h2 class="panel-heading">Previous submissions</h2>
+      </div>
+    </div>
+
+    <!-- main description -->
+    <div class="col-md-12 panel panel-primary">
+      <div class="panel-body">
+
+        <div style="text-align:center">
+          <h3 class="orangeTit">Welcome {{ username }}</h3>
+        </div>
+        <p style="text-align: justify;">Here you can open or delete your submissions or check their
+          publication state.
+        </p>
+
+      </div>
+    </div>
+
+    <!-- link to docs -->
+    <div class="col-md-12 panel panel-primary">
+      <div class="panel-body">
+        <p>For more information on this form, see the <a class="textlink" alt="Work in progress.">docs</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+  <!--   <body> -->
+  <div id="pform" class="col-md-7">
+    <div id="form" class="col-md-12 panel panel-primary">
+      <div class="panel-body">
+        <div class="container-fluid" style="padding-top:15px">
+          <p>
+            <a class="textlink" href="/accounts/change_data">Change user information</a> -
+            <a class="textlink" href="/accounts/change_passw">Change password</a> -
+            <a class="textlink" href="/accounts/logout">Log out</a></li>
+          </p>
+
+          <form action="{% url 'dynadb:db_inputform' submission_id=sub.submission_id %}" method="post">
+            {% csrf_token %}
+            <table class="simTable table table-responsive">
+              <tr>
+                {% if superuser %}
+                <th>Username</th>
+                {% endif %}
+                <th></th>
+                <th>Submission ID</th>
+                <th>Dynamics ID</th>
+                <th>State</th>
+                <th></th>
+                <th></th>
+              </tr>
+              {% for sub in submission_table %}
+              <tr id="row_sub{{sub.submission_id}}">
+                {% if superuser %}
+                <td><p>{{sub.username}}</p></td>
+                {% endif %}
+                <td class="links">
+                  {% if sub.dynamics_id%}
+                  <a target="_blank" href="/view/{{sub.dynamics_id}}" class="submitBtn btn btn-default linkbtn"
+                    role="button">View</a>
+                  <a target="_blank" href="/dynadb/dynamics/id/{{sub.dynamics_id}}"
+                    class="submitBtn btn btn-default linkbtn" role="button">Report</a>
+                  {% else %}
+                  <p>Unavalible</p>
+                  {% endif%}
+                </td>
+                <td><p>{{sub.submission_id}}</p></td>
+                <td>{% if sub.state != "Open" %}<p><a 
+                    href="{% url 'dynadb:query_dynamics' dynamics_id=sub.dynamics_id %}">{{sub.dynamics_id}}</a></p>
+                    {% else %}<p>{{sub.dynamics_id}}</p>{% endif %}</td>
+                <td><p>{{sub.state}}</p></td>
+                <td>{% if sub.state == "Open" %}<p>
+                  <a class="textlink" href="{% url 'dynadb:db_inputform' submission_id=sub.submission_id %}">Open</a> </p>
+                </td>
+                <td>
+                  <img id="loading_icon{{sub.submission_id}}" src="{% static 'view/images/loading-gear.gif' %}"
+                    class="loading_delete" />
+                  <button id='delete{{sub.submission_id}}' class="submitBtn btn"
+                    onclick="return delete_submid({{sub.submission_id}})">Delete</button>
+                  <div class="alert alert-danger error_div" id="error_delete{{sub.submission_id}}">
+                    <p>Error</p>
+                    <div>
+                </td>
+                <td>{% if sub.state == "Open" %}
+                  {% if sub.is_completed %}
+                  <img id="close_loading_icon{{sub.submission_id}}" src="{% static 'view/images/loading-gear.gif' %}"
+                    class="loading_close" />
+                  <button id='close{{sub.submission_id}}' class="close_button"
+                    onclick="return close_submid({{sub.submission_id}})">Close</button>
+                  <div class="alert alert-danger error_div" id="error_close{{sub.submission_id}}">
+                    <p>Error</p>
+                    <div>
+                      {% else %}
+                      <p>Uncomplete</p>
+                      {% endif %}
+                </td>{% endif %}
+                {% else %}<p>
+                <a href="{% url 'dynadb:submission_summary' submission_id=sub.submission_id %}">See summary</a></p></td>
+                <td></td>
+                {% endif %}
+              </tr>
+              {% endfor %}
+            </table>
+          </form>
+
+          <div class="row">
+            <div class="col-md-8 firstBtn">
+              <a href="/dynadb/db_inputform/" class="submitBtn btn btn-block">New submission</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+
+{% block addon_js %}
+<script type="text/javascript">
+
+  //Delete submission entry on request
+  function delete_submid(submid) {
+
+    //Ensure deletion
+    result = window.confirm('Are you sure to delete submission entry ' + submid + '?')
+    if (result) {
+
+      //Show loading icon
+      $("#loading_icon" + submid).show()
+      $("#delete" + submid).hide()
+      //Send request to delete submission
+      $.ajax({
+        url: '/dynadb/delete_submission/' + submid,
+        success: function () {
+          $("#row_sub" + submid).hide()
+        },
+        error: function () {
+          $("#error_delete" + submid).show()
+          window.alert("Error: Submission " + submid + " could not be deleted")
+        },
+        complete: function () {
+          $("#loading_icon" + submid).hide()
+        },
+        timeout: 600000
+      });
+    }
+    return false
+  };
+
+  function close_submid(submid) {
+
+    //Ensure deletion
+    result = window.confirm('Do you really wish to close submission entry ' + submid + '? The submission will be send for revision and \
+      no further changes will be allowed in it')
+    if (result) {
+
+      //Show loading icon
+      $("#close_loading_icon" + submid).show()
+      $("#close" + submid).hide()
+      //Send request to delete submission
+      $.ajax({
+        url: '/dynadb/close__submission/' + submid,
+        success: function () {
+          $("#row_sub" + submid).hide()
+        },
+        error: function () {
+          $("#error_close" + submid).show()
+          window.alert("Error: Submission " + submid + " could not be closed")
+        },
+        complete: function () {
+          $("#close_loading_icon" + submid).hide()
+        },
+        timeout: 600000
+      });
+    }
+    return false
+  };
+</script>
+{% endblock %}

@@ -1,0 +1,783 @@
+<head>
+  <!-- for google plots-->
+  <!-- <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"],"language":"en"});
+    </script>-->
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <script>
+    google.charts.load("45", { packages: ["corechart"] });
+    //  google.charts.setOnLoadCallback(drawChart);
+  </script>
+
+  <!-- for NGL iframe-->
+  <script>
+    document.domain = document.domain;
+  </script>
+
+  {% load static %}
+  <!-- BASE -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="{% static 'home/logo/gpcrmd/main_circle.png' %}" />
+  <!-- Bootstrap -->
+  <link
+    href="{% static 'bootstrap/css/bootstrap.min.css' %}"
+    rel="stylesheet"
+  />
+  <!-- Custom styles -->
+  <link href="{% static 'home/css/style.css' %}" rel="stylesheet" />
+
+  {% load covid_custom %} {% block addon_css %}
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="{% static 'covid19/css/dynanalysis.css' %}"
+  />
+
+  {% endblock %}
+</head>
+
+<body style="padding: 20px">
+  {% block content %}
+
+  <div
+    id="chart_popup_box"
+    style="
+      display: none;
+      position: absolute;
+      background-color: white;
+      opacity: 0.9;
+      z-index: 2;
+      padding: 5px 10px 0 10px;
+      border-radius: 4px;
+    "
+  ></div>
+  <div id="chart_div"></div>
+
+  {% endblock content %} {% block addon_js %}
+
+  <!-- From base.html -->
+  <script src="{% static 'home/js/jquery.js' %}"></script>
+  <!-- jQueryUI -->
+  <link
+    rel="stylesheet"
+    href="{% static 'home/css/jquery-ui.min.css' %}"
+    type="text/css"
+    media="all"
+  />
+  <link
+    rel="stylesheet"
+    href="{% static 'home/css/jquery-ui.theme.min.css' %}"
+    type="text/css"
+    media="all"
+  />
+  <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+  <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+  <script>
+    $.widget.bridge("uitooltip", $.ui.tooltip);
+    $.widget.bridge("uibutton", $.ui.button);
+  </script>
+  <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+  <!-- END From base.html -->
+  <!-- My imports-->
+  <script type="text/javascript">
+    $(document).ready(function () {
+      $("#chart_div").on("mouseenter", ".all_scores_dist_hover", function () {
+        var displaysentence = $(this).data("text");
+        displaypopup(true, displaysentence);
+      });
+      $("#chart_div").on("mouseleave", ".all_scores_dist_hover", function () {
+        displaypopup(false, false);
+      });
+
+      function add_svg_box(
+        chart,
+        box_location,
+        box_min,
+        box_max,
+        stroke_color,
+        stroke_width,
+        fill_color
+      ) {
+        box_location
+          .append("rect")
+          .attr("class", "all_scores_dist_hover")
+          .attr(
+            "data-text",
+            "Impact score values of the selected variant over trajectory frames"
+          )
+          .attr("x", chart.getChartLayoutInterface().getXLocation(box_min))
+          .attr(
+            "y",
+            chart.getChartLayoutInterface().getChartAreaBoundingBox().top
+          )
+          .attr(
+            "width",
+            chart.getChartLayoutInterface().getXLocation(box_max) -
+              chart.getChartLayoutInterface().getXLocation(box_min)
+          )
+          .attr(
+            "height",
+            chart.getChartLayoutInterface().getChartAreaBoundingBox().height
+          )
+          .attr("fill", fill_color)
+          .attr("stroke", stroke_color)
+          .attr("stroke-width", stroke_width)
+          .attr("opacity", "0.5");
+      }
+
+      function add_svg_horizontal_line(
+        chart,
+        line_location,
+        line_min,
+        line_max,
+        stroke_color,
+        stroke_width
+      ) {
+        y_line_pos =
+          chart.getChartLayoutInterface().getChartAreaBoundingBox().top +
+          chart.getChartLayoutInterface().getChartAreaBoundingBox().height / 2;
+        line_location
+          .append("rect")
+          .attr("x", chart.getChartLayoutInterface().getXLocation(line_min))
+          .attr("y", y_line_pos)
+          .attr(
+            "width",
+            chart.getChartLayoutInterface().getXLocation(line_max) -
+              chart.getChartLayoutInterface().getXLocation(line_min)
+          )
+          .attr("height", 1)
+          .attr("fill", "none")
+          .attr("stroke", stroke_color)
+          .attr("stroke-width", stroke_width)
+          .attr("opacity", "0.5");
+      }
+
+      function add_svg_vertical_line(
+        chart,
+        line_location,
+        line_value,
+        linestyle,
+        displaysentence
+      ) {
+        line_location
+          .append("line")
+          .attr("data-text", displaysentence)
+          .attr("class", "all_scores_dist_hover")
+          .attr("style", linestyle)
+          .attr("x1", chart.getChartLayoutInterface().getXLocation(line_value))
+          .attr(
+            "y1",
+            chart.getChartLayoutInterface().getChartAreaBoundingBox().top
+          )
+          .attr("x2", chart.getChartLayoutInterface().getXLocation(line_value))
+          .attr(
+            "y2",
+            chart.getChartLayoutInterface().getChartAreaBoundingBox().height +
+              chart.getChartLayoutInterface().getChartAreaBoundingBox().top
+          );
+      }
+
+      function displaypopup(appear, displaysentence) {
+        if (appear) {
+          $("#chart_popup_box").html("<p>" + displaysentence + "</p>");
+          $("#chart_popup_box").css({
+            top: mouseY - 30,
+            left: mouseX - 30,
+            display: "inline",
+          });
+        } else {
+          $("#chart_popup_box").css("display", "none");
+        }
+      }
+
+      //#############
+      $(document).mousemove(function (e) {
+        // mouse coordinates
+        mouseX = e.pageX;
+        mouseY = e.pageY;
+      });
+      google.charts.load("current", { packages: ["corechart"] });
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        selector_id = "chart_div";
+        score_valies = [
+          ["Score"],
+          [4],
+          [2.75],
+          [1.3500000000000003],
+          [1],
+          [5.2],
+          [2.5],
+          [0.40000000000000036],
+          [2.75],
+          [2.75],
+          [1.55],
+          [0.8500000000000001],
+          [1.6],
+          [2.766666666666667],
+          [2.8666666666666667],
+          [2.1750000000000003],
+          [2.3000000000000003],
+          [1.3250000000000002],
+          [3.8],
+          [3.5999999999999996],
+          [3.325],
+          [2.6500000000000004],
+          [3.5000000000000004],
+          [0.5666666666666665],
+          [0.6499999999999999],
+          [0.2999999999999998],
+          [1.65],
+          [3.1],
+          [5.2],
+          [2.8],
+          [0],
+          [2.6],
+          [5.3],
+          [5.2],
+          [0.2999999999999998],
+          [3.1],
+          [1.6],
+          [2.7],
+          [2.6999999999999997],
+          [1.9000000000000001],
+          [2.8000000000000003],
+          [1.65],
+          [4],
+          [2.25],
+          [3.15],
+          [4.6000000000000005],
+          [0.7000000000000002],
+          [1.2000000000000002],
+          [2.8],
+          [1.7],
+          [0.8333333333333334],
+          [3.5],
+          [5.075],
+          [2.2750000000000004],
+          [2.45],
+          [2.3],
+          [2.1999999999999997],
+          [1.9000000000000001],
+          [1.9000000000000001],
+          [3.85],
+          [3.5],
+          [2.65],
+          [2.62],
+          [1.9],
+          [4.1],
+          [3.6],
+          [2.5],
+          [2.5],
+          [4.6],
+          [4.15],
+          [3.85],
+          [0.5],
+          [0.3999999999999999],
+          [4.1],
+          [3.2000000000000006],
+          [0.2999999999999998],
+          [1.366666666666667],
+          [1.35],
+          [2.1333333333333333],
+          [5.2],
+          [3.3],
+          [0.2999999999999998],
+          [0.6000000000000001],
+          [2.45],
+          [2.65],
+          [1.35],
+          [2.7],
+          [3.8],
+          [2.85],
+          [0.7000000000000002],
+          [2.6],
+          [3.85],
+          [2.4000000000000004],
+          [1],
+          [3.85],
+          [0.8500000000000001],
+          [1.2],
+          [0],
+          [0.40000000000000036],
+          [0.5],
+          [1.8333333333333333],
+          [3.1],
+          [2.1750000000000003],
+          [2.5],
+          [2.6],
+          [3.8],
+          [3.9],
+          [2.6],
+          [3.85],
+          [1.65],
+          [0],
+          [2.5],
+          [3.85],
+          [1.35],
+          [0.6499999999999999],
+          [0.7000000000000002],
+          [3.6],
+          [0.40000000000000036],
+          [2.8333333333333335],
+          [4.1],
+          [1.35],
+          [0.4666666666666666],
+          [3.85],
+          [0.3500000000000001],
+          [1.8333333333333333],
+          [2.2],
+          [0.4],
+          [2.4000000000000004],
+          [1.55],
+          [5.2],
+          [2.6],
+          [3.06],
+          [2.6333333333333333],
+          [4.7],
+          [1],
+          [4.15],
+          [1.9000000000000001],
+          [2.4000000000000004],
+          [1.0333333333333334],
+          [0],
+          [2.1999999999999997],
+          [2.05],
+          [0.6000000000000001],
+          [1.35],
+          [1.45],
+          [3.2249999999999996],
+          [2.4250000000000007],
+          [1.3500000000000003],
+          [7],
+          [3.5],
+          [4.35],
+          [7.3],
+          [2.866666666666667],
+          [2.25],
+          [4.2],
+          [3.85],
+          [4.65],
+          [1.4000000000000001],
+          [2.1333333333333333],
+          [0.2999999999999998],
+          [1.1666666666666667],
+          [2.55],
+          [0.2999999999999998],
+          [2.5],
+          [1.9000000000000001],
+          [2.6],
+          [4.6000000000000005],
+          [2.6],
+          [3.0500000000000003],
+          [2.6],
+          [5.3],
+          [0.6499999999999999],
+          [1.35],
+          [0.5],
+          [3.1333333333333333],
+          [2.9],
+          [0.8500000000000001],
+          [1.5],
+          [2.7000000000000006],
+          [2.1750000000000003],
+          [3.1],
+          [1.4000000000000001],
+          [0.34999999999999987],
+          [2.4000000000000004],
+          [5.2],
+          [1.1],
+          [0.7000000000000002],
+          [2.7],
+          [1],
+          [2.8],
+          [2.6],
+          [2.3666666666666667],
+          [1],
+          [0.8500000000000001],
+          [2.45],
+          [2.5],
+          [2.2500000000000004],
+          [0.8],
+          [3.1999999999999997],
+          [1.9],
+          [3.8],
+          [2.8499999999999996],
+          [0.4666666666666666],
+          [4.45],
+          [3.8500000000000005],
+          [5.050000000000001],
+          [4.866666666666666],
+          [2.4000000000000004],
+          [2.7],
+          [4.025],
+          [1.9000000000000001],
+          [5.2],
+          [3.5666666666666664],
+          [1],
+          [3.8],
+          [0.29999999999999993],
+          [0.6000000000000001],
+          [1.9000000000000001],
+          [0.2999999999999998],
+          [3.0500000000000003],
+          [3.5999999999999996],
+          [0.5],
+          [0.4666666666666666],
+          [4],
+          [1],
+          [2.85],
+          [4],
+          [0.2999999999999998],
+          [0],
+          [2.9],
+          [2.45],
+          [2.5],
+          [3.5250000000000004],
+          [2.75],
+          [1.0999999999999999],
+          [1.15],
+          [2.025],
+          [3.6999999999999997],
+          [2],
+          [1.15],
+          [1.75],
+          [3.1],
+          [0.2999999999999998],
+          [2.5],
+          [1.35],
+          [1],
+          [1.9000000000000001],
+          [0.3999999999999999],
+          [3.1],
+          [1.8333333333333333],
+          [1.4000000000000001],
+          [3.85],
+          [2.8499999999999996],
+          [0.7000000000000002],
+        ];
+
+        selected_var_score = 2.5;
+        sel_score_min = 0.5;
+        sel_score_25 = 1;
+        sel_score_50 = 2;
+        sel_score_75 = 4;
+        sel_score_max = 5;
+
+        //####################
+
+        var datatoplot = google.visualization.arrayToDataTable(
+          score_valies,
+          false
+        );
+        var id_elements = selector_id.split("_");
+        var score_data_type = id_elements[id_elements.length - 1];
+        var plot_title = "Histogram of impact score over all protein residues";
+        plotcolor = "#3366CC";
+        if (score_data_type == "sd") {
+          plot_title =
+            "Histogram of variability-based impact score over all protein residues";
+          plotcolor = "#166956";
+        } else if (score_data_type == "average") {
+          plot_title =
+            "Histogram of average-based impact score over all protein residues";
+          plotcolor = "#247ca8";
+        }
+
+        if (score_data_type == "sd" || score_data_type == "average") {
+          var options = {
+            title: plot_title,
+            height: 350,
+            width: 350,
+            legend: { position: "none" },
+            chartArea: { right: "5", left: "40", top: "50", bottom: "60" },
+            hAxis: { title: "Score", slantedText: true, slantedTextAngle: 90 },
+            vAxis: { title: "Occurrences" },
+            colors: [plotcolor],
+          };
+        } else {
+          var options = {
+            title: plot_title,
+            height: 350,
+            width: 620,
+            legend: { position: "none" },
+            chartArea: { right: "10", left: "70", top: "50", bottom: "60" },
+            hAxis: { title: "Score" },
+            vAxis: { title: "Occurrences" },
+            colors: [plotcolor],
+          };
+        }
+
+        var chart = new google.visualization.Histogram(
+          document.getElementById(selector_id)
+        );
+
+        chart.draw(datatoplot, options);
+
+        var selector_tag = "#" + selector_id;
+
+        var line_selscore_location = d3.select(selector_tag + " svg");
+        add_svg_vertical_line(
+          chart,
+          line_selscore_location,
+          selected_var_score,
+          "stroke:rgb(0,0,0); stroke-width:3;",
+          "Average-based score"
+        );
+
+        if (typeof sel_score_min == "number") {
+          var stroke_color = "#999999";
+          var stroke_width = 2;
+          var fill_color = "#cccccc";
+          var box_location = d3.select(selector_tag + " svg g g g");
+          //Q1 to med
+          add_svg_box(
+            chart,
+            box_location,
+            sel_score_25,
+            sel_score_50,
+            stroke_color,
+            stroke_width,
+            fill_color
+          );
+          //Med to Q3
+          add_svg_box(
+            chart,
+            box_location,
+            sel_score_50,
+            sel_score_75,
+            stroke_color,
+            stroke_width,
+            fill_color
+          );
+          //Min and max line
+          linestyle =
+            "stroke:" + stroke_color + "; stroke-width:" + stroke_width + ";";
+          add_svg_vertical_line(
+            chart,
+            box_location,
+            sel_score_min,
+            linestyle,
+            "Minimum score of the selected variant in this trajectoriy"
+          );
+          add_svg_vertical_line(
+            chart,
+            box_location,
+            sel_score_max,
+            linestyle,
+            "Maximum score of the selected variant in this trajectoriy"
+          );
+          //Horizontal lines from min to Q1 and Q3 to max
+          add_svg_horizontal_line(
+            chart,
+            box_location,
+            sel_score_min,
+            sel_score_25,
+            stroke_color,
+            stroke_width
+          );
+          add_svg_horizontal_line(
+            chart,
+            box_location,
+            sel_score_75,
+            sel_score_max,
+            stroke_color,
+            stroke_width
+          );
+        }
+      }
+
+      /*
+      $('#chart_div').tooltip({
+          selector: '.protscoretooltip',
+          trigger:"click",
+      }); 
+
+      var thisscore=2.5;
+      var min=0.5
+      var max=3
+
+      google.charts.load("current", {packages:["corechart"]});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+//        score_valies.unshift("Score")
+//        for (var i=0; i < score_valies.length; i++){
+//            score_valies[i]=[score_valies[i]]
+//        }
+      selector_id="chart_div"
+      score_valies=[4, 2.75, 1.3500000000000003, 1, 5.2, 2.5, 0.40000000000000036, 2.75, 2.75, 1.55, 0.8500000000000001, 1.6, 2.766666666666667, 2.8666666666666667, 2.1750000000000003, 2.3000000000000003, 1.3250000000000002, 3.8, 3.5999999999999996, 3.325, 2.6500000000000004, 3.5000000000000004, 0.5666666666666665, 0.6499999999999999, 0.2999999999999998, 1.65, 3.1, 5.2, 2.8, 0, 2.6, 5.3, 5.2, 0.2999999999999998, 3.1, 1.6, 2.7, 2.6999999999999997, 1.9000000000000001, 2.8000000000000003, 1.65, 4, 2.25, 3.15, 4.6000000000000005, 0.7000000000000002, 1.2000000000000002, 2.8, 1.7, 0.8333333333333334, 3.5, 5.075, 2.2750000000000004, 2.45, 2.3, 2.1999999999999997, 1.9000000000000001, 1.9000000000000001, 3.85, 3.5, 2.65, 2.62, 1.9, 4.1, 3.6, 2.5, 2.5, 4.6, 4.15, 3.85, 0.5, 0.3999999999999999, 4.1, 3.2000000000000006, 0.2999999999999998, 1.366666666666667, 1.35, 2.1333333333333333, 5.2, 3.3, 0.2999999999999998, 0.6000000000000001, 2.45, 2.65, 1.35, 2.7, 3.8, 2.85, 0.7000000000000002, 2.6, 3.85, 2.4000000000000004, 1, 3.85, 0.8500000000000001, 1.2, 0, 0.40000000000000036, 0.5, 1.8333333333333333, 3.1, 2.1750000000000003, 2.5, 2.6, 3.8, 3.9, 2.6, 3.85, 1.65, 0, 2.5, 3.85, 1.35, 0.6499999999999999, 0.7000000000000002, 3.6, 0.40000000000000036, 2.8333333333333335, 4.1, 1.35, 0.4666666666666666, 3.85, 0.3500000000000001, 1.8333333333333333, 2.2, 0.4, 2.4000000000000004, 1.55, 5.2, 2.6, 3.06, 2.6333333333333333, 4.7, 1, 4.15, 1.9000000000000001, 2.4000000000000004, 1.0333333333333334, 0, 2.1999999999999997, 2.05, 0.6000000000000001, 1.35, 1.45, 3.2249999999999996, 2.4250000000000007, 1.3500000000000003, 7, 3.5, 4.35, 7.3, 2.866666666666667, 2.25, 4.2, 3.85, 4.65, 1.4000000000000001, 2.1333333333333333, 0.2999999999999998, 1.1666666666666667, 2.55, 0.2999999999999998, 2.5, 1.9000000000000001, 2.6, 4.6000000000000005, 2.6, 3.0500000000000003, 2.6, 5.3, 0.6499999999999999, 1.35, 0.5, 3.1333333333333333, 2.9, 0.8500000000000001, 1.5, 2.7000000000000006, 2.1750000000000003, 3.1, 1.4000000000000001, 0.34999999999999987, 2.4000000000000004, 5.2, 1.1, 0.7000000000000002, 2.7, 1, 2.8, 2.6, 2.3666666666666667, 1, 0.8500000000000001, 2.45, 2.5, 2.2500000000000004, 0.8, 3.1999999999999997, 1.9, 3.8, 2.8499999999999996, 0.4666666666666666, 4.45, 3.8500000000000005, 5.050000000000001, 4.866666666666666, 2.4000000000000004, 2.7, 4.025, 1.9000000000000001, 5.2, 3.5666666666666664, 1, 3.8, 0.29999999999999993, 0.6000000000000001, 1.9000000000000001, 0.2999999999999998, 3.0500000000000003, 3.5999999999999996, 0.5, 0.4666666666666666, 4, 1, 2.85, 4, 0.2999999999999998, 0, 2.9, 2.45, 2.5, 3.5250000000000004, 2.75, 1.0999999999999999, 1.15, 2.025, 3.6999999999999997, 2, 1.15, 1.75, 3.1, 0.2999999999999998, 2.5, 1.35, 1, 1.9000000000000001, 0.3999999999999999, 3.1, 1.8333333333333333, 1.4000000000000001, 3.85, 2.8499999999999996, 0.7000000000000002];
+
+      array=[score_valies];
+      //var array = [         [ 100, 90, 110, 85, 96, 104, 120],       ];
+      selected_var_score=2;
+
+
+
+      var data = new google.visualization.DataTable();
+      
+      for (var j=0;j<array[0].length;j++){
+
+        data.addColumn('number', 'x'+j);
+      }
+
+      data.addColumn({id:'max', type:'number', role:'interval'});
+      data.addColumn({id:'min', type:'number', role:'interval'});
+      data.addColumn({id:'firstQuartile', type:'number', role:'interval'});
+      data.addColumn({id:'median', type:'number', role:'interval'});
+      data.addColumn({id:'thirdQuartile', type:'number', role:'interval'});
+      data.addColumn({id:'this_score', type:'number', role:'interval'});
+
+      data.addRows(getBoxPlotValues(array,selected_var_score));
+
+
+      function getBoxPlotValues(array,selected_var_score) {
+
+        var c = array[0].length;
+        console.log("aa")
+        for (var i = 0; i < array.length; i++) {
+          console.log("bb")
+          var arr = array[i].slice(1).sort(function (a, b) {
+            return a - b;
+          });
+
+          var max = arr[arr.length - 1];
+          var min = arr[0];
+
+          array[i][c] = max;
+          array[i][c+1] = min
+          array[i][c+2] = Quartile(arr, 0.25);//firstQuartile;
+          array[i][c+3] = Quartile(arr, 0.5);//median;
+          array[i][c+4] = Quartile(arr, 0.75);//thirdQuartile;
+          array[i][c+5] = selected_var_score
+        }
+        return array;
+      }
+
+          function Quartile(data, q) {
+  data=Array_Sort_Numbers(data);
+  var pos = ((data.length) - 1) * q;
+  var base = Math.floor(pos);
+  var rest = pos - base;
+  if( (data[base+1]!==undefined) ) {
+    return data[base] + rest * (data[base+1] - data[base]);
+  } else {
+    return data[base];
+  }
+}
+
+function Array_Sort_Numbers(inputarray){
+  return inputarray.sort(function(a, b) {
+    return a - b;
+  });
+}
+
+
+
+      var options = {
+          title:'Box Plot',
+          height: 500,
+          legend: {position: 'none'},
+          hAxis: {
+            gridlines: {color: '#fff'}
+          },
+          lineWidth: 0,
+          series: [{'color': '#D3362D'}],
+          intervals: {
+            barWidth: 1,
+            boxWidth: 1,
+            lineWidth: 2,
+            style: 'boxes'
+          },
+          interval: {
+            max: {
+              style: 'bars',
+              fillOpacity: 1,
+              color: '#777'
+            },
+            min: {
+              style: 'bars',
+              fillOpacity: 1,
+              color: '#777'
+            },
+            this_score: { 'style':'points', 'color':'#8B0000', 'pointSize': 10,
+            'lineWidth': 0, 'fillOpacity': 1 }
+          }
+      };
+
+      var chart = new google.visualization.LineChart(document.getElementById(selector_id));
+
+      chart.draw(data, options);
+    }
+
+*/
+
+      /*
+
+
+
+
+        score_valies=[["Score"],[4],[2.75],[1.3500000000000003],[1],[5.2],[2.5],[0.40000000000000036],[2.75],[2.75],[1.55],[0.8500000000000001],[1.6],[2.766666666666667],[2.8666666666666667],[2.1750000000000003],[2.3000000000000003],[1.3250000000000002],[3.8],[3.5999999999999996],[3.325],[2.6500000000000004],[3.5000000000000004],[0.5666666666666665],[0.6499999999999999],[0.2999999999999998],[1.65],[3.1],[5.2],[2.8],[0],[2.6],[5.3],[5.2],[0.2999999999999998],[3.1],[1.6],[2.7],[2.6999999999999997],[1.9000000000000001],[2.8000000000000003],[1.65],[4],[2.25],[3.15],[4.6000000000000005],[0.7000000000000002],[1.2000000000000002],[2.8],[1.7],[0.8333333333333334],[3.5],[5.075],[2.2750000000000004],[2.45],[2.3],[2.1999999999999997],[1.9000000000000001],[1.9000000000000001],[3.85],[3.5],[2.65],[2.62],[1.9],[4.1],[3.6],[2.5],[2.5],[4.6],[4.15],[3.85],[0.5],[0.3999999999999999],[4.1],[3.2000000000000006],[0.2999999999999998],[1.366666666666667],[1.35],[2.1333333333333333],[5.2],[3.3],[0.2999999999999998],[0.6000000000000001],[2.45],[2.65],[1.35],[2.7],[3.8],[2.85],[0.7000000000000002],[2.6],[3.85],[2.4000000000000004],[1],[3.85],[0.8500000000000001],[1.2],[0],[0.40000000000000036],[0.5],[1.8333333333333333],[3.1],[2.1750000000000003],[2.5],[2.6],[3.8],[3.9],[2.6],[3.85],[1.65],[0],[2.5],[3.85],[1.35],[0.6499999999999999],[0.7000000000000002],[3.6],[0.40000000000000036],[2.8333333333333335],[4.1],[1.35],[0.4666666666666666],[3.85],[0.3500000000000001],[1.8333333333333333],[2.2],[0.4],[2.4000000000000004],[1.55],[5.2],[2.6],[3.06],[2.6333333333333333],[4.7],[1],[4.15],[1.9000000000000001],[2.4000000000000004],[1.0333333333333334],[0],[2.1999999999999997],[2.05],[0.6000000000000001],[1.35],[1.45],[3.2249999999999996],[2.4250000000000007],[1.3500000000000003],[7],[3.5],[4.35],[7.3],[2.866666666666667],[2.25],[4.2],[3.85],[4.65],[1.4000000000000001],[2.1333333333333333],[0.2999999999999998],[1.1666666666666667],[2.55],[0.2999999999999998],[2.5],[1.9000000000000001],[2.6],[4.6000000000000005],[2.6],[3.0500000000000003],[2.6],[5.3],[0.6499999999999999],[1.35],[0.5],[3.1333333333333333],[2.9],[0.8500000000000001],[1.5],[2.7000000000000006],[2.1750000000000003],[3.1],[1.4000000000000001],[0.34999999999999987],[2.4000000000000004],[5.2],[1.1],[0.7000000000000002],[2.7],[1],[2.8],[2.6],[2.3666666666666667],[1],[0.8500000000000001],[2.45],[2.5],[2.2500000000000004],[0.8],[3.1999999999999997],[1.9],[3.8],[2.8499999999999996],[0.4666666666666666],[4.45],[3.8500000000000005],[5.050000000000001],[4.866666666666666],[2.4000000000000004],[2.7],[4.025],[1.9000000000000001],[5.2],[3.5666666666666664],[1],[3.8],[0.29999999999999993],[0.6000000000000001],[1.9000000000000001],[0.2999999999999998],[3.0500000000000003],[3.5999999999999996],[0.5],[0.4666666666666666],[4],[1],[2.85],[4],[0.2999999999999998],[0],[2.9],[2.45],[2.5],[3.5250000000000004],[2.75],[1.0999999999999999],[1.15],[2.025],[3.6999999999999997],[2],[1.15],[1.75],[3.1],[0.2999999999999998],[2.5],[1.35],[1],[1.9000000000000001],[0.3999999999999999],[3.1],[1.8333333333333333],[1.4000000000000001],[3.85],[2.8499999999999996],[0.7000000000000002]]
+        var datatoplot = google.visualization.arrayToDataTable(score_valies,false);
+        
+        plotcolor="#166956"
+        var options = {
+            "title":"Histograme of impact score over all protein residues",
+            "height":350, "width":620, "legend":{"position":"none"}, 
+            "chartArea":{"right":"10","left":"50","top":"50","bottom":"60"},
+            hAxis: {title: "Score"},vAxis: {title: "Frequency"},
+            colors:[plotcolor]
+
+        };
+
+        
+        var chart = new google.visualization.Histogram(document.getElementById('chart_div'));
+
+        
+        chart.draw(datatoplot, options);   
+console.log(d3.select("svg"))    
+var svg = d3.select("svg g g g");
+console.log(svg)
+d3.select("svg")
+    .append('line') 
+    .attr('id', 'lineId')
+    .attr("class","protscoretooltip")
+    .attr('style', 'stroke:rgb(0,0,0); stroke-width:3;')
+    .attr('x1', chart.getChartLayoutInterface().getXLocation(thisscore))
+    .attr('y1', chart.getChartLayoutInterface().getChartAreaBoundingBox().top)
+    .attr('x2', chart.getChartLayoutInterface().getXLocation(thisscore))
+    .attr('y2', chart.getChartLayoutInterface().getChartAreaBoundingBox().height + chart.getChartLayoutInterface().getChartAreaBoundingBox().top)
+    .append("title")
+      .append("text")
+              .text("Obtained score");
+
+d3.select("svg g g g")
+    .append('rect') 
+    .attr('id', 'rectId')
+    .attr('x',  chart.getChartLayoutInterface().getXLocation(min))
+    .attr('y',  chart.getChartLayoutInterface().getChartAreaBoundingBox().top)
+    .attr("width",chart.getChartLayoutInterface().getXLocation(max) - chart.getChartLayoutInterface().getXLocation(min))
+    .attr("height",chart.getChartLayoutInterface().getChartAreaBoundingBox().height )
+    .attr("fill","#044B94") 
+    .attr("opacity","0.4")
+    .append("title")
+      .append("text")
+              .text("Scores in selected mutation")
+      }*/
+    });
+  </script>
+  <!-- Flare plots -->
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="{% static 'view/fplot2/docs/css/flareplot-main.css' %}"
+  />
+  <script src="{% static 'view/fplot2/d3.v3.min.js' %}"></script>
+  <script src="{% static 'view/fplot2/docs/js/flareplot-main.js' %}"></script>
+  <!-- D:< -->
+
+  <!-- End Flare plots -->
+  {% endblock %}
+</body>

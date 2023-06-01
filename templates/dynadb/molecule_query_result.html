@@ -1,0 +1,110 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% block addon_css %}
+<style>
+    .panel-body {
+        word-break: break-all
+    }
+
+    .mol-container {
+        width: 80%;
+        height: 400px;
+        position: relative;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="regForm row">
+    <div class="col-md-8 col-md-offset-2">
+
+        <div class="col-md-12 regPanel panel panel-primary">
+            <div class="panel-body">
+                <h2 class="panel-heading"> Molecule Info: {{answer.name}}</h2> 
+            </div>
+        </div>
+
+        <div class="panel panel-primary panel-body">
+            {% if answer.smiles %}
+            <p><b>Smiles</b>:<br> {{answer.smiles}}</p> <br>
+            {%endif%}
+            <br>
+            {% if answer.netcharge %}
+            <p><b>Netcharge</b>:<br>{{answer.netcharge}} </p><br>
+            {%endif%}
+            <br>
+            {% if answer.inchikey %}
+            <p><b>InChIKey</b>:<br>{{answer.inchikey}} </p><br>
+            {%endif%}
+            <br>
+            {% if answer.inchi %}
+            <p><b>InChI</b>:<br><p class="inchitext">{{answer.inchi}} </p></p><br>
+            {%endif%}
+            <br>
+            {% if answer.inchicol %}
+            <p><b>InChIcol</b>:<br>{{answer.inchicol}} </p><br>
+            {%endif%}
+            <br>
+            {% if answer.link_2_compound %}
+            <p><b>More information (from its Standard Form)</b>:</p><br>
+            <a class='btn btn-info' role='button' href= /dynadb/compound/id/{{answer.link_2_compound}}>{{answer.name}}
+                </a> {%endif%} <br>
+                {% if answer.inmodels %}
+                <br><p><b> Complex structures in which this molecule appears </b>:</p><br>
+                {%for model in answer.inmodels%}
+                <a class='btn btn-info' role='button' href= /dynadb/model/id/{{model}}> Complex Structure ID:
+                    {{model}}</a> {%endfor%} {%endif%} <br>
+                    {% if answer.references %}
+                    <br><p><b>References in which this molecule is mentioned</b>:</p><br>
+                    {%for reference in answer.references%}
+                    {%if reference.pmid%}
+                    <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}}
+                        {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a
+                            href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a> </p> <br>
+                            {%else%}
+                            <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}}
+                                {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}.</p><br>
+                            {%endif%}
+                            {%endfor%}
+                            {% endif %}
+
+                            <br>
+                            <center><a href=/dynadb/files/Molecule/{{answer.sdfile}}> <button class="btn btn-primary"
+                                    type="button">Download the SDF file</button></a></center>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-8 col-md-offset-2">
+        <div class="panel panel-primary panel-body">
+            <div style="text-align:center;margin-top:3%">
+                <h4 class="orangeTit">Image of the Specific State</h4> 
+            </div>
+            <div id='leftdiv' class="col-sm-6">
+                <center><button style="display:none;" type="button" class="btn btn-primary ortoligand"
+                        id={{answer.myid}}> See 3D </button></center><br>
+                <center><img src="{{answer.imagelink}}" /></center>
+            </div>
+            <div id='rightdiv' class="col-sm-6">
+                <div id="container-01" class="mol-container"></div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock content %}
+
+
+{% block addon_js %}
+<script src="{% static 'dynadb/mol3dv.js' %}"></script>
+<script src="https://3Dmol.csb.pitt.edu/build/3Dmol-nojquery.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('.ortoligand:first').click();
+    });
+</script>
+{% endblock%}

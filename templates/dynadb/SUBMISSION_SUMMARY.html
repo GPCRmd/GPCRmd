@@ -1,0 +1,697 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% block addon_css %}
+<style>
+  label {
+    cursor: pointer;
+    font-weight: normal
+  }
+
+  .ui-autocomplete {
+    max-height: 100px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+  }
+
+  .input_row {
+    padding-bottom: 15px;
+  }
+
+  .center_div {
+    text-align: center;
+  }
+
+  /* IE 6 doesn't support max-height
+   * we use height instead, but this forces the menu to always be this tall
+   */
+  * html .ui-autocomplete {
+    height: 100px;
+  }
+
+  th {
+    width: 80px;
+    text-align: center;
+  }
+
+  td {
+    padding: 5px 5px 5px 5px;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="regForm row">
+  <form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+    <!-- description column -->
+    <div class="col-md-3 col-md-offset-1">
+      <div id="left" class="col-md-12">
+        {% include "dynadb/SUBMISSION_SUMMARY_description.html" %}
+      </div>
+    </div>
+
+    <!-- middle column -->
+    <div class="col-md-7 ">
+      {% include "dynadb/REUSE_CAPTION.html" with prot=True %}
+
+      <div id="ssform" class="col-md-12 panel panel-primary">
+        <div id="sform" style="margin-top:2%">
+
+          <!--Protein block-->
+          <div class="col-md-12 panel panel-primary summBtn" id="PROTEIN_BUTTON">
+            <h4 class="butTitle">
+              Toggle the (<b>1</b>) <b>Protein </b>block </h4>
+          </div>
+
+          {% for o in qPROT %} 
+          {%for int0 in int_id0%}
+          {% if forloop.counter == forloop.parentloop.counter %}
+          <div class="col-md-12 panel panel-primary " hidden id="PROTEIN_BLOCK-{{int0}}"
+            style="border-color:#555;background-color:rgba(200, 150, 200, 0.1);">
+
+            <div class="row"><br>
+              <div class="col-md-1">
+                <h4></h4>
+              </div>
+              <div class="col-md-6 col-md-offset-2" style="text-align:center">
+                <h4 class="orangeTit">Protein
+                  #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}
+                </h4>
+              </div>
+              <div class="col-md-2 col-md-offset-1" style="text-align:center">
+                <h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum"></h4>
+              </div>
+            </div><br>
+
+            <div class="row">
+              <div class="col-md-1" style="height:30px"></div>
+              <div class="col-md-3"><label for="id_form-{{int0}}-name"><a
+                    title="Name: Recommended name from UniProtKB. "><p>Name:</p></a></label></div>
+              <div class="col-md-6"><input id="id_form-{{int0}}-name" maxlength="60" readonly name="form-{{int0}}-name"
+                  type="text" style="width:300px" value="{{o.name}}" /></div>
+              <br>
+            </div>
+
+            <div class="row">
+              <div class="col-md-1" style="height:30px"></div>
+              <div class="col-md-3"><label for="id_form-{{int0}}-id_species"><a
+                    title="Species: Protein sequence species. Type scientific name or UniprotKB mnemonic inside brackets and select the appropiate entry. Use &quot;synthetic&quot; for artficial sequences or &quot;unidentified&quot for unknown sources."><p>Species:</p></a></label>
+              </div>
+              <div class="col-md-7" style="height:30px;">
+                {% for ll in sci_namel %}
+                {% if forloop.counter == forloop.parentloop.counter %}
+                <input id="id_form-{{int0}}-id_species" name="form-{{int0}}-id_species" type="text" style="width:300px"
+                  readonly value="{{ll}}" />
+                {%endif%}
+                {%endfor%}
+
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-3 col-md-offset-1" style="height:30px"><label for="id_uniprotkbac"><a
+                    title="UniProtKB AC: UniProtKB Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers pointing to cannonical sequences. Mutations are handled in a different field."><p>UniProtKB
+                    AC:</p></a></label></div>
+              <div class="col-md-2" style="height:30px"><input id="id_form-{{int0}}-uniprotkbac" maxlength="10"
+                  name="form-{{int0}}-uniprotkbac" style="width:75px" readonly type="text" value="{{o.uniprotkbac}}" />
+              </div>
+              <div class="col-md-2" style="margin-left:25px"><label for="id_isoform"><a
+                    title="Isoform: Isoform number for a UniProtKB Accession Number. Cannonical sequences have the value '1'."><p>Isoform:</p></a></label>
+              </div>
+              <div class="col-md-2"><input readonly id="id_form-{{int0}}-isoform" name="form-{{int0}}-isoform"
+                  type="number" style="width:75px" value="{{o.isoform}}" /></div>
+            </div>
+            <br>
+
+            {% if o.is_mutated == True %}
+            <div class="row" style="margin:0px;height:30px">
+              <div class="col-md-6 col-md-offset-3 panel panel-primary" style="border-color:#555">
+                <div class="row"
+                  style="text-align:center;vertical-align:middle;padding:0px 0px 0px 0px;cursor:pointer;background-color:rgba(200, 150, 200, 0.1);border-color:#555"
+                  id="show_protmut-{{int0}}" data-toggle="collapse"
+                  data-target="#id_form-{{int0}}-mutations_id,#id_mutations_id">
+                  <h4 style="margin:5px">Toggle protein mutations</h4>
+                </div>
+              </div>
+            </div><br>
+
+            <div class="row" id="id_form-{{int0}}-mutationtable" style="align:center;margin-bottom:20px">
+              <table style="align:center;margin:auto">
+                <tr>
+                  <th><label for="id_form-{{int0}}-resid"><a
+                        title="Resid: Residue number that its mutated on wild type protein."><p>Resid</p></a></label></th>
+                  <th><label for="id_form-{{int0}}-resletter_from"><a
+                        title=" Resletter from: Residue name in IUPAC one letter code that is present on wild type protein. '-' character is used in case of insertions."><p>Resletter
+                        from</p></a></label></th>
+                  <th><label for="id_form-{{int0}}-resletter_to"><a
+                        title=" Resletter to: Residue name in IUPAC one letter code that is present on mutated protein. '-' character is used in case of deletions and 'X' for engineered residues."><p>Resletter
+                        to</p></a></label></th>
+                </tr>
+                {% for protM in MUTations%} 
+                {% if forloop.counter == forloop.parentloop.counter %}
+                {% for o in protM %}
+                <tr>
+                  <td><input style="width:140px;" readonly id="id_form-{{int0}}-resid" name="form-{{int0}}-resid"
+                      type="number" value="{{o.resid}}" /></td>
+                  <td><input style="width:140px;" id="id_form-{{int0}}-resletter_from" maxlength="1" readonly
+                      name="form-{{int0}}-resletter_from" value="{{o.resletter_from}}" type="text" /></td>
+                  <td><input style="width:140px;" id="id_form-{{int0}}-resletter_to" maxlength="1" readonly
+                      name="form-{{int0}}-resletter_to" type="text" value="{{o.resletter_to}}" /></td>
+                </tr>{%endfor%}
+                {% endif%}
+                {%endfor%}
+
+              </table>
+            </div>
+            {% endif%}
+
+          </div>
+          {%endif%} 
+          {%endfor%}
+          {%endfor%}
+
+          <!-- Small mol block -->
+          <div class="col-md-12 panel panel-primary summBtn" id="SMALL_BUTTON">
+
+            <h4 class="butTitle">
+              Toggle the (<b>2</b>) <b>Small Molecule </b>block </h4>
+          </div>
+
+          {% for o in qMOL %} 
+          {%for int0 in int_ids0%}
+          {% if forloop.counter == forloop.parentloop.counter %}
+          <div class="col-md-12 panel panel-primary"  id="SMALL_BLOCK-{{int0}}"
+            style="border-color:#555;background-color:rgba(200, 150, 200, 0.1);">
+
+            <div class="row"><br>
+              <div class="col-md-1">
+                <h4></h4>
+              </div>
+              <div class="col-md-6 col-md-offset-2" style="text-align:center">
+                <h4 class="orangeTit">Small Molecule
+                  #{%for int in int_ids%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}
+                </h4>
+              </div>
+              <div class="col-md-2 col-md-offset-1" style="text-align:center">
+                <h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">
+              </div>
+            </div><br>
+
+            <div class="row">
+              <div class="col-md-1" style="height:30px"></div>
+              <div class="col-md-3"><label for="id_form-{{int0}}-name"><a
+                    title="Name: First name in the list of names in PubChem or 'compound name' in ChEMBL if there is no entry in PubChem."><p>Name:</p></a></label>
+              </div>
+              {% for com in qCOMP %}
+              {% if forloop.counter == forloop.parentloop.counter %}
+              <div class="col-md-6"><input readonly style="width:300px" id="id_form-{{int0}}-name" maxlength="60"
+                  name="form-{{int0}}-name" type="text" value={{com.name}} /></div>
+              {%endif%} 
+              {%endfor%}
+
+            </div>
+            <div class="row">
+              <div class="col-md-1" style="height:30px"></div>
+              <div class="col-md-3"><label for="id_form-{{int0}}-net_charge"><a
+                    title="Net charge: Net charge of the molecule structure."><p>Net charge:</p></a></label></div>
+              <div class="col-md-2"><input style="width:75px" id="id_form-{{int0}}-net_charge"
+                  name="form-{{int0}}-net_charge" type="number" value="{{o.net_charge}}" readonly /></div>
+              <div class="col-md-2" style="padding-right:0px;padding-left:5px;margin-left:15px"><label
+                  for="id_form-{{int0}}-pubchem_cid"><a style="padding-right:-40px"
+                    title="PubChem cid: PubChem chemical identifier"><p>PubChem cid:</p></a></label></div>
+              {% if submission_id %}
+              {% for com in qCOMP %}
+              {% if forloop.counter == forloop.parentloop.counter %}
+              <div class="col-md-2"><input id="id_form-{{int0}}-pubchem_cid" readonly name="form-{{int0}}-pubchem_cid"
+                  style="width:75px;margin-left:10px" type="number" value={{com.pubchem_cid}} /></div>
+              {%endif%} 
+              {%endfor%}
+              {% endif %}
+            </div>
+
+            <div class="row">
+              <div class="col-md-1" style="height:30px"></div>
+              <div class="col-md-3"><label style="height:30px;margin-right:-30px"
+                  for="id_form-{{int0}}-is_present">
+                  {% if submission_id %} 
+                  {% for t in labtypels %}
+                  {% if forloop.counter == forloop.parentloop.counter %} 
+                  {% if t.0 < 6 %} <a
+                    style="height:30px;margin-right:-30px"
+                    title="Check this field if the molecule has been co-crystalized with the GPCR."><p>Crystalized
+                    molecule</p></a>
+                  {%else%}<a style="height:30px;margin-right:-30px"
+                    title="Bulk molecule, component of the simulation environment."><p>Bulk (no crystalized)</p></a>
+                  {% endif %}
+                  {% endif %}
+                  {%endfor%} 
+                  {%else%} 
+                  {% endif %}</label></div>
+              <div class="col-md-6"><input style="width:300px" id="id_form-{{int0}}-co_type" name="form-{{int0}}-type"
+                  type="text" 
+                  {% for t in labtypels %} 
+                  {% if forloop.counter == forloop.parentloop.counter %}
+                  value="{{t.1}}" 
+                  {%endif%} 
+                  {%endfor%} readonly /></div>{{t.1}}
+
+
+            </div><br>
+
+          </div>
+          {%endif%} 
+          {%endfor%}
+          {%endfor%}
+
+          <!--Crystal block-->
+          <div class="col-md-12 panel panel-primary summBtn" id="MODEL_BUTTON">
+            <h4 class="butTitle">
+              Toggle the (<b>3</b>) <b>Crystal-derived assembly</b> block</h4>
+          </div>
+
+          <div class="col-md-12 panel panel-primary" hidden id="MODEL_BLOCK"
+            style="border-color:#555;background-color:rgba(200, 150, 200, 0.1);">
+
+            <div class="row" style="margin-top:30px">
+              <div class="col-md-1" style="height:30px"></div>
+              <div class="col-md-3"><label for="id_name"><a title="Choose a name for your complex"><p>Name:</p></a></label>
+              </div>
+              <div class="col-md-6"><input cols="40" id="id_name" type="text" name="name" rows="2"
+                  {% if submission_id %} value="{{p.values.0.name}}" readonly {%endif%} style="width:300px"></input>
+              </div>
+              <br>
+            </div>
+
+            <div class="row">
+              <div class="col-md-1" style="height:30px"></div>
+              <div class="col-md-3"><label for="id_type"><a
+                    title="Complex Type: Type of structure that is modeled."><p>Type:</p></a></label></div>
+              <div class="col-md-6"><input id="id_type" maxlength="6" name="type" type="text" {% if submission_id %}
+                  value="{{TypeM}}" readonly {% endif %} style="width:300px" /></div>
+              <br>
+            </div>
+
+            <div class="row">
+              <div class="col-md-1" style="height:30px"></div>
+              <div class="col-md-3"><label for="id_pdbid"><a
+                    title="PDB ID: PDB ID from Protein Data Bank database. It should contain chain code when necessary (e.g. 4IAR.A). "><p>PDB
+                    ID:</p></a></label></div>
+              <div class="col-md-6"><input id="id_pdbid" maxlength="6" name="pdbid" type="text" {% if submission_id %}
+                  value="{{p.values.0.pdbid}}" readonly {% endif %} style="width:300px" /></div>
+              <br>
+            </div>
+
+            <div class="row">
+              <div class="col-md-1" style="height:30px"></div>
+              <div class="col-md-3"><label for="id_source_type"><a
+                    title="Source Type: Source of the coordinates of the “complex”. Loop repairs and other replaced missing protein residues on X-ray or NMR structures are not taken into account for setting the value of this field. In order to set the value to X-ray or NMR all the coordinates (including relative positions between different components) of protein complexes and their components should come from an X-ray or an NMR experiment."><p>Source
+                    Type:</p></a></label></div>
+              <div class="col-md-6"><input id="id_source_type" maxlength="6" name="id_source_type" type="text"
+                  {% if submission_id %} value="{{SType}}" readonly {% endif %} style="width:300px" /></div>
+              <br>
+            </div>
+
+            <div class="row" style="margin-bottom:20px;">
+
+              <div class="col-md-1" style="height:30px"></div>
+              <div class="col-md-3"><label for="id_description"><a
+                    title="Description: Description of the complex containing information that is not provided in other field such as procedure followed for the construction of the model. "><p>Description:</p></a></label>
+              </div>
+              <div class="col-md-6"><textarea cols="40" id="id_description" name="description" rows="2"
+                  {% if submission_id %} readonly {%endif%}
+                  style="width:300px">{% if submission_id %}{{p.values.0.description}}{%endif%}</textarea></div>
+              <br>
+            </div>
+
+          </div>
+          
+          <!--Simulation block-->
+          <div class="col-md-12 panel panel-primary summBtn" id="DYNAMICS_BUTTON">
+            <h4 class="butTitle">
+              Toggle the (<b>4</b>) <b>Simulation</b> block</h4>
+          </div>
+
+          <div class="col-md-12 panel panel-primary" hidden id="DYNAMICS_BLOCK"
+            style="border-color:#555;background-color:rgba(200, 150, 200, 0.1);">
+            <div class="row">
+              <div class="col-md-6 col-md-offset-3 panel panel-primary" id="collapse-PRUEBA2"
+                style="margin-top:20px;margin-bottom:20px;cursor:pointer;background-color:rgba(200, 150, 200, 0.1);border-color:#555">
+                <h4 style="padding:0px;margin:10px 0px 10px 0px;text-align:center">Toggle simulation components</h4>
+              </div>
+            </div>
+
+            <div style="text-align:center" hidden id='PRUEBA2' style="margin-bottom:20px">
+              <table style="text-align=center;width:80%;margin-left:10%;margin-right:10%;margin-bottom:10px">
+                <thead>
+                  <tr>
+                    <th style="width:80px;text-align:center"><label for="id_formc-0-resname"><a
+                          title="Resname: Resname present on simulation topology file. Names from pdb are preferred but not mandatory. "><p>Resname</p></a></label>
+                    </th>
+                    <th style="width:80px;text-align:center"><label for="id_formc-0-molecule"><a
+                          title="Ordinal number corresponding to the records containing sequence information that was provided in the small molecule form.  "><p>Molecule</p></a></label>
+                    </th>
+                    <th style="width:80px;text-align:center;display:none"><label for="id_formc-0-id_molecule"><a
+                          title="Mol ID: ID of the chemical model (“molecule”) present in  “dynamics”. "><p>Mol
+                          ID</p></a></label></th>
+                    <th style="width:80px;text-align:center"><label for="id_formc-0-name"><a
+                          title="Mol name: Name of the molecule"><p>Mol name</p></a></label></th>
+                    <th style="width:80px;text-align:center"><label for="id_formc-0-numberofmol"><a
+                          title="Number of molecules: Number of molecules belonging to a specific residue type present on simulation topology. "><p>Num
+                          of mol</p></a></label></th>
+                    <th style="width:80px;text-align:center"><label for="id_formc-0-type"><a
+                          title="Type: Type of compound/molecule present in the simulation."><p>Type</p></a></label></th>
+                    <th style="width:80px;text-align:center"><label for="id_formc-0-cryst"><a
+                          title="Cryst: Crystalized component of the simulation"><p>Cryst</p></a></label></th>
+                </thead>
+
+                <tbody id="pElement1">
+                  {% for mc in data %}
+                  <tr id="Element1-{{forloop.counter0}}">
+
+                    <td style="padding:5px 5px 5px 5px"><input style="width:70px"
+                        id="id_formc-{{forloop.counter0}}-resname" maxlength="4"
+                        name="formc-{{forloop.counter0}}-resname" type="text" {% if mc.readonly %} readonly {%endif%}
+                        value="{{mc.resname}}" /></td>
+                    <td style="padding:5px 5px 5px 5px"><input style="width:70px"
+                        id="id_formc-{{forloop.counter0}}-molecule" maxlength="4"
+                        name="formc-{{forloop.counter0}}-molecule" type="text" readonly value="{{mc.int_id}}" /></td>
+                    <td style="padding:5px 5px 5px 5px;display:none"><input style="width:70px"
+                        id="id_formc-{{forloop.counter0}}-id_molecule" name="formc-{{forloop.counter0}}-id_molecule"
+                        type="hidden" readonly value="{{mc.id_molecule}}"></td>
+                    <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-name" maxlength="60"
+                        name="formc-{{forloop.counter0}}-name" type="text" style="width:100px" readonly
+                        value="{{mc.name}}" /></td>
+                    <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-numberofmol" min="0"
+                        name="formc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly
+                        value="{{mc.numberofmol}}" /></td>
+                    <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-typemc" type="text"
+                        readonly name="formc-{{forloop.counter0}}-typemc" style="width:60px" value="{{mc.type}}">
+                      <input id="id_formc-{{forloop.counter0}}-type_int" type="hidden"
+                        name="formc-{{forloop.counter0}}-type_int" value="{{mc.type_int}}"></td>
+                    <td style="padding:5px 5px 5px 5px;text-align:center"><input value="{{mc.type_int.cryst}}"
+                        id="id_form-{{intps0}}-cryst" name="form-{{intps0}}-cryst" style="aligned:center"
+                        type="checkbox" {% if mc.not_in_model%} {%else%}checked{%endif%} disabled /></td>
+                  </tr>
+
+
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 col-md-offset-3 panel panel-primary" id="collapse-PRUEBA3"
+                style="margin-bottom:20px;margin-top:10px;cursor:pointer;background-color:rgba(200, 150, 200, 0.1);border-color:#555">
+                <h4 style="padding:0px;margin:10px 0px 10px 0px;text-align:center">Toggle simulation details</h4>
+              </div>
+            </div>
+
+            <div style="text-align=center" hidden id='PRUEBA3' style="margin-bottom:20px">
+              <div class="row">
+                <div class="col-md-1" style="height:30px"></div>
+                <div class="col-md-3"><label for="id_id_dynamics_methods"> <a
+                      title="Method: Classification of the simulation according to the computational method."><p> Method:</p>
+                    </a> </label></div>
+                <div class="col-md-6">
+                  <td><input id="id_id_dynamics_methods" maxlength="30" readonly name="id_id_dynamics_methods"
+                      value=" {{ddown.id_dynamics_methods}}" type="text" style="width:300px" /></td>
+                  </tr>
+                </div>
+                <br>
+              </div>
+
+              <div class="row">
+                <div class="col-md-1" style="height:30px"></div>
+                <div class="col-md-3">
+                  <tr>
+                    <th><label for="id_software"> <a
+                          title="Software: Name of the software used to compute the simulations (without version)."><p>
+                          Software:</p> </a> </label></th>
+                </div>
+                <div class="col-md-6">
+                  <td><input id="id_software" value=" {{qDS.values.0.software}}" readonly maxlength="30" name="software"
+                      type="text" style="width:300px" /></td>
+                  </tr>
+                </div>
+                <br>
+              </div>
+
+              <div class="row">
+                <div class="col-md-1" style="height:30px"></div>
+                <div class="col-md-3">
+                  <tr>
+                    <th><label for="id_sversion" style="margin-right:-30px"><a style="margin-right:-20px;width:130px"
+                          title="Software version: Version of the software used to compute the simulations."><p>Software
+                          version:</p></a></label></th>
+                </div>
+                <div class="col-md-6">
+                  <td><input id="id_sversion" maxlength="15" readonly name="sversion" value=" {{qDS.values.0.sversion}}"
+                      type="text" style="width:300px" /></td>
+                  </tr>
+                </div>
+                <br>
+              </div>
+
+              <div class="row">
+                <div class="col-md-1" style="height:30px"></div>
+                <div class="col-md-3">
+                  <tr>
+                    <th><label for="id_ff"> <a
+                          title="Force Field: Name of the force-field used to compute the simulations (without version).">
+                          <p>Force Field:</p> </a> </label></th>
+                </div>
+                <div class="col-md-6">
+                  <td><input id="id_ff" maxlength="20" readonly name="ff" type="text" value=" {{qDS.values.0.ff}}"
+                      style="width:300px" /></td>
+                  </tr>
+                </div>
+                <br>
+              </div>
+
+              <div class="row">
+                <div class="col-md-1" style="height:30px"></div>
+                <div class="col-md-3">
+                  <tr>
+                    <th><label for="id_ffversion"> <a
+                          title="FF version: Version of the force field used to compute the simulations."> <p>FF version:</p>
+                        </a> </label></th>
+                </div>
+                <div class="col-md-6">
+                  <td><input id="id_ffversion" readonly maxlength="15" name="ffversion" type="text"
+                      value=" {{qDS.values.0.ffversion}}" style="width:300px" /></td>
+                  </tr>
+                </div>
+                <br>
+              </div>
+
+
+              <div class="row">
+                <div class="col-md-1" style="height:30px"></div>
+                <div class="col-md-3">
+                  <tr>
+                    <th><label for="id_id_assay_types"><a
+                          title="Assay type: Classification of simulations according to an equivalent experimental assay.">
+                          <p>Assay type:</p></a> </label></th>
+                </div>
+                <div class="col-md-6">
+                  <td><input id="id_id_assay_types" name="id_assay_types" readonly type="text" min="0"
+                      style="width:300px" value=" {{ddown.id_assay_types}}" /></td>
+                  </tr>
+                </div>
+                <br>
+              </div>
+
+              <div class="row">
+                <div class="col-md-1" style="height:30px"></div>
+                <div class="col-md-3">
+                  <tr>
+                    <th><label for="id_id_dynamics_membrane_types"><a
+                          title="Membrane type: Type of membrane used in the simulation."> <p>Membrane type:</p></a> </label>
+                    </th>
+                </div>
+                <div class="col-md-6">
+                  <td><input id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" readonly type="text"
+                      min="0" style="width:300px" value=" {{ddown.id_dynamics_membrane_types}}" /></td>
+                  </tr>
+                </div>
+                <br>
+              </div>
+
+              <div class="row">
+                <div class="col-md-1" style="height:30px"></div>
+                <div class="col-md-3">
+                  <tr>
+                    <th><label for="id_id_dynamics_solvent_types"><a
+                          title="Solvent type: Type of solvent used in the simulation. "><p>Solvent type:</p></a> </label></th>
+                </div>
+                <div class="col-md-6">
+                  <td><input id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" readonly type="text"
+                      min="0" style="width:300px" value=" {{ddown.id_dynamics_solvent_types}}" /></td>
+                  </tr>
+                </div>
+                <br>
+              </div>
+
+              <div class="row">
+                <div class="col-md-1" style="height:30px"> </div>
+                <div class="col-md-3"><label for="id_solvent_num"><a
+                      title="Solvent num: Number of solvent molecules"><p>Solvent num:</p></a> </label></div>
+                <div class="col-md-2"><input id="id_solvent_num" name="solvent_num" readonly type="text" min="0"
+                    style="width:75px" value=" {{qDS.values.0.solvent_num}}" /></div>
+                <div class="col-md-2" style="padding-right:0px;padding-left:5px;margin-left:15px"><label
+                    for="id_atom_num"><a title="Num. Atoms: Number of atoms in the simulation."><p>Num. Atoms:</p></a></label>
+                </div>
+                <div class="col-md-2"><input id="id_atom_num" name="atom_num" type="text" readonly
+                    style="width: 75px; margin-left: 10px" value=" {{qDS.values.0.atom}}" /></div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-1" style="height:30px"> </div>
+                <div class="col-md-3"><label for="id_timestep"><a
+                      title="Time step: Simulation integration step (fs)."><p>Time step:</p></a> </label></div>
+                <div class="col-md-2">
+                  <td><input readonly id="id_timestep" value=" {{qDS.values.0.timestep}}" name="timestep" type="text"
+                      style="width:75px" min="0" />
+                </div>
+                <div class="col-md-2" style="padding-right:0px;padding-left:5px;margin-left:15px"><label
+                    for="id_delta"><a title="Delta: Time lapse between frames in a trajectory file (ns)."><p>Delta:</p></a>
+                  </label></div>
+                <div class="col-md-2" style="align:right"><input readonly id="id_delta" value=" {{qDS.values.0.delta}}"
+                    name="delta" type="text" style="width: 75px; margin-left: 10px" /></div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-1" style="height:85px"> </div>
+                <div class="col-md-3"><label for="id_description"><a
+                      title="Additional Information: Short text describing other relevant information that it is not contained on other fields. "><p>Additional
+                      Info:</p></a> </label></th>
+                </div>
+                <div class="col-md-6">
+                  <td><textarea cols="40" readonly id="id_description" name="description" rows="2"
+                      style="width:300px"> {{qDS.values.0.description}}</textarea>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+        <!---->
+
+      </div>
+
+      {% if submission_id and not submission_closed %}
+        <div class="col-md-12 panel panel-primary">
+          <div class="col-md-12 panel panel-primary">
+            <!--Submit prueba -->
+            <div class="panel-body" id="selection-confirm">
+              <a id='selection-button' href="{% url 'dynadb:close_submission' submission_id %}"
+                style="color:black;font-size:20px" class="btn btn-success btn-lg btn-block has-spinner">
+                <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Confirm Submission</a>
+            </div>
+            <div class="panel-body" id="selection-">
+              <a id='selection-button' href="/dynadb/protein/{{submission_id}}"
+                class="btn btn-success btn-lg btn-block has-spinner">
+                <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Protein Information (Step 1)</a>
+            </div>
+            <div class="panel-body" id="selection-">
+              <a id='selection-button' href="/dynadb/molecule/{{submission_id}}"
+                class="btn btn-success btn-lg btn-block has-spinner">
+                <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Small Molecule Information (Step
+                2)</a>
+            </div>
+            <div class="panel-body" id="selection-">
+              <a id='selection-button' href="/dynadb/model/{{submission_id}}"
+                class="btn btn-success btn-lg btn-block has-spinner">
+                <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Crystalized Components
+                Information (Step 3)</a>
+            </div>
+            <div class="panel-body" id="selection-">
+              <a id='selection-button' href="/dynadb/dynamics/{{submission_id}}"
+                class="btn btn-success btn-lg btn-block has-spinner">
+                <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Dynamics Information (Step 4)</a>
+            </div>
+          </div>
+        </div>
+      {%endif%}
+    </div>
+
+
+  </form>
+</div>
+
+{% endblock content %}
+
+
+{% block addon_js %}
+<script src="{% static 'dynadb/descriptionSquare.js' %}"></script>
+<script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+<script src="{% static 'dynadb/closeSubmission.js' %}"></script>
+
+
+<script>
+  $(document).ready(function () {
+
+    $.fn.set_readonly_color = function () {
+      $(this).css('background-color', '#FFEFD5');
+      return this;
+    }
+
+    $.fn.set_restore_color = function () {
+      $(this).css('background-color', '');
+      return this;
+    }
+
+    $("[readonly]").set_readonly_color();
+    $("#Choose_reused_model").set_readonly_color();
+
+    $(document).on('click', "[id|=show_protmut]", function () {
+      self = $(this);
+      tablemut = $(this).parents("[id|=sform]").find("[id$=mutationtable]");
+      tablemut.toggle();
+    });
+
+    $(document).on('click', "#collapse-PRUEBA2", function () {
+      self = $(this);
+      tablecomp = $(this).parent().siblings("#PRUEBA2");
+      tablecomp.toggle();
+    });
+
+    $(document).on('click', "#collapse-PRUEBA3", function () {
+      self = $(this);
+      tablecomp = $(this).parent().siblings("#PRUEBA3");
+      tablecomp.toggle();
+    });
+
+    $(document).on('click', "#PROTEIN_BUTTON", function () {
+      self = $(this);
+      tablecomp = $(this).siblings("[id|=PROTEIN_BLOCK]");
+      tablecomp.toggle();
+    });
+
+    $(document).on('click', "#SMALL_BUTTON", function () {
+      self = $(this);
+      tablecomp = $(this).siblings("[id|=SMALL_BLOCK]");
+      tablecomp.toggle();
+    });
+
+    $(document).on('click', "#MODEL_BUTTON", function () {
+      self = $(this);
+      tablecomp = $(this).siblings("#MODEL_BLOCK");
+      tablecomp.toggle();
+    });
+
+    $(document).on('click', "#DYNAMICS_BUTTON", function () {
+      self = $(this);
+      tablecomp = $(this).siblings("#DYNAMICS_BLOCK");
+      tablecomp.toggle();
+    });
+  });
+</script>
+
+<!--    $(document).on('click',"#PROTEIN_BUTTON","#SMALL_BUTTON","#MODEL_BUTTON","#DYNAMICS_BUTTON" ,function(){
+    self=$(this);
+    tablecomp=$(this).siblings("#PROTEIN_BLOCK-{{int0}}", "SMALL_BLOCK-{{int0}}", "#MODEL_BLOCK", "DYNAMICS_BLOCK");
+    tablecomp.toggle();
+        });-->
+{% endblock %}

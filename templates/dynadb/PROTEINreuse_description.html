@@ -1,0 +1,40 @@
+<div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">
+    <div class="panel-body">
+        <!--        	<h3 > Simulation Submission<br>Step 1:<br>Protein Information</h3> -->
+        <h3> Reuse Crystal-Derived Assembly </h3>
+        <h3>Step 1:<br>Protein Information</h3>
+    </div>
+</div>
+
+<!-- main description -->
+<div id="square_description" class="col-md-12 panel panel-primary" style="height:300px">
+    <div class="panel-body"
+        style="margin-bottom:5%;margin-top:4%;margin-left:-3%;margin-right:-5%;overflow:auto;height:91%">
+
+        <div style="text-align:center">
+            <h4 style="margin-top:-5%">CHECK THE PROTEIN INFO</h4>
+        </div>
+        <p style="text-align: justify;"> Please, note that this form shows the description of the proteins involved in
+            the "crystal" you have selected to be reused. The information contained here must not be modified. </p>
+        <p style="text-align: justify;"> Confirm that the set of proteins involved in the chosen complex is exactly that
+            one you have used in your simulations. When mutant proteins appear in the form, pay special attention to the
+            "Protein Mutations" sections corresponding to those mutants!!! Mutations in your simulation must exactly
+            match the ones in this form for each mutated protein.</p>
+        <p style="text-align: justify;margin-bottom:-5%;">If one of the proteins in your simulation is not present in
+            this form, please click the ‘New Submission’ button in the initial ‘Simulation Submission’ page and enter
+            your simulations as a new system from scratch.</p>
+
+    </div>
+</div>
+
+<!-- link to docs -->
+<div class="col-md-12 panel panel-primary">
+    <div class="panel-body">
+        <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+        </p>
+    </div>
+</div>
+
+
+
+{% include "dynadb/REUSE_CAPTION.html" with prot=True %}

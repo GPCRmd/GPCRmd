@@ -1,0 +1,45 @@
+<div class="col-md-12 regPanel panel panel-primary">
+    <div class="panel-body">
+        <h2 class="panel-heading"> Simulation Submission</h2>
+          <h3 class="panel-heading">Step 3:<br>Crystalized Components Information</h3>
+    </div>
+</div>
+
+<!-- main description -->
+<div id="square_description" class="col-md-12 panel panel-primary" style="height:300px">
+    <div class="panel-body"
+        style="margin-bottom:5%;margin-top:4%;margin-left:-3%;margin-right:-5%;overflow:auto;height:91%">
+        <div style="text-align:center">
+            <h4 class="orangeTit">Fill In The Crystalized Components Form</h4>
+        </div>
+        <p style="text-align: justify;">(<b>A</b>) Fill in the form with general information about the crystalized part
+            of the simulated system.</p>
+        <p style="text-align: justify;">(<b>B</b>) Fill the "Curated protein data". As the coordinates of a protein may
+            have different sources (X-ray, homology modeling...), the table must be filled in a protein segment-wise
+            fashion. A segment stands for a continuum fragment of the protein whose coordinates come from the same
+            source. In cases where the coordinates of the whole protein come from the same source, only one row in the
+            table is needed for that protein. Importantly, information about the segments of all the proteins submitted
+            in the step 1 must be provided. Every segment must be labeled with the "<b>Prot #</b>" number of the protein
+            to which it belongs (the "<b>Submitted proteins summary</b>" table shows the "<b>Prot #</b>" number for each
+            submitted protein). In order to assign correctly the canonical GPCR numbering to your simulation system,
+            please indicate the starting ("<b>From res</b>" field) and ending ("<b> To res</b>") residue numbers for
+            each protein segment. After clicking the "Autocomplete resid" button, the Uniprot numbering will be later
+            automatically assigned. In addition, indicate the source for coordinates of each crystalized or modeled
+            protein segment, e.g. 'threading' for a modeled loop. Note that the "<b>PDB ID</b>" field in the table must
+            be filled when the segment source is "X-ray" or "NMR".</p>
+
+        <p style="text-align: justify;margin-bottom:-5%;">(<b>C</b>) Indicate the "<b>Resname</b>" in the retrieved list
+            of co-crystalized small molecules. Extra rows can be added to the table after clicking the "<b>+ Add
+                molecule</b>" if molecules with more than one "<b>Resname</b>" exist in the set of crystalized
+            molecules. Then, click the "<b>Validate</b>" button and the "<b>Num of mol</b>" will be automatically
+            filled.</p>
+    </div>
+</div>
+
+<!-- link to docs -->
+<div class="col-md-12 panel panel-primary">
+    <div class="panel-body">
+        <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+        </p>
+    </div>
+</div>

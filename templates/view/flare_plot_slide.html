@@ -1,0 +1,97 @@
+<html lang="en-us">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+  <title>Flare-plot</title>
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block addon_css %}
+    <style type="text/css">
+    #content{
+        width:100%;
+    }
+    
+    #flareDiv div{
+        position: relative;
+    }
+    #sliderDiv {
+        height: 30px;
+        width: 600px;
+        position: relative;
+        margin-top: 20px;
+    }
+    #sliderDiv > div {
+        width: 600px;
+    }
+    
+    </style>
+{% endblock %}
+</head>
+<body>
+{% block content %} 
+{% csrf_token %}
+<section class="main-head">
+   <h1 class="main-title"  style="background-color:#3278B4;border-radius:5px;color:white;padding-top:15px;padding-bottom:15px;margin-top:0;margin-bottom:10px;text-align:center"><b>Flare plot</b> - <span style="font-size:24px">Dynamic interaction network of Hydrogen bonds (HB)</span></h1>
+   <h1 id="info" data-json_path={{json_path}} style="background-color:#F3F3F3; border-radius:2px;font-size:18px;text-align:center;padding-top:10px;padding-bottom:10px;">{{prot_names}} ({{traj_name}})</h1>
+   <a id="to_viewer" class="btn btn-info btn-xs" href="{% url 'view:index' dyn_id=dyn_id %}" >Go back to viewer</a>
+</section>
+
+<section class="main-content">
+
+
+  <center>
+    <div id="flareDiv"></div>
+    <div id="sliderDiv" style="width:600px"></div>
+    
+    <div class="buttonBox" style="padding:10 0 100 0">
+      <button class="summaryButton btn btn-primary" type="button" style="margin:auto">
+        Summarize
+      </button>
+    </div>
+  </center>
+
+
+
+</section>
+{% endblock content %} 
+{% block addon_js %} 
+    <link rel="stylesheet" type="text/css" href="{% static 'view/fplot2/docs/css/flareplot-main.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'view/fplot2/docs/css/flareplot-rangeslider.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'view/fplot2/docs/css/flareplot-selectors.css' %}" />
+    
+<!--    <script src="{% static 'view/fplot2/d3.v3.min.js' %}"></script>-->
+    <script src="{% static 'view/fplot2/docs/vendor/d3/d3.v3.min.js' %}"></script>
+    <script src="{% static 'view/fplot2/docs/js/flareplot-main.js' %}"></script>
+    <script src="{% static 'view/fplot2/docs/js/flareplot-selectors.js' %}"></script>
+    <script src="{% static 'view/fplot2/docs/js/flareplot-rangeslider.js' %}"></script>
+    <script>
+        var json_path =$("#info").data("json_path");   
+        var flareplot;
+        d3.text(json_path, function(json_text){
+            flareplot = createFlareplot(600, json_text, "#flareDiv");
+            slider = createFlareplotSlider(flareplot, "#sliderDiv");
+/*            var numfr = flareplot.getNumFrames();
+
+            $(".summaryButton").click(function(){            
+                if ($(this).hasClass("active")){
+                    $(this).removeClass("active");
+                    flareplot.setFrame(0);
+                } else{
+                    $(this).addClass("active");
+                    flareplot.framesSum(0, numfr);
+                }
+            });
+            */
+        });
+       
+        
+        
+    </script>
+{% endblock %}
+</body>
+</html>
+

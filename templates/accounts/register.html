@@ -1,0 +1,135 @@
+<head>
+  <style>
+    .long input {
+      width: 100%;
+    }
+  </style>
+</head>
+{% extends "home/base.html" %}
+{% load static %}
+
+
+{% block content %}
+<div class="regForm">
+  <form class="row" action="{% url 'accounts:register' %}" method="post">{% csrf_token %}
+    <!-- description column -->
+    <div class="col-md-4 col-md-offset-1">
+      <div class="col-md-12 regPanel panel panel-primary">
+        <div class=" panel-body">
+          <h2 class="panel-heading">Simulation Submission</h2>
+        </div>
+      </div>
+
+      <!-- main description -->
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <a class="textlink" href="/accounts/logout">Log out</a></li>
+          <div class="newAcc">
+            <h3 class="orangeTit">Welcome admin {{ username }}</h3>
+            <h4 class="orangeTit">Create a new account</h4>
+          </div>
+          <p style="text-align: justify;">Fill in the form to create a new account.</p>
+
+          {% comment %} <p style="text-align: justify;"> As a registered user, you will be able to access the GPCRmd Simulation
+            Submission tool.</p>
+
+          <p style="text-align: justify;">Any time later, you will be able to modify all submitted personal data.</p>
+
+          <p style="text-align: justify;">
+            The personal data provided will be stored in GPCR Drug Discovery group, Research Programme on Biomedical
+            Informatics (GRIB) at Universitat Pompeu Fabra (UPF), for the purpose of performing the submission of
+            molecular dynamics data into the database and verifying the corresponding citations associated to the
+            information stored in the database. Your username and working place affiliation data will be publicly
+            available only after publication of your submissions and will be archived for bibliographical reasons. Email
+            and passwords will not be disclosed to third parties unless required by law. The responsible for this personal
+            data is Jana Selent, head of the GPCR Drug Discovery group.<br> Rights to access, correct, cancel or object to
+            data in these files may be exercised by applying in writing, including a photocopy of your identity card,
+            passport, or equivalent to: <br>Parc de Recerca Biomèdica de Barcelona (PRBB), <br>Dr. Aiguader, 88 <br> 08003
+            Barcelona (Spain).
+          </p> {% endcomment %}
+
+        </div>
+      </div>
+
+      <!-- link to docs -->
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <p>For more information on this form, see the <a class="textlink" alt="Work in progress.">docs</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!--   <body> -->
+    <div id="pprotform" class="col-md-6">
+      <div id="protform" class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+
+          <div style="text-align:center">
+            <h3 class="orangeTit"><br>User Registration</h3>
+          </div>
+          <!-- modifica a partir de aqui -->
+          <div style="margin:10px">
+            
+            <div style="margin-bottom:8px">
+              {% for field in form %}
+              <div class="row">
+                <div class="col-md-3 col-md-offset-1" style="min-width:180px;">
+                  {{ field.label_tag }}
+                </div>
+                <div class="col-md-6"><span class="long"> {{field}}</span>
+                </div>
+                <div class="col-md-2">
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-11 col-md-offset-1" style="padding-left:20px;margin-bottom:8px">
+                  {% if field.errors %}
+                  <div>
+                    {% for err in field.errors %}
+                      <p style="margin-bottom:px" class=text-danger>{{ err }}</p>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+
+              <div class=row>
+                <div class="col-md-11 col-md-offset-1" style="padding-left:20px;">
+                  {% if form.non_field_errors %}
+                    <div>
+                      {% for err in form.non_field_errors %}
+                        <p style="margin-bottom:px" class=text-danger>{{ err }}</p>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <!-- hasta aqui -->
+
+            <div class="row">
+              <div class="col-md-3 col-md-offset-1" style="margin-bottom:5px;">
+                <input class="submitBtn" type="submit" value="Submit"  />
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+
+
+{% endblock content %}
+
+
+{% block addon_js %}
+<script type="text/javascript">
+  $('.row input').attr('required', true)
+</script>
+
+{% endblock %}

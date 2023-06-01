@@ -1,0 +1,721 @@
+<head>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="https://www.google.com/jsapi"></script>
+ 
+  <script>document.domain = document.domain;</script>
+  {% extends "home/base.html" %}
+  {% load static %}
+  {% block addon_css %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  {% endblock %}
+</head>
+
+<body>
+
+  {% block content %}
+
+  <!-- Banner -->
+  <div class="showcase">
+    <img class="bg-image" src="{% static 'home/images/canvas9.png' %}">
+
+    <div class="vert_center" style="height:500px;margin:auto;">
+      <h1 id="lema" class="lineUp">The GPCR molecular dynamics database</h1>
+      <h2 id="sublema">visualize · inspect · analyze</h2>
+      <div class="row form-outline searchBarDiv">
+        <input type="search" id="searchInput" class="col-xs-3 col-xs-offset-4 searchBar"
+          placeholder="Search your structure" aria-label="Search" />
+        <button id="search_button" type="submit" class="col-xs-1 searchBtn btn btn-primary btn-sm"
+          onclick="search_item(this)">Search</button>
+      </div>
+      <p class="searchExamples">Examples: <a id="5-hydroxytryptamine receptor 1b" class="aExamples"
+          onclick="search_example(this)">5-hydroxytryptamine receptor 1b</a>, <a id="5ht1b_human" class="aExamples"
+          onclick="search_example(this)">5ht1b_human</a>, <a id="P28222" class="aExamples"
+          onclick="search_example(this)">P28222</a>, <a id="4IAQ" class="aExamples"
+          onclick="search_example(this)">4IAQ</a></p>
+    </div>
+  </div>
+
+  <!-- Presentation text -->
+  <div class="subanner jumbotron jumbotron-fluid">
+    <div id="mySubtitle" class="row">
+      <p id="subtitle" class="subtitle">Welcome to the online platform with web-based visualization capabilities and a
+        comprehensive analysis toolbox that allows visualizing, inspecting, and analysing GPCR molecular dynamics.</p>
+    </div>
+  </div>
+
+  <!-- Tools -->
+  <div id="tools" class="jumbotron jumbotron-fluid">
+
+    <!-- First row -->
+    <div id="firstRowTools" class="toolRow row ">
+      {% comment %} <div class="tool col-xs-6 col-md-3 ">
+        <button id="analysis_ac_pan-button" class="thumbnail toolBox toolBox_hover active" onclick="openSearch1(this)"> 
+          <img class="toolImg" src="{% static 'home/images/tools/ac.png' %}" alt="AllostericCommunication">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Allosteric<br>communication</h3>
+          </div>
+        </button>
+      </div> {% endcomment %}
+
+      <div class="tool col-xs-6 col-md-3">
+        <button id="analysis_cs_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/cs.png' %}" alt="ChemicalShift">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Chemical<br>shift (dev)</h3>
+          </div>
+        </button>
+      </div>
+
+      <div class="tool col-xs-6 col-md-3 ">
+        <button id="analysis_pockets_pan" class="thumbnail toolBox toolBox_hover active" onclick="openSearch1(this)"> 
+          <img class="toolImg" src="{% static 'home/images/tools/po.png' %}" alt="Pockets">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Pockets</h3>
+          </div>
+        </button>
+      </div>
+
+      <div class="tool col-xs-6 col-md-3">
+        <button id="analysis_variants_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/gv.png' %}" alt="GeneticVariants">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Genetic<br>variants</h3>
+            </viv>
+        </button>
+      </div>
+
+      <div class="tool col-xs-6 col-md-3">
+        <button id="analysis_tunnels_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/tc.png' %}" alt="TunnelsChannels">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Tunnels and<br>channels</h3>
+          </div>
+        </button>
+      </div>
+
+      <div class="tool col-xs-6 col-md-3">
+        <button id="analysis_pharmacophores_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/dp.png' %}" alt="Pharmacophores">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Dynamic<br>pharmacophores</h3>
+          </div>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Search bar1  -->
+    <div id="searchTool1" class="row divHidden" >
+      <div id="searchToolDiv1" class="col-md-12 searchTool">
+        <div class="row">
+          <div class="col-md-1 col-md-offset-11">
+            <span id="searchTool1_close" onclick=closeSrch(this) class="closeSearch glyphicon glyphicon-remove"></span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-10 col-md-offset-1 searchBarToolDiv">
+            <div class="panel panel-primary">
+              <h2 class="panel-heading">Select a simulation to see the tool</h2>
+              <p class="warningText">Please note that not all the simulations have all the tools avilable. If you want to 
+                view a simulation with all tools check this example:<br> 
+                <a class="textlink" href="/view/36/"> Adenosine receptor A2a in complex with xanthine amine 
+                congener (3REY)</a> </p>
+              <div class="modulateHeigh search-tabs tab-content restheight100">
+                <div id="searchtable" class="height100 tab-pane fade in active test123" style="margin:0px 15px;height: 100%;">
+                  <center class="height100" style="height: 100%">
+      
+                    <span id="loading">
+                      <center><img src="{% static 'view/images/loading-gear.gif' %}"
+                          style="width:50px;height:50px;margin-top:210px;position:absolute;z-index:10;margin-left:-25px" />
+                      </center>
+                    </span>
+      
+                    <iframe class="height100" id="searchIframe1" style="border:none" height=100% width="100%"
+                      src=""> </iframe>
+      
+                  </center>
+                </div>      
+              </div>
+      
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Second row -->
+    <div class="toolRow row">
+      <div class="tool col-xs-6 col-md-3">
+        <button id="analysis_watermap_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/wd.png' %}" alt="WaterVolume">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Water volume<br>distribution</h3>
+          </div>
+        </button>
+      </div>
+
+      <div class="tool col-xs-6 col-md-3">
+        <button id="analysis_fplot_pan" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/in.png' %}" alt="Interaction network">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Interaction<br>network</h3>
+          </div>
+        </button>
+      </div>
+
+      <div class="tool col-xs-6 col-md-3">
+        <button id="analysis_rmsd_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/rmsd.png' %}" alt="RMSD">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">RMSD</h3>
+          </div>
+        </button>
+      </div>
+
+      <div class="tool col-xs-6 col-md-3">
+        <button id="interaction_freqs_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/if.png' %}" alt="InteractionFrequencies">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Interaction<br>frequencies</h3>
+          </div>
+        </button>
+      </div>
+
+      <div class="tool col-xs-6 col-md-3">
+        <button id="analysis_dist_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/dist.png' %}" alt="Distance">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Distance</h3>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workbench -->
+  <div class="wb jumbotron jumbotron-fluid">
+    <div class="row">
+      <div class="wbench">
+        <div class="workImageDiv col-xs-12 col-md-5 col-md-offset-1 vcenter">
+          <a href="/gpcrtree/"><img class="workImage" src="{% static 'home/images/famTree_white.png' %}"></a>
+        </div>
+        <div class="workTextDiv col-xs-12 col-md-5 vcenter">
+          <a href="/gpcrtree/">
+            <h2 class="jumbotronTitle workTitle display-4">Check the available simulations</h2>
+          </a>
+          <p class="workText lead">Look into the family tree to find any simulated structure.
+            The family tree helps you find the GPCR you are looking for. The GPCRs are classified by class
+            and family. Finally, the different PDBs corresponding to each protein are displayed. Put your
+            mouse in the PDB you are interested in and find out the different simulations.<br>
+            There are more than 500 simulations available!
+          </p>
+        </div>
+      </div>
+    </div>
+  </div> 
+
+  {% comment %} <!-- Family tree -->
+  <div class="ft jumbotron jumbotron-fluid">
+    <div class="row">
+      <div class ="famtree">
+        <div class="famTextDiv col-xs-12 col-md-6 col-md-offset-1 vcenter">
+          <a href="/gpcrtree/">
+            <h2 class="jumbotronTitle famTitle display-4">Check the available simulations</h2>
+          </a>
+          <p class="famText lead ">Look into the family tree to find any simulated structure.
+            The family tree helps you find the GPCR you are looking for. The GPCRs are classified by class
+            and family. Finally, the different PDBs corresponding to each protein are displayed. Put your
+            mouse in the PDB you are interested in and find out the different simulations.<br>
+            There are more than 500 simulations available!
+          </p>
+        </div>
+        <div class="famImageDiv col-xs-12 col-md-4 vcenter">
+          <a href="/gpcrtree/"><img class="famImage" src="{% static 'home/images/famTree.png' %}"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workbench -->
+  <div class="wb jumbotron jumbotron-fluid">
+    <div class="row">
+      <div class="wbench">
+        <div class="workImageDiv col-xs-12 col-md-5 col-md-offset-1 vcenter">
+          <a href="/view/36"><img class="workImage" src="{% static 'home/images/workbench.png' %}"></a>
+        </div>
+        <div class="workTextDiv col-xs-12 col-md-5 vcenter">
+          <a href="/view/36">
+            <h2 class="jumbotronTitle workTitle display-4">Quickly analyse <br>simulations</h2>
+          </a>
+          <p class="workText lead">Visualize and inspect the GPCR molecular simulations in the workbench.
+            The simulation is displayed in the left panel with different selection options available.
+            In the right panel, you can find all the different tools that can be instantaneously applied
+            into the simulation.<br>
+            Apply all the tools available in the workbench to analyze your simulation in depth!
+          </p>
+        </div>
+      </div>
+    </div>
+  </div> {% endcomment %}
+
+  <!-- MetaAnalysis -->
+  <div class="ft jumbotron jumbotron-fluid">
+    <div class="row">
+      <div class="metaAnal">
+        <div class="famTextDiv col-xs-12 col-md-6 col-md-offset-1 vcenter">
+          <a href="/contmaps/?itype=hb&cluster=3&prtn=prt&rev=norev&stnd=cmpl">
+            <h2 class="jumbotronTitle famTitle display-4">Receptor meta-analysis</h2>
+          </a>
+          <p class="famText lead">Explore the receptor meta-analysis tool.
+            Visualize the contact frequencies of all receptors in the database in a heatmap. You can select 
+            different simulations, interaction types, and cluster the receptors. Additionally, you can 
+            visualize the most frequent interactions of each cluster using different networks.<br>
+            Check the tool!
+          </p>
+        </div>
+        <div class="famImageDiv col-xs-12 col-md-4 vcenter">
+          <a href="/contmaps/?itype=hb&cluster=3&prtn=prt&rev=norev&stnd=cmpl"><img class="famImage"
+              src="{% static 'home/images/metaAnalysis_.png' %}"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- News -->
+  <div class="wb jumbotron jumbotron-fluid">
+    <div class="row">
+      <a href="/news/">
+        <h2 class="jumbotronTitle newsTitle display-4">Check out the latest news of the GPCR community</h2>
+      </a>
+      <div id="moreNews" style="display:block;" class="col-xs-2 col-xs-offset-5 newsbuttonDiv">
+        <a class="buttonNews" onclick="showDiv()">Show more</a>
+      </div>
+
+      <!-- Three latest news -->
+      <div id="newsSection" style="display:none;" class="newsblock col-xs-12">
+        <div class="col-xs-12 col-md-4">
+          <div class="subPanelLeft panel panel-primary">
+            <div class="news">
+              <h2 class="newTitle">8th and Final ERNEST Meeting to Take Place in Crete with Participation from GPCR Drug Discovery Group</h2>
+              <p>The 8th and final meeting of the European Research 
+                Network on Signal Transduction (<a class="textlink" href="https://ernest-gpcr.eu/8th-and-final-ernest-meeting-may-3-7-2023-in-crete/"
+                target="_blank">ERNEST</a>) is set to take place from May 3-7, 2023 in Crete. 
+                This event promises to be an exciting gathering of scientists from around the world who are 
+                interested in the latest developments in signal transduction research. Among the attendees 
+                will be several members of the G protein-coupled receptor (GPCR) Drug Discovery Group from 
+                the <a class="textlink" href="http://grib.imim.es/" target="_blank">GRIB</a> in Barcelona...<a id="news1" class="textlink" onclick="go_to_news(this)">Show all</a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xs-12 col-md-4">
+          <div class="subPanelLeft panel panel-primary">
+            <div class="news">
+              <a href="/newsLink1/">
+                <h2 class="newTitle">Revolutionary Alpha Fold Algorithm Unveiled: A Game-Changer for Protein Folding and Drug Discovery</h2>
+              </a>
+              <p>In a groundbreaking new publication, researchers have unveiled 
+                the latest advancements in the field of protein folding. The publication, titled "<a class="textlink"
+                 href="https://www.nature.com/articles/s41586-021-03819-2" target="_blank">Alpha Fold: a 
+                solution to a 50-year-old grand challenge in biology,</a>" details the creation of a powerful algorithm 
+                that can predict the three-dimensional structures of proteins with unprecedented accuracy. This 
+                breakthrough has the potential to revolutionize drug discovery, as it provides a more efficient way 
+                to design and develop new drugs that can target specific proteins...<a id="news2" class="textlink" onclick="go_to_news(this)">Show all</a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xs-12 col-md-4">
+          <div class="subPanelLeft panel panel-primary">
+            <div class="news">
+              <a href="/newsLink1/">
+                <h2 class="newTitle">Second simulation round</h2>
+              </a>
+              <p>After our first successful <a class="textlink"
+                href="https://www.nature.com/articles/s41592-020-0884-y" target="_blank">publication in Nature
+                Methods</a>, we are back to increase the data coverage of GPCRmd in a 2nd simulation 
+                round...<a id="news3" class="textlink" onclick="go_to_news(this)">Show all</a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div id="goToNews" style="display:block;" class="col-xs-2 col-xs-offset-5 newsbuttonDiv">
+          <a href="/news/" class="buttonNews">Show all</a>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Datasets -->
+  <div class="ds ft jumbotron jumbotron-fluid">
+    <div class="row">
+      <div class="dsets">
+        <div class="famTextDiv col-xs-12 col-md-6 col-md-offset-1 vcenter">
+          <a href="/dynadb/datasets/">
+            <h2 class="jumbotronTitle famTitle display-4">Collaborative database</h2>
+          </a>
+          <p class="famText lead">Our simulations have been computed and curated by our research team together
+            with the collaboration of worldwide users that upload their own simulations.<br>
+            Take a look at our <a class="jumbotronTextLink" href="/dynadb/datasets/">dataset</a> or <a class="jumbotronTextLink"
+              href="/accounts/memberpage/">upload your own simulation</a>!</p>
+        </div>
+
+        <div class="col-xs-12 col-md-4 vcenter">
+          <div class="panel panel-primary text_col">
+            <h3 class="panel-heading">Statistics</h3>
+            <div class="panel-body">
+
+              <div id="statsCarousel" class="carousel slide" data-interval="false" data-ride="carousel">
+
+                <!-- Wrapper for slides -->
+                <div class="carousel-inner">
+                  <div class="item active" style="padding:15px;">
+                    <h4 class="extrainfo_title">Simulations in GPCRmd</h4>
+                    <div style="overflow-x: auto;overflow-y: hidden">
+                      {% comment %} <div id="stats_subm" data-subm_data="{{subm_data}}" style="width: 100%; height: 100%;margin:auto;">
+                      </div> {% endcomment %}
+                      <div id="stats_subm" data-subm_data='[["Mar 2017", 3, "3", 3, "3"], ["Apr 2017", 4, "4", 4, "4"], ["May 2017", 6, "6", 6, "6"], ["Jun 2017", 6, "", 6, ""], ["Jul 2017", 6, "", 6, ""], ["Aug 2017", 6, "", 6, ""], ["Sep 2017", 6, "", 6, ""], ["Oct 2017", 6, "", 6, ""], ["Nov 2017", 6, "", 6, ""], ["Dec 2017", 6, "", 6, ""], ["Jan 2018", 6, "", 6, ""], ["Feb 2018", 6, "", 6, ""], ["Mar 2018", 6, "", 6, ""], ["Apr 2018", 6, "", 6, ""], ["May 2018", 9, "9", 15, "15"], ["Jun 2018", 47, "47", 129, "129"], ["Jul 2018", 50, "50", 138, "138"], ["Aug 2018", 50, "", 138, ""], ["Sep 2018", 50, "", 138, ""], ["Oct 2018", 112, "112", 324, "324"], ["Nov 2018", 115, "115", 333, "333"], ["Dec 2018", 161, "161", 471, "471"], ["Jan 2019", 188, "188", 552, "552"], ["Feb 2019", 190, "190", 558, "558"], ["Mar 2019", 191, "191", 561, "561"], ["Apr 2019", 191, "", 561, ""], ["May 2019", 191, "", 561, ""], ["Jun 2019", 191, "", 561, ""], ["Jul 2019", 191, "", 561, ""], ["Aug 2019", 191, "", 561, ""], ["Sep 2019", 191, "", 561, ""], ["Oct 2019", 191, "", 561, ""], ["Nov 2019", 191, "", 561, ""], ["Dec 2019", 195, "195", 570, "570"], ["Jan 2020", 202, "202", 586, "586"], ["Feb 2020", 202, "", 586, ""], ["Mar 2020", 202, "", 586, ""], ["Apr 2020", 202, "", 586, ""], ["May 2020", 202, "", 586, ""], ["Jun 2020", 202, "", 586, ""], ["Jul 2020", 202, "", 586, ""], ["Aug 2020", 202, "", 586, ""], ["Sep 2020", 202, "", 586, ""], ["Oct 2020", 207, "207", 591, "591"], ["Nov 2020", 208, "208", 592, "592"], ["Dec 2020", 208, "", 592, ""], ["Jan 2021", 208, "", 592, ""], ["Feb 2021", 208, "", 592, ""], ["Mar 2021", 211, "211", 595, "595"], ["Apr 2021", 211, "", 595, ""], ["May 2021", 211, "", 595, ""], ["Jun 2021", 222, "222", 632, "632"], ["Jul 2021", 222, "", 632, ""], ["Aug 2021", 222, "", 632, ""], ["Sep 2021", 222, "", 632, ""], ["Oct 2021", 222, "", 632, ""], ["Nov 2021", 222, "", 632, ""], ["Dec 2021", 222, "", 632, ""], ["Jan 2022", 554, "554", 1628, "1628"], ["Feb 2022", 586, "586", 1724, "1724"], ["Mar 2022", 587, "587", 1727, "1727"], ["Apr 2022", 588, "588", 1730, "1730"], ["May 2022", 588, "", 1730, ""], ["Jun 2022", 588, "", 1730, ""], ["Jul 2022", 589, "589", 1731, "1731"], ["Aug 2022", 589, "", 1731, ""], ["Sep 2022", 589, "", 1731, ""], ["Oct 2022", 589, "", 1731, ""], ["Nov 2022", 592, "592", 1734, "1734"], ["Dec 2022", 592, "", 1734, ""], ["Jan 2023", 595, "595", 1737, "1737"]]' style="width: 100%; height: 100%;margin:auto;">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="item" style="padding:15px">
+                    <h4 class="extrainfo_title">Simulated GPCR families with known structure</h4>
+                    <div style="overflow-x: auto;overflow-y: hidden">
+                      <div id="fam_stats" style="width: 100%;margin-left: 65px;position: absolute" 
+                      data-fam_stats="{{fam_stats}}">
+                      </div>
+                      <div class="centerLabel">{{total_fam_stats}}</div>
+                    </div>
+                  </div>
+
+                  <div class="item" style="padding:15px">
+                    <h4 class="extrainfo_title">Simulated GPCR subtypes with known structure</h4>
+                    <div style="overflow-x: auto;overflow-y: hidden">
+                      <div id="subtype_stats" style="width: 100%;margin-left: 65px;position: absolute"
+                        data-subtype_stats="{{subtype_stats}}"></div>
+                      <div class="centerLabel">{{total_subtype_stats}}</div>
+                    </div>
+                  </div>
+
+                  <div class="item" style="padding:15px">
+                    <h4 class="extrainfo_title">Simulated PDB structures with known structure</h4>
+                    <div style="overflow-x: auto;overflow-y: hidden">
+                      <div id="pdb_stats" style="width: 100%;margin-left: 65px;position: absolute" 
+                        data-pdb_stats="{{pdb_stats}}"></div>
+                      <div class="centerLabel">{{total_pdb_stats}}</div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Left and right controls -->
+                <a class="left carousel-control" href="#statsCarousel" data-slide="prev">
+                  <span class="glyphicon glyphicon-chevron-left"></span>
+                  <span class="sr-only">Previous</span>
+                </a>
+                <a class="right carousel-control" href="#statsCarousel" data-slide="next">
+                  <span class="glyphicon glyphicon-chevron-right"></span>
+                  <span class="sr-only">Next</span>
+                </a>
+
+                <!-- Indicators -->
+                <ol id="stats" class="carousel-indicators" style="position: relative;margin-bottom:0;">
+                  <li data-target="#statsCarousel" data-slide-to="0" class="active"></li>
+                  <li data-target="#statsCarousel" data-slide-to="1"></li>
+                  <li data-target="#statsCarousel" data-slide-to="2"></li>
+                  <li data-target="#statsCarousel" data-slide-to="3"></li>
+                </ol>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invisible FamTree to correctly display statistics -->
+    <div class="col-xs-6 col-md-6 plot_section_col" id="plot_col" style="display:none;">
+      <div style="display: none;">
+        <div style="text-align:center;margin:0 auto 10px auto">
+          <h2>3D-GPCRome tree</h2>
+          <p>Click on a GPCR structure (PDB id) to access the MD simulations*</p>
+          <div class="">
+            <a href="https://youtu.be/sNQNWcBhIyg" class="btn btn-default btn-sm howtobtn" target="_blank" role="button"
+              style="">How to<br>use it<br><span class="glyphicon glyphicon-play" style="font-size:14px"></span></a>
+          </div>
+        </div>
+        <div id="chart" data-chart_data="{{tree_data}}" style="margin:auto;">
+          <!-- width: 826px; height: 826px;-->
+
+        </div>
+      </div>
+      <div class="extrainfo_section">
+        <div class="extrainfo_col">
+          <div class="panel-body">
+            <div id="statsCarousel" class="carousel slide" data-interval="false" data-ride="carousel"
+              style="height:100%">
+              <!-- Wrapper for slides -->
+              <div class="carousel-inner">
+                <div class="item active" style="padding:15px;width: 100%; height: 100%;">
+                  <h4 class="extrainfo_title">Simulations in GPCRmd</h4>
+                  <div style="overflow-x: auto;overflow-y: hidden; width: 100%; height: 100%;">
+                    <div id="stats_subm" data-subm_data="{{subm_data}}" style="width: 100%; height: 100%;margin:auto;">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="item" style="padding:15px">
+                  <h4 class="extrainfo_title">Simulated GPCR families</h4>
+                  <p>Simulated GPCR families with known structure.*</p>
+                  <div style="overflow-x: auto;overflow-y: hidden; width: 100%; height: 100%;">
+                    <div id="fam_stats" 
+                    data-fam_stats="{{fam_stats}}" data-total_fam_stats="{{total_fam_stats}}">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="item" style="padding:15px">
+                  <h4 class="extrainfo_title">Simulated GPCR subtypes</h4>
+                  <p>Simulated GPCR subtypes with known structure.*</p>
+                  <div style="overflow-x: auto;overflow-y: hidden; width: 100%; height: 100%;">
+                    <div id="subtype_stats" 
+                      data-subtype_stats="{{subtype_stats}}" data-total_subtype_stats="{{total_subtype_stats}}"></div>
+                  </div>
+                </div>
+
+                <div class="item" style="padding:15px">
+                  <h4 class="extrainfo_title">Simulated PDBO structures</h4>
+                  <p>Simulated GPCRs with known structure.*</p>
+                  <div style="overflow-x: auto;overflow-y: hidden; width: 100%; height: 100%;">
+                    <div id="pdb_stats" 
+                    data-total_pdbs_stats="{{total_pdbs_stats}}" data-pdb_stats="{{pdb_stats}}" >
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <!-- Left and right controls -->
+              <a class="left carousel-control" href="#statsCarousel" data-slide="prev">
+                <span class="glyphicon glyphicon-chevron-left"></span>
+                <span class="sr-only">Previous</span>
+              </a>
+              <a class="right carousel-control" href="#statsCarousel" data-slide="next">
+                <span class="glyphicon glyphicon-chevron-right"></span>
+                <span class="sr-only">Next</span>
+              </a>
+              <!-- Indicators -->
+              <ol class="carousel-indicators" style="position: relative;margin-bottom:0;">
+                <li data-target="#statsCarousel" data-slide-to="0" class="active"></li>
+                <li data-target="#statsCarousel" data-slide-to="1"></li>
+                <li data-target="#statsCarousel" data-slide-to="2"></li>
+                <li data-target="#statsCarousel" data-slide-to="3"></li>
+              </ol>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  {% endblock content %}
+
+
+  {% block addon_js %}
+  <!-- Open search bar after click on tool button -->
+  <script>
+    function openSearch1(button) {
+      // Check if it other tool is selected
+      var isToolSelected = document.getElementsByClassName('toolActive');
+      if (isToolSelected.length == 0) {// no other tool is selected
+        // Show searchbar
+      document.getElementById("searchTool1").classList.remove("divHidden");
+      document.getElementById("searchToolDiv1").classList.add("topBottom");
+      document.getElementById("searchToolDiv1").classList.add("addShadow");
+        // Delete the hover effect in the rest of the tools divs
+        var myTools = document.getElementsByClassName('toolBox');
+        for (let i = 0; i < myTools.length; i++) {
+          if (myTools[i].getAttribute('id') != button.getAttribute('id')){
+            myTools[i].classList.remove('toolBox_hover');
+            myTools[i].classList.add('toolBox_hover_dis');
+      }
+        }
+        // Delete the hover effect from all the tool titles
+        var myToolsTitle = document.getElementsByClassName('toolTitle');
+        for (let i = 0; i < myToolsTitle.length; i++) {
+          myToolsTitle[i].classList.remove('toolTitle_hover');
+        }
+
+        // Store the name of the tool in the iframe URL
+    myButton=button.getAttribute('id');
+    document.getElementById(myButton).classList.add("toolActive");
+    tool=myButton.split('-')
+        document.getElementById('searchIframe1').src="/dynadb/table_reduced/?"+tool[0]
+      }
+    }
+</script>
+    
+  
+    
+  <!-- Close search bar -->
+  <script>
+    function closeSrch (spanValue) {//searchTool1_close
+
+      myId=spanValue.getAttribute('id');
+      divIdList=myId.split('_')//searchTool1
+      divId=divIdList[0]
+      divIdDiv=divId+'Div'//searchTool1Div
+      document.getElementById(divId).classList.add("divHidden");
+
+      myTool= document.getElementsByClassName('toolActive')[0].id
+      document.getElementById(myTool).classList.remove("toolActive");
+      
+      // Add hover classes in tool titles and divs
+      // Add the hover effect in the rest of the tools divs
+      var elems = document.querySelectorAll(".toolBox.toolBox_hover_dis");
+      [].forEach.call(elems, function(el) {
+          el.classList.remove("toolBox_hover_dis");
+          el.classList.add("toolBox_hover");
+      });
+      // Add the hover effect from all the tool titles
+      var myToolsTitle = document.getElementsByClassName('toolTitle');
+        for (let i = 0; i < myToolsTitle.length; i++) {
+          myToolsTitle[i].classList.add('toolTitle_hover');
+        }
+      
+    }      
+  </script>
+
+
+  <!--<script src="https://cdn.jsdelivr.net/npm/pdfkit@0.10.0/js/pdfkit.standalone.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/svg-to-pdfkit@0.1.8/source.js"></script>-->
+
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <!--<script type="module" src="{% static 'home/js/gpcrmd_homepage.js' %}"></script>-->
+  <script src="{% static 'home/js/gpcrmd_homepage.js' %}"></script>
+
+  <!-- Big menu in the homepage -->
+  <script>
+    $(document).ready(function () {
+      document.getElementById("topmenu").style.height = "110px";
+      document.getElementById("logo").style.height = "81px";
+      document.getElementById("navbar").style.marginTop = "1%";
+    });
+  </script>
+
+  <!-- Smaller topmenu when scrolling down -->
+  <script>
+    window.onscroll = function () { scrollFunction() };
+    function scrollFunction() {
+      if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+        document.getElementById("topmenu").style.height = "80px";
+        document.getElementById("logo").style.height = "65px";
+        document.getElementById("navbar").style.marginTop = "0.5%";
+      } else {
+        document.getElementById("topmenu").style.height = "110px";
+        document.getElementById("logo").style.height = "81px";
+        document.getElementById("navbar").style.marginTop = "1%";
+      }
+    } 
+  </script>
+
+  <!-- Go to tools section is selected the menu button -->
+  <script>
+    $(document).ready(function () {
+      var path_list = window.location.href.split("/");
+      var myTool=path_list.at(-1)//select the last element of the url
+      if (myTool == '#md_tools') {
+        const element = document.getElementById("subtitle");
+        var pos = element.offsetTop;
+        var offset = document.documentElement.scrollHeight * 0.04;
+        window.scrollTo(0, pos + offset);
+      }
+    })
+  </script>
+
+  <!-- Animation of jumbotrons -->
+  <script>
+    const one = document.querySelector('.famtree')
+    const two = document.querySelector('.wbench')
+    const three = document.querySelector('.dsets')
+    const four = document.querySelector('.metaAnal')
+
+    const divs = [one, two, three, four];
+
+    function animation(entires) {
+      entires.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (entry.target.classList.contains('famtree')) {
+            entry.target.classList.add('leftRight');
+          }
+          if (entry.target.classList.contains('wbench')) {
+            entry.target.classList.add('rightLeft');
+          }
+          if (entry.target.classList.contains('dsets')) {
+            entry.target.classList.add('leftRight');
+          }
+          if (entry.target.classList.contains('metaAnal')) {
+            entry.target.classList.add('leftRight');
+          }
+        }
+      })
+    }
+    const observer = new IntersectionObserver(animation)
+    divs.forEach((div) => observer.observe(div));
+  </script>
+
+  <!-- Go to search page with the inputed text in the URL-->
+  <script>
+    function search_item(button) {
+      var inputext = document.getElementById("searchInput").value;
+      window.location.href = '/dynadb/search/#' + inputext;
+    }
+    $("#searchInput").keyup(function (event) {
+      if (event.keyCode === 13) {
+        $("#search_button").click();
+      }
+    });
+  </script>
+
+  <!-- Go to the search page with the example link selected in the URL  -->
+  <script>
+    function search_example(link) {
+      var example = link.getAttribute('id');
+      window.location.href = '/dynadb/search/#' + example;
+    }
+  </script>
+
+
+  <!-- Show news chunks-->
+  <script>
+    function showDiv() {
+      document.getElementById('newsSection').style.display = "block";
+      document.getElementById('goToNews').style.display = "block";
+      document.getElementById('moreNews').style.display = "none";
+    }
+
+  </script>
+
+  <!-- Go to news with the open piece of news -->
+  <script>
+    function go_to_news(button) {
+      var newsid = button.getAttribute('id');
+      window.location.href = '/news/#' + newsid;
+    }
+  </script>
+
+  {% endblock %}
+
+
+</body>

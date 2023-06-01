@@ -1,0 +1,433 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+<!-- Form styles -->
+{% block addon_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'dynadb/newform_styles.css' %}" />
+{% endblock %}
+
+<!-- step1.html -->
+{% block content %}
+<div class="regForm">
+  <form class="row" method="post" id="mainform" onsubmit="return createAllErrors('mainform','loading_submit')"
+    action="/dynadb/step1_submit/{{submission_id}}/" enctype="multipart/form-data">{% csrf_token %}
+
+    <div id="MODEL_f">
+      <div class="col-md-10 col-md-offset-1">
+        <!-- middle column -->
+        <div class="col-md-12 regPanel panel panel-primary">
+          <div class="panel-body">
+            <h2 class="panel-heading">Step 1: General information</h2>
+          </div>
+        </div>
+
+        <!--Pre-submission info -->
+        <div class="row" id="info_box">
+              <div class="col-md-10 col-md-offset-1 logInAlert alert alert-info alert-dismissible">
+
+                <p><strong>Pre-submission:</strong></p>
+
+                <p>Before to start a submission it is necessary to do a previous preparation:</p>
+                <p>   1) Prepare the files need it for the upload:</p>
+                <ul>
+                  <li>Topology. Extensions: psf, top </li>
+                  <li>Trajectory. Extensions: dcd, xtc, trj, trr</li>
+                  <li>Simulation parameters. Extensions: prm, prmtop, tar.gz, tgz</li>
+                  <li>Simulation protocol. Extensions: zip, tar.gz, tgz</li>
+                </ul>
+                <p> As optional, add other files that you consider necessary for the submission:</p>
+                <ul>
+                  <li>Other. Extensions: tar.gz, tgz</li>
+                </ul>              
+                <p>   2) Trajectories must be aligned to transmembrane part of the receptor.</p>
+                <br>
+
+                <p><strong>Do you have any question? </strong></p>
+                <p>Please contact us at <a class="textlink" href="mailto:info@gpcrmd.org">info@gpcrmd.org</a> and we will help you. 
+                  Remember that for more information, see the <a class="textlink" alt="Work in progress.">docs</a>.</p> 
+
+              </div>
+        </div>
+
+        <!--Part A: General information-->
+        <div class="col-md-12 panel panel-primary panel_input">
+          <div class="row">
+            <br>
+            <div class="col-md-1">
+              <h4 class="orangeTit" id="aa">(<b>A</b>)</h4>
+            </div>
+            <div class="col-md-6 col-md-offset-2 section_title">
+              <h4 class="orangeTit" >System information</h4>
+            </div>
+          </div>
+
+          <br>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_name">
+                <p>Name:</p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              {% if model_id or saved %}
+              <input required cols="40" maxlength="100" id="id_name" class="input_step" type="text" name="name" rows="2"
+                value="{{name}}"></input>
+              {%else%}
+              <input required cols="40" id="id_name" class="input_step" type="text" name="name" rows="2"></input>
+              {%endif%}
+            </div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_type">
+                <p>Type:</p>
+              </label>
+            </div>
+            <div class="col-md-6 height-col">
+              <select {% if model_id %} readonly {%endif%} class="input_step select_input" id="id_type" name="type"
+                placeholder="   ">
+                {% if model_id or saved %}
+                <option value="{{type.0}}">{{type.1}}</option>
+                {% else %}
+                <option value="{{ fdbMF.Meta.model.MODEL_TYPE.1.0}}"> {{ fdbMF.Meta.model.MODEL_TYPE.1.1 }}</option>
+                <option value="{{ fdbMF.Meta.model.MODEL_TYPE.0.0}}"> {{ fdbMF.Meta.model.MODEL_TYPE.0.1 }}</option>
+                {% endif %}
+              </select>
+            </div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title=""
+                data-original-title="Protein Data Bank identifier of the structure in which this simulation was based."></span>
+              <label for="id_pdbid">
+                <p>PDB ID:</p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <input required id="id_pdbid" class="input_step" maxlength="6" name="pdbid" type="text"
+                {% if model_id or saved %} value="{{pdbid}}" {%endif%} {% if model_id %} readonly {%endif%}
+                placeholder="" />
+            </div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_description">
+                <p>Description:</p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              {% if model_id or saved  %}
+              <textarea cols="40" maxlength="200" id="id_description" name="description" rows="2" placeholder=""
+                class="input_step" value="{{description}}">{{description}}</textarea>
+              {% else %}
+              <textarea cols="40" maxlength="200" id="id_description" name="description" rows="2" placeholder=""
+                class="input_step"></textarea>
+              {% endif %}
+            </div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_source_type">
+                <p>Source Type:</p>
+              </label>
+            </div>
+            <div class="col-md-6 height-col">
+              <select required {% if model_id %} readonly {%endif%} id="id_source_type" name="source_type" placeholder=""
+                class="input_step select_input">
+                {% if model_id or saved  %}
+                <option readonly value="{{source.0}}">{{source.1}}</option>
+                {% else %}
+                {% for i in fdbMF.Meta.model.SOURCE_TYPE %}
+                {% if forloop.counter > 2 and 5 > forloop.counter %}
+                {%else%}
+                <option value="{{i.0}}"> {{i.1}}</option>
+                {%endif%}
+                {% endfor %}
+                {%endif%}
+              </select>
+            </div>
+            <br>
+          </div>
+
+          <!-- Secret field for submitting our own simulations-->
+          <div class="row hidden_sections" id="hidden_field">
+            <div class="col-md-3 label_div">
+              <label for="gpcrcom">
+                <p>Is this simulation from GPCRmd community?</p>
+              </label>
+            </div>
+            <div class="col-md-3">
+              <input id="gpcrcom" class="input_step" name="gpcrcom" type="checkbox" {% if is_gpcrcom %} checked
+                {% endif %} />
+            </div>
+            <div class="col-md-3 label_div">
+              <label for="passcode">
+                <p>Passcode (confirm you are from the GPCRmd community</p>
+              </label>
+            </div>
+            <div class="col-md-3">
+              <input id="passcode" class="input_step" name="passcode" type="text" value="" />
+            </div>
+          </div>
+        </div>
+
+        <!--Part B: Simulation specifications-->
+        <div class="col-md-12 panel panel-primary panel_input">
+          <div class="row" id='PRUEBA'>
+            <br>
+            <div class="col-md-1">
+              <h4 class="orangeTit" >(<b>B</b>)</h4>
+            </div>
+            <div class="col-md-6 col-md-offset-2" style="text-align:center">
+              <h4 class="orangeTit" >Simulation specifications</h4>
+            </div>
+          </div>
+
+          <br>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_id_dynamics_methods">
+                <p> Method: </p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <select required id="id_id_dynamics_methods" name="id_dynamics_methods" class="select_input input_step">
+                {% for i in qDMeth.values %}
+                {% if model_id and i.id == method.0%}
+                <option value="{{method.0}}" selected>{{method.1}}</option>
+                {%else%}
+                <option value="{{i.id}}"> {{i.type_name}}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_software">
+                <p> Software: </p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <input required id="id_software" maxlength="30" class="input_step" name="software" type="text"
+                placeholder="" {%if model_id or saved%}value=" {{software}}" {%endif%} />
+            </div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_sversion">
+                <p>Software version:</p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <input required id="id_sversion" maxlength="15" class="input_step" name="sversion" type="text"
+                placeholder="" {%if model_id or saved%} value=" {{sversion}}" {%endif%} />
+            </div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_ff">
+                <p> Force Field: </p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <input required id="id_ff" maxlength="20" name="ff" class="input_step" type="text" placeholder=""
+                {%if model_id or saved%} value=" {{ff}}" {%endif%} />
+            </div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_ffversion">
+                <p> FF version: </p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <input required id="id_ffversion" maxlength="15" class="input_step" {%if model_id or saved%}
+                value=" {{ffversion}}" {%endif%} name="ffversion" type="text" placeholder="" />
+            </div>
+            <br>
+          </div>
+
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_id_assay_types">
+                <p> Assay type:</p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <select required id="id_id_assay_types" name="id_assay_types" class="select_input input_step"
+                placeholder="  ">
+                <option value="{{ddown.id_assay_types.0}}">{{ddown.id_assay_types.1}}</option>
+                {% for i in qAT.values %}
+                {%if model_id and assay.0 == i.id%}
+                <option value="{{i.id}}" selected> {{i.type_name}}</option>
+                {% else %}
+                <option value="{{i.id}}"> {{i.type_name}}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_id_dynamics_membrane_types">
+                <p> Membrane type:</p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <select required id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types"
+                class="input_step select_input" placeholder="  ">
+                <br>
+                {% for i in qDMT.values %}
+                {%if model_id and membrane.0 == i.id%}
+                <option value="{{i.id}}" selected> {{i.type_name}}</option>
+                {% else %}
+                <option value="{{i.id}}"> {{i.type_name}}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_id_dynamics_solvent_types">
+                <p>Solvent type:</p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <select required id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types"
+                class="input_step select_input" placeholder="  ">
+                {% for i in qDST.values %}
+                {%if model_id and solvent.0 == i.id%}
+                <option value="{{i.id}}" selcted> {{i.type_name}}</option>
+                {% else %}
+                <option value="{{i.id}}"> {{i.type_name}}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title=""
+                data-original-title="Simulation integration step (fs)."></span>
+              <label for="id_timestep">
+                <p>Time step:</p>
+              </label>
+            </div>
+            <div class="col-md-2">
+              <input required id="id_timestep" name="timestep" type="number" class="input_step" step="any" min="0"
+                placeholder="" {%if model_id or saved%} value="{{timestep}}" {%endif%} />
+            </div>
+            <div class="col-md-2 label_div">
+              <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title=""
+                data-original-title="Delta: Time lapse between frames in a trajectory file (ns)."></span>
+              <label for="id_delta">
+                <p>Delta:</p>
+              </label>
+            </div>
+            <div class="col-md-2">
+              <input required id="id_delta" name="delta" type="number" class="input_step" step="any" placeholder=""
+                {%if model_id or saved%} value="{{delta}}" {%endif%} />
+            </div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_description">
+                <p>Additional Info:</p>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <textarea cols="40" id="id_description" name="add_info" rows="2" class="input_step"
+                placeholder="Description of simulaiton protocol, ensemble type, what is studied in the simulation (e.g. sodium binding)..."
+                value="{%if model_id or saved%}{{additional}}{%endif%}">{%if model_id or saved%}{{additional}}{%endif%}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!--Part C: Coordinate files-->
+        <div class="col-md-12 panel panel-primary panel_input">
+          <div class="row">
+            <br>
+            <div class="col-md-1">
+              <h4 class="orangeTit" >(<b>C</b>)</h4>
+            </div>
+            <div class="col-md-6 col-md-offset-2 section_title">
+              <h4 class="orangeTit" >Coordinate files</h4>
+            </div>
+          </div>
+
+          <br>
+
+          <div class="row">
+            <div class="col-md-4 col-md-offset-2 label_div">
+              <label for="dynamics">
+                <p><span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title=""
+                    data-original-title="Coordinates of the simulated system at the start of the simulation (PDB format) (Max. size: 50 MB)"></span>
+                  Coordinates of the simulated structure (.pdb):</p>
+              </label>
+            </div>
+            <div class="col-md-5">
+              <input required type="file" name="dynamics"
+                class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder="" accept=".pdb"
+                id="dynamics" />
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+
+    {% include "dynadb/submission_steps_menu.html" %}
+
+  </form>
+</div>
+{% endblock content %}
+
+{% block addon_js %}
+<script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+<script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+<script src="{% static 'dynadb/uploadModelPDB.js' %}"></script>
+<script src="{% static 'dynadb/pdbchecker.js' %}"></script>
+<script src="{% static 'dynadb/searchtop.js' %}"></script>
+<script src="{% static 'dynadb/pdbCheckMol.js' %}"></script>
+<script src="{% static 'dynadb/required_fields.js' %}"></script>
+<script>
+  //Enable secret field in double click of A
+  $("#aa").dblclick(function () {
+    $("#hidden_field").show()
+  })
+</script>
+<script type="text/javascript" >
+  $(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+    <form method="post" action="{{ action }}" enctype="multipart/form-data">
+        {% csrf_token %}
+            {% form %}
+            <input type="hidden" name="extra" value="{{extra}}">
+            <fieldset>
+                {% for form in formset %}
+                    {% form %}
+                {% endfor %}
+                <input type="submit" name="action" value="+">
+            </fieldset>
+        <div style="text-align: right">
+        {% if not edit%}
+            <input type="submit" name="action" value="Create">
+        {% else %}
+            <input type="submit" name="action" value="Edit">
+        {% endif %}
+        </div>
+    </form>
+

@@ -1,0 +1,55 @@
+<head>
+<script>
+    document.domain=document.domain;
+</script>
+{% load static %} 
+
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="{% static 'home/logo/gpcrmd/main_circle.png' %}">
+    <!-- Bootstrap -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles -->
+    <link href="{% static 'home/css/style.css' %}" rel="stylesheet">
+
+{% load dynadb %}
+{% block addon_css %}
+<style>
+</style>
+{% endblock %}
+<base href="your_domain/" target="_PARENT">
+</head>
+
+<body style="padding:0">
+{% block content %}
+
+It worked! :)
+
+
+{% endblock content %}
+{% block addon_js %} 
+
+<!-- From base.html -->
+    <script src="{% static 'home/js/jquery.js' %}"></script>
+    <!-- jQueryUI -->
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.min.css' %}" type="text/css" media="all" />
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.theme.min.css' %}" type="text/css" media="all" />
+    <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+    <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+<!-- END From base.html -->
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+{% endblock %}
+</body>

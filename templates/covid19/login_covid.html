@@ -1,0 +1,121 @@
+<head>
+
+<head>
+{% extends "covid19/base_covid19.html" %} 
+{% load static %} 
+{% block addon_css %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'covid19/css/login.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'covid19/css/base.css' %}" />
+<style>
+
+.long input {
+ width:100%;
+}
+
+
+
+</style>
+{% endblock %}
+</head>
+
+
+{% block content %} 
+<form action="{% url 'accounts:login' %}" method="post">
+{% csrf_token %}
+{% if next_url %} <input type="hidden" name="next" value="{{next_url}}"> {% endif %}
+{% if is_covid %} <input type="hidden" name="is_covid" value="{{is_covid}}"> {% endif %}
+
+
+<div class="col-md-12 "> 
+
+   <div class="row pagetitle" >  
+       <div >
+          <h2  >Log in</h2>
+       </div> 
+   </div>
+
+
+  <div class="" style="min-width:300px;max-width:1000px;margin:auto;margin-top:40px"> 
+    <div >
+
+<!-- modifica a partir de aqui -->
+<div style="margin:10px">
+  <div class="row" id="info_box">
+    <div class="col-md-10 col-md-offset-1 alert alert-info alert-dismissible">
+      <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+
+<p><strong>Current submission policy:</strong></p>
+
+<p>In order to ensure data quality, we currently restrict data submission to MD data which will be published (peer-reviewed process).</p> 
+<p>You can upload your data prior to publication for the peer-review process (restricted access only for user and reviewer). Upon paper acceptance, your MD data will be published on this online resource. </p><br>
+
+<p><strong>Do you want to submit a simulation? </strong></p>
+<p>Please contact us at <a href="mailto:info@gpcrmd.org">info@gpcrmd.org</a> and we will provide you a registration link. </p>
+
+
+    </div>
+  </div>
+  <div class=row > 
+        <div class="col-md-10 col-md-offset-1" > 
+            {% if form.non_field_errors %}
+               <div class="non-field-errors alert alert-danger" style="padding:7px">
+                 {% for err in form.non_field_errors %}
+                    <p>{{ err }}</p>
+                {% endfor %}
+               </div>
+           {% endif %}
+        </div>
+  </div>
+<div class="form-group">
+{% for field in form %}
+  <div  style="margin-bottom:8px">
+     <div class="row">
+         <div class="col-md-3 col-md-offset-1" style="width:120px;color:#337ac1;">  
+               {{ field.label_tag }} 
+         </div>  
+         <div class="col-md-7" ><span class="long"> {{field}}</span>
+         </div>
+         <div class="col-md-1" >
+         </div>
+     </div>
+     <div class="row" >
+        <div class="col-md-11 col-md-offset-1" style="padding-left:20px;margin-bottom:8px"> 
+          {% if field.errors %}
+            <div>
+              {% for err in field.errors %}
+                 <p style="margin-bottom:px" class=text-danger>{{ err }}</p>
+              {% endfor %}
+            </div>
+         {% endif %}
+       </div>
+     </div>
+{% endfor %}
+</div>
+</div>
+<!-- hasta aqui -->
+
+<div class="row" >
+  <div class="col-md-3 col-md-offset-1" style="margin-bottom:5px;width:120px">
+     <input class="btn btn-default" type="submit" value="Log in" style="width:75px"/> </form>
+  </div>
+  <!--<div class="col-md-2" style="width:80px;">
+    <a href='/accounts/register'>Register</a>
+  </div>-->
+  <div class="col-md-4" style="margin-top:5px">
+    <a href='/accounts/password_reset'>Forgot your password?</a>
+  </div>
+
+</div>
+
+
+<h1></h1>
+
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+
+
+{% endblock %}

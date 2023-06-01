@@ -1,0 +1,40 @@
+<!-- dynadb_Dynamics.html -->
+
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %}
+{% for o in rows %}           <table> </tbody> 
+				<tr id="Element1"><td style="padding:5px 5px 5px 5px"><input id="id_prot" value="1"  name="prot" type="number" style="width:45px" placeholder="  1" /></td>
+				<!--<td style="padding:5px 5px 5px 5px"><input id="id_id_protein" value=  name="id_protein" type="number" style="width:60px" placeholder=" 1"/></td>-->
+				<td style="padding:5px 5px 5px 5px"><input id="id_chain" maxlength="1" value={{o.chain}}  name="chain" type="text" style="width:45px" placeholder=" E"/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_segid" maxlength="4" value={{o.segid}}  name="segid" type="text" style="width:45px" placeholder="PROA"/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_resid_from" value={{o.resid_from}}  name="resid_from" type="text"  style="width:45px" placeholder=" "/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_resid_to" value={{o.resid_to}}  name="resid_to" type="text" style="width:50px" placeholder=" ?? "/></td>
+                              <td style="padding:5px 5px 5px 5px"><input id="id_seq_resid_from" value={{o.seq_resid_from}}  name="seq_resid_from" type="text"  style="width:50px" placeholder=" "/></td>
+                              <td style="padding:5px 5px 5px 5px"><input id="id_seq_resid_to" value={{o.seq_resid_to}}  name="seq_resid_to" type="text"  style="width:50px" placeholder=" "/></td>
+                              <td style="padding:5px 5px 5px 10px"><input id="id_bonded_to_id_modeled_residues" value={{o.bonded_to_id_modeled_residues_id}}  name="bonded_to_id_modeled_residues" style="aligned:center" type="checkbox" checked placeholder=" "/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_pdbidps" maxlength="6" value={{o.pdbid}}  name="pdbidps" type="text"  style="width:50px" placeholder=" 4IAR.A  "/></td>
+				<td style="padding:5px 5px 5px 5px"><select id="id_source_typeps"  value={{o.source_type}}  name="source_typeps" style="width:50px" >	
+					<option value="0">X-ray</option>
+					<option value="1">NMR</option>
+					<option value="2">Ab-initio</option>
+					<option value="3">Threading</option>
+					<option value="4">Homology</option>
+					<option value="5">Threading</option>
+					<option value="6">Other Computational Methods</option>
+				</select></td>
+<!--				<td style="padding:5px 5px 5px 5px"><input id="id_template_id_model" style="width:60px"  value={{o}}  name="template_id_model" type=text></td>   -->
+				</tr></tbody></table> 
+
+
+
+{% endfor %}
+
+{% endblock content %}
+
+
+
+

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    {% extends "home/base.html" %}
+    {% load static %}
+    <meta charset="utf-8"/>
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+
+    {% block extra_head %}
+        {# -- Add any extra HTML heads tags here - except scripts and styles -- #}
+    {% endblock %}
+
+    {% block favicon %}
+        {# -- Maybe replace the favicon -- #}
+        <link rel="icon" type="image/png" href="{% static 'drf-yasg/swagger-ui-dist/favicon-32x32.png' %}"/>
+    {% endblock %}
+
+    {% block main_styles %}
+        {% comment %} <link rel="stylesheet" type="text/css" href="{% static 'drf-yasg/style.css' %}"/>
+        <link rel="stylesheet" type="text/css" href="{% static 'drf-yasg/swagger-ui-dist/swagger-ui.css' %}"> {% endcomment %}
+    {% endblock %}
+    {% block extra_styles %}
+        {# -- Add any additional CSS scripts here -- #}
+    {% endblock %}
+</head>
+
+<body class="swagger-body">
+
+{% block extra_body %}
+    {# -- Add any header/body markup here (rendered BEFORE the swagger-ui/redoc element) -- #}
+    {% comment %} {% include "home/base.html" %} {% endcomment %}
+{% endblock %}
+
+{% block content %}
+        {% comment %} DJANGO-REST-API BLOCK (api/urls.py) {% endcomment %}
+        <link rel="stylesheet" type="text/css" href="{% static 'drf-yasg/swagger-ui-dist/swagger-ui.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'drf-yasg/style.css' %}"/>
+
+        <div id="swagger-ui">
+        </div>
+
+            {% comment %} OTHER TOOLS {% endcomment %}
+            <div id="tools" class="swagger-ui swagger-container">
+                <div class="swagger-ui">
+                    <div class="information-container wrapper">
+                        <section class="block col-12">
+                            <div>
+                                <div class="info">
+                                    <hgroup class="main">
+                                        <h2 class="title">Other GPCRmd API tools</h2>
+                                    </hgroup>
+                                    <div class="description">
+                                        <div class="markdown">
+                                            <p>Tools related with files stored into the GPCRmd database (e.g. trajectories, topologies, parameters, protocols,...)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    {% if user.is_authenticated %}
+                        <div id="downloader" class="wrapper">
+                            <section class="block col-12 block-desktop col-12-desktop">
+                                <div>
+                                    <span>
+                                        <div class="opblock-tag-section">
+                                            <h3 class="opblock-tag no-desc" id="operations-tag-downloader_all" data-tag="downloader_all" data-is-open="false" onclick="openclosetag(this)">
+                                                <a class="nostyle">
+                                                    <span>downloader_all</span>
+                                                </a><small></small>
+                                                <button id="operations-button-downloader_all" aria-expanded="true" class="expand-operation" title="Collapse operation">
+                                                    <svg class="arrow" width="20" height="20" aria-hidden="true" focusable="true">
+                                                        <use id="arrow-downloader_all" href="#large-arrow-down"></use>
+                                                    </svg>
+                                                </button>
+                                            </h3>
+                                            {% csrf_token %}
+                                            <form id="retreivefiles" action="/api/download_all/">
+                                                <div class="opblock opblock-get" id="operations-downloader_all" style="display:none">
+                                                    <div class="opblock-body">
+                                                        <div class="opblock-description-wrapper">
+                                                            <div class="opblock-description">
+                                                                <div class="markdown">
+                                                                    <p>Get a zip with all the files related with the dynamics ids requested.</p>
+                                                                        <p>{dyn_ids} is a list of dynamics ids, e.g. 36,90</p>
+                                                                        <p style="color: #BF3C1F"> This tool is under development. For this reason, the limit of dyns is 5. </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="opblock-section">
+                                                            <div class="opblock-section-header">
+                                                                <div class="tab-header">
+                                                                    <h4 class="opblock-title">Parameters</h4>
+                                                                </div>
+                                                            </div>
+                                                            <div class="table-container">
+                                                                <table class="parameters">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th class="col col_header parameters-col_name">Name</th>
+                                                                            <th class="col col_header parameters-col_description">Values</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td class="col parameters-col_name">
+                                                                                <div class="parameter__name required">
+                                                                                    dyn_ids
+                                                                                    <span style="color: red;">&nbsp;*</span>
+                                                                                </div>
+                                                                                <div class="parameter__type">list</div>
+                                                                            </td>
+                                                                            <td class="col parameters-col_description">
+                                                                                <input id="dyn_ids" name="dyn_ids" type="text" class="" title="" placeholder="(e.g. 36,90)" value="">
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                        <div class="execute-wrapper">
+                                                            {% comment %} <button class="btn execute opblock-control__btn">Execute</button> {% endcomment %}
+                                                            <input class="btn execute opblock-control__btn" type="submit" id="retrieve_doi" value="Execute">
+                                                        </div>
+                                                        <div class="responses-wrapper">
+                                                            <div class="opblock-section-header">
+                                                                <h4>Responses</h4>
+                                                            </div>
+                                                            <div id="error_dyns" class="error_loading alert alert-danger" style="display:none">
+                                                            </div>
+                                                            <div id="loading_dyns" class="error_loading" style="display:none">
+                                                                <p> Downloading information... <img id="loading_icon" src="/static/view/images/loading-gear.gif" height="18px"></p><p></p>
+                                                            </div>
+                                                            {% comment %} include the bar progress as response {% endcomment %}
+                                                            <div id="dowload_dyns" class="error_loading" style="display:none">
+                                                                <a id="dowload_dyns_link" href="">Download</a>
+                                                            </div>
+                                                            <br>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </span>
+                                </div>
+                            </section>
+                        </div>
+                    {% else %}
+                        <div id="downloader" class="wrapper">
+                            <p style="color:#BF3C1F"> Log in to use these tools...</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+
+    {% block footer %}
+        {# -- Add any footer markup here (rendered AFTER the swagger-ui/redoc element) -- #}
+    {% endblock %}
+
+    <script id="swagger-settings" type="application/json">{{ swagger_settings | safe }}</script>
+    <script id="oauth2-config" type="application/json">{{ oauth2_config | safe }}</script> 
+
+    {% block main_scripts %}
+        <script src="{% static 'drf-yasg/swagger-ui-dist/swagger-ui-bundle.js' %}"></script>
+        <script src="{% static 'drf-yasg/swagger-ui-dist/swagger-ui-standalone-preset.js' %}"></script>
+        <script src="{% static 'drf-yasg/insQ.min.js' %}"></script>
+        <script src="{% static 'drf-yasg/immutable.min.js' %}"></script>
+        <script src="{% static 'drf-yasg/swagger-ui-init.js' %}"></script>
+    {% endblock %}
+    {% block extra_scripts %}
+        {# -- Add any additional scripts here -- #}
+        <script> 
+            function openclosetag(e){
+                var parent = e;
+                var isopen = parent.dataset.isOpen;
+                var tag = parent.dataset.tag;
+                var arrow = e.getElementsByTagName("use")[0]; 
+                if (isopen === "false") {
+                    parent.dataset.isOpen = "true";
+                    arrow.href.baseVal = "#large-arrow-up";
+                    document.getElementById("operations-downloader_all").style.display = "block";
+                    window.scrollTo(0, document.body.scrollHeight);
+
+                } if (isopen ==="true") {
+                    parent.dataset.isOpen = "false";
+                    arrow.href.baseVal = "#large-arrow-down";
+                    document.getElementById("operations-downloader_all").style.display = "none";
+                }
+            }
+        </script>
+        <script>
+        $(document).ready(function(){
+            // When the "retreive" button of the doi searcher is clicked, activate this function to retrieve information and 
+            // put in the HTML entry fields
+            $("#retreivefiles").submit(function(e) {
+                e.preventDefault(); // avoid to execute the actual submit of the form.
+                var form = $(this);
+                var url = form.attr('action');
+                var downdiv = $("#dowload_dyns");
+                var downlink =  $("#dowload_dyns_link");
+                var errordiv = $("#error_dyns"); 
+                var loadingdiv = $("#loading_dyns");
+                var dyn_ids = $('#dyn_ids').val();
+                var input_data = {
+                'dyn_ids' : dyn_ids,
+                }
+                downdiv.hide()
+                errordiv.hide()
+                loadingdiv.show()
+                $.ajax({
+                    url: url,
+                    data: input_data,
+                    // On success, replace prot entry's values by the ones obtained in the retrieved data
+                    success: function(data){
+                        down_data = JSON.parse(data);
+                        downlink.attr("href", down_data['url']);
+                        downdiv.show()
+                    },
+                    //Migth something go wrong, show an error message bellow the retreive button
+                    error: function(){
+                        errordiv.html("<p>Error: something failed upon retrieving files </p>")
+                        errordiv.show()
+                    },
+                    //Hide loading div when it is done
+                    complete: function(){
+                        loadingdiv.hide()
+                    }
+                });
+            });
+            //To add class format to input fields
+            $("form input").addClass("input_step")
+
+            });
+        </script>
+    {% endblock %}
+
+    <a id="oauth2-redirect-url" href="{% static 'drf-yasg/swagger-ui-dist/oauth2-redirect.html' %}" class="hidden"></a>
+
+    {% if USE_SESSION_AUTH %}
+        <div id="django-session-auth" class="hidden">
+            {% block session_auth_button %}
+                {% csrf_token %}
+
+                {% block user_context_message %}
+                    {% if request.user.is_authenticated %}
+                        <div class="hello">
+                            <span class="django-session">Django</span> <span
+                                class="label label-primary">{{ request.user }}</span>
+                        </div>
+                    {% endif %}
+                {% endblock %}
+
+                {% if request.user.is_authenticated %}
+                    <div class='btn authorize'>
+                        <a id="auth" class="header__btn" href="{{ LOGOUT_URL }}?next={{ request.path }}" data-sw-translate>
+                            {% block django_logout_message %}
+                                Django Logout
+                            {% endblock %}
+                        </a>
+                    </div>
+                {% else %}
+                    <div class='btn authorize'>
+                        <a id="auth" class="header__btn" href="{{ LOGIN_URL }}?next={{ request.path }}" data-sw-translate>
+                            {% block django_login_message %}
+                                Django Login
+                            {% endblock %}
+                        </a>
+                    </div>
+                {% endif %}
+            {% endblock %}
+        </div>
+    {% endif %}
+<br>
+<br>
+{% endblock %}
+</body>
+
+
+
+</html>

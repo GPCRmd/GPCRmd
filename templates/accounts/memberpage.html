@@ -1,0 +1,144 @@
+<head>
+  <style>
+    .long input {
+      width: 100%;
+    }
+
+    .deco a:link,
+    .deco a:visited {
+      background-color: #F0F0F0;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 12px;
+    }
+
+    .deco a:hover,
+    .deco a:active {
+      color: white;
+    }
+  </style>
+</head>
+{% extends "home/base.html" %}
+{% load static %}
+
+
+{% block content %}
+<div class="regForm">
+  <form class="row" action="{% url 'accounts:register' %}" method="post">
+    {% csrf_token %}
+
+    <!-- description column -->
+    <div class="col-md-4 col-md-offset-1">
+
+      <div class="col-md-12 regPanel panel panel-primary">
+        <div class="panel-body">
+          <h2 class="panel-heading">Simulation Submission</h2>
+        </div>
+      </div>
+
+      <!-- main description -->
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+
+          <div style="text-align:center">
+            <h3 class="orangeTit">Welcome {{ username }}</h3>
+          </div>
+          <p style="text-align: justify;">With the GPCRmd Simulation Submission tool you can create, store and manage
+            your
+            simulations.</p>
+
+        </div>
+      </div>
+
+      <!-- link to docs -->
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <p>For more information on this form, see the <a class="textlink" alt="Work in progress.">docs</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--   <body> -->
+
+    <div id="pprotform" class="col-md-6">
+      <div id="protform" class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <p>
+            <a class="textlink" href="/accounts/change_data">Edit user information</a> -
+            <a class="textlink" href="/accounts/change_passw">Change password</a> -
+            <a class="textlink" href="/accounts/logout">Log out</a></li>
+          </p>
+
+          <div class="container-fluid" style="padding-top:15px">
+            {% if user_covid %}
+            <center>
+              <h3 class="orangeTit">COVID-19 MD</h3>
+                <p>This section is only visible for users with privileges for COVID-19 MD</p>
+                <div style="margin-bottom:40px">
+                  <div class="row" style="margin:5px">
+                    <a href="/covid19" class="btn btn-success" role="button" style="width:150px">Search simulations</a>
+                  </div>
+                  <div class="row" style="margin:5px">
+                    <a href="/covid19/upload" class="btn btn-success" role="button" style="width:150px">New
+                      submission</a>
+                  </div>
+                </div>
+                <h3 class="orangeTit">GPCRmd</h3>
+            </center>
+            {% endif %}
+            <div class="row" id="info_box">
+              <div class="col-md-10 col-md-offset-1 logInAlert alert alert-info alert-dismissible">
+
+                <p><strong>Pre-submission:</strong></p>
+
+                <p>Before to start a submission it is necessary to do a previous preparation:</p>
+                <p>   1) Prepare the files need it for the upload:</p>
+                <ul>
+                  <li>Topology. Extensions: psf, top </li>
+                  <li>Trajectory. Extensions: dcd, xtc, trj, trr</li>
+                  <li>Simulation parameters. Extensions: prm, prmtop, tar.gz, tgz</li>
+                  <li>Simulation protocol. Extensions: zip, tar.gz, tgz</li>
+                </ul>
+                <p> Optionally, add other files that you consider necessary for the submission:</p>
+                <ul>
+                  <li>Other. Extensions: tar.gz, tgz</li>
+                </ul>              
+                <p>   2) Trajectories must be aligned to transmembrane part of the receptor.</p>
+                <br>
+
+                <p><strong>Do you have any question? </strong></p>
+                <p>Please contact us at <a class="textlink" href="mailto:info@gpcrmd.org">info@gpcrmd.org</a> and we will help you. 
+                  Remember that for more information, see the <a class="textlink" alt="Work in progress.">docs</a>.</p> 
+
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 col-md-offset-3 firstBtn" >
+                <a href="{% url 'accounts:user_submissions' %}" class="submitBtn btn btn-block">Previous Submissions</a>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 col-md-offset-3">
+                <a href="/dynadb/step0/" class="submitBtn btn btn-block">New Submission</a>
+              </div>
+            </div>
+            <!--
+            <div class="row">
+               <div class="col-md-6 col-md-offset-2 deco" style="text-align:center;width:400px;padding-bottom:25px">  
+                  <a href="/dynadb/modelreuserequest/0/" class="btn btn-block" style"margin: 0px 500px 0px 20px" >New Submission based on a previous model</a>
+               </div>
+            </div>
+            -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock content %}
+
+
+{% block addon_js %}
+
+
+{% endblock %}

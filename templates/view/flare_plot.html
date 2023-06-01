@@ -1,0 +1,254 @@
+<html lang="en-us">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+  <title>Flare-plot</title>
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block addon_css %}
+    <style type="text/css">
+    #content{
+        width:100%;
+    }
+    </style>
+{% endblock %}
+</head>
+<body>
+{% block content %} 
+{% csrf_token %}
+<section class="main-head">
+   <h1 class="main-title"  style="background-color:#3278B4;border-radius:5px;color:white;padding-top:15px;padding-bottom:15px;margin-top:0;margin-bottom:10px"><b>Flare plot</b> - <span style="font-size:24px">Dynamic interaction network of Hydrogen bonds (HB)</span></h1>
+   <h1 id="info" data-json_path={{json_path}} data-pdb_path={{pdb_path}} data-lig_li={{lig_li}} data-seg_li={{seg_li}} data-nametoresi="{{nameToResiTable}}" style="background-color:#F3F3F3; border-radius:2px;font-size:18px;text-align:center;padding-top:10px;padding-bottom:10px;">{{prot_names}} ({{traj_name}})</h1>
+   <a id="to_viewer" class="btn btn-info btn-xs" href="{% url 'view:index' dyn_id=dyn_id %}" >Go back to viewer</a>
+</section>
+
+<section class="main-content">
+  
+  <div class="evoBundleChart col-md-7" style="margin:auto">
+  <center>
+    <div id="evobundlediv">
+
+    </div>
+    <!--<div class="tensionControl">Tension: <input style="" type="range" min="0" max="100" value="85" /></div>-->
+    <div id="evocontrols" style=""><!-padding-left:120px-->
+      <span  id="controls"></span>
+      <input id="timeRange" type="range" min="0" max="1000" value="0" />
+      <span id="timeLabel">0</span>
+    </div>
+
+    <div class="buttonBox" style="padding:0 0 100 0">
+      <button class="summaryButton btn btn-primary" type="button" style="margin:auto">
+        Summarize
+      </button>
+      <button class="trackButton  btn btn-info actInact" type="button">
+        <!--Tracks--> Track HB freq.
+      </button>
+      <button class="sortButton  btn btn-info actInact depend1" type="button">
+        <!--Sort clustered tracks-->Sort within helices
+      </button>
+      <!--<button class="sortWithoutButton fr btn btn-info actInact depend1" type="button">
+        Sort tracks
+      </button>-->
+      <!--<button class="switchButton fr btn btn-info actInact" type="button">
+        Switch cluster
+      </button>-->
+    </div>
+  </center>
+  </div>
+
+  <div>
+  <div id="pviewer" class="col-md-5"></div>
+  </div>
+
+</section>
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+<link rel="stylesheet" type="text/css" href="{% static 'view/fplot/stylesheets/normalize.css' %}" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" type="text/css" href="{% static 'view/fplot/stylesheets/gpcr_demo.css' %}" media="screen">
+
+  <!--<script src="http://d3js.org/d3.v3.min.js"></script>-->
+  <script src="{% static 'view/fplot/gpcr_demo2/d3.v3.min.js' %}"></script>
+  <script src="{% static 'view/fplot/gpcr_demo2/parse.js' %}"></script>
+  <script src="{% static 'view/fplot/gpcr_demo2/pv.min.js' %}"></script>
+  <script src="{% static 'view/fplot/gpcr_demo2/main_test.js' %}"></script>
+<script type='text/javascript'>
+
+  $(".actInact").click(function(){
+      if ($(this).hasClass("active")){
+          $(this).removeClass("active");
+      } else{
+          $(this).addClass("active");
+          if ($(this).hasClass("depend1")){
+              $(this).siblings(".depend1").removeClass("active");
+          }
+      }
+  })
+
+  // override the default options with something less restrictive.
+  var options = {
+    width: 500,
+    height: 800,
+    antialias: true,
+    quality : 'medium'
+  };
+  // insert the viewer under the Dom element with id 'gl'.
+  var viewer = pv.Viewer(document.getElementById('pviewer'), options);
+  var struc;
+
+
+  function loadMOR() {
+    // asynchronously load the PDB file for the dengue methyl transferase
+    // from the server and display it in the viewer.
+    var pdb_path =$("#info").data("pdb_path");
+    pv.io.fetchPdb(pdb_path, function(structure) {  
+      struc = structure;
+        
+      var seg_s=$("#info").data("seg_li");
+      seg_ls=seg_s.split(",");
+      //seg_li=[];
+      color_d={0:"#78C5D5",1:"#5FB0BF",2:"#459BA8",3:"#5FAF88",4:"#79C268",5:"#9FCD58",6:"#C5D747",7:"#DDD742",8:"#F5D63D",9:"#F3B138",10:"#F18C32",11:"#ED7A6A",12:"#E868A1",13:"#D466A4",14:"#BF63A6"}
+      for (sn in seg_ls){
+          s_li=seg_ls[sn].split("-");
+          if (s_li.length > 1){
+              var newseg=structure.select({rnumRange : s_li});
+              viewer.trace('protein', newseg,  { color: pv.color.uniform(color_d[sn]) });
+          }   
+      }
+        
+      viewer.trace('protein', structure, { color : color.ssSuccession() });
+      var lig_li=$("#info").data("lig_li");
+      var ligands = structure.select({ rnames : lig_li });
+      viewer.ballsAndSticks('ligands', ligands);
+      viewer.fitTo(structure);
+      //var rotation = pv.viewpoint.principalAxes(viewer.all()[0]);
+      //viewer.setRotation(rotation);
+      viewer.setRotation([1,0,0,0,0,1,0,-1,0]);
+
+      //viewer.autoZoom();
+
+      //var randAtom = structure.atom('A.95.CA');
+      //var options = { fontSize : 16, fontColor: '#aee', backgroundAlpha:0.8  };
+      //var acount = 0;
+      //struc.eachAtom(function(a){
+      //  if(a.name()!="CA") return;
+      //  viewer.label('label'+acount, a.residue().num(), a.pos(), options);
+      //  acount++;
+      //});
+
+      //var cm = viewer.customMesh('interactions');
+      //cm.addTube( structure.atom('A.95.CA').pos(), structure.atom('A.116.CA').pos(), 0.5, {cap:false, color:'black'});
+
+      //viewer.rm('interaction');
+      //cm.addTube( structure.atom('A.95.CA').pos(), structure.atom('A.116.CA').pos(), 0.5, {cap:false, color:'black'});
+
+
+    });
+  }
+  // load the methyl transferase once the DOM has finished loading. That's
+  // the earliest point the WebGL context is available.
+  document.addEventListener('DOMContentLoaded', loadMOR);
+    var json_path =$("#info").data("json_path");
+    d3.text(json_path, function(rawtext){
+    //load_dataset(rawtext);
+    create_bundle(rawtext);
+  });
+
+    //[!] Added code to obtain nameToResiTable depending of the clustering specifid at main js.
+    
+
+    //database din: 
+    var nameToResiTable=$("#info").data("nametoresi");
+
+    //var nameToResiTable={'4x54': ['P.178', ''], '4x61': ['P.185', ''], '4x50': ['P.174', ''], '2x45': ['P.90', ''], '5x62': ['P.232', ''], '1x33': ['P.50', ''], '8x58': ['P.384', ''], '2x55': ['P.100', ''], '3x31': ['P.128', ''], '6x33': ['P.312', ''], '2x57': ['P.103', ''], '5x42': ['P.211', ''], '7x50': ['P.366', ''], '3x21': ['P.118', ''], '4x46': ['P.170', ''], '4x58': ['P.182', ''], '7x36': ['P.353', ''], '2x52': ['P.97', ''], '6x30': ['P.309', ''], '4x47': ['P.171', ''], '1x31': ['P.48', ''], '6x40': ['P.319', ''], '8x52': ['P.378', ''], '7x54': ['P.370', ''], '45x50': ['P.199', ''], '3x43': ['P.140', ''], '2x51': ['P.96', ''], '8x50': ['P.376', ''], '6x53': ['P.332', ''], '5x56': ['P.226', ''], '4x49': ['P.173', ''], '5x71': ['P.301', ''], '1x42': ['P.59', ''], '1x30': ['P.47', ''], '3x27': ['P.124', ''], '6x38': ['P.317', ''], '6x59': ['P.338', ''], '4x56': ['P.180', ''], '7x42': ['P.359', ''], '3x35': ['P.132', ''], '7x56': ['P.372', ''], '5x47': ['P.217', ''], '5x38': ['P.207', ''], '7x43': ['P.360', ''], '2x38': ['P.83', ''], '6x51': ['P.330', ''], '8x53': ['P.379', ''], '7x31': ['P.348', ''], '5x63': ['P.233', ''], '4x52': ['P.176', ''], '12x49': ['P.79', ''], '5x36': ['P.205', ''], '4x59': ['P.183', ''], '2x49': ['P.94', ''], '1x32': ['P.49', ''], '5x60': ['P.230', ''], '3x46': ['P.143', ''], '34x57': ['P.161', ''], '1x47': ['P.64', ''], '6x35': ['P.314', ''], '5x68': ['P.238', ''], '6x42': ['P.321', ''], '3x51': ['P.148', ''], '5x69': ['P.239', ''], '5x54': ['P.224', ''], '1x50': ['P.67', ''], '7x47': ['P.363', ''], '3x24': ['P.121', ''], '34x56': ['P.160', ''], '2x58': ['P.104', ''], '5x43': ['P.212', ''], '1x43': ['P.60', ''], '6x26': ['P.305', ''], '7x34': ['P.351', ''], '3x37': ['P.134', ''], '1x59': ['P.76', ''], '7x33': ['P.350', ''], '2x47': ['P.92', ''], '34x54': ['P.158', ''], '6x57': ['P.336', ''], '4x51': ['P.175', ''], '2x50': ['P.95', ''], '6x39': ['P.318', ''], '1x38': ['P.55', ''], '3x30': ['P.127', ''], '8x55': ['P.381', ''], '5x44': ['P.213', ''], '5x53': ['P.223', ''], '7x37': ['P.354', ''], '2x46': ['P.91', ''], '5x45': ['P.214', ''], '6x31': ['P.310', ''], '5x40': ['P.209', ''], '6x28': ['P.307', ''], '5x55': ['P.225', ''], '7x30': ['P.347', ''], '2x62': ['P.108', ''], '5x52': ['P.222', ''], '1x49': ['P.66', ''], '5x57': ['P.227', ''], '6x32': ['P.311', ''], '1x46': ['P.63', ''], '1x58': ['P.75', ''], '1x37': ['P.54', ''], '6x29': ['P.308', ''], '4x39': ['P.163', ''], '6x43': ['P.322', ''], '2x60': ['P.106', ''], '3x28': ['P.125', ''], '23x52': ['P.117', ''], '2x53': ['P.98', ''], '6x41': ['P.320', ''], '3x39': ['P.136', ''], '5x50': ['P.220', ''], '7x49': ['P.365', ''], '12x50': ['P.80', ''], '3x44': ['P.141', ''], '4x57': ['P.181', ''], '2x63': ['P.109', ''], '2x48': ['P.93', ''], '4x43': ['P.167', ''], '7x38': ['P.355', ''], '7x46': ['P.362', ''], '7x39': ['P.356', ''], '7x35': ['P.352', ''], '6x55': ['P.334', ''], '4x40': ['P.164', ''], '3x32': ['P.129', ''], '6x48': ['P.327', ''], '7x32': ['P.349', ''], '6x52': ['P.331', ''], '12x48': ['P.78', ''], '2x551': ['P.101', ''], '6x45': ['P.324', ''], '8x49': ['P.375', ''], '6x34': ['P.313', ''], '34x53': ['P.157', ''], '4x45': ['P.169', ''], '2x41': ['P.86', ''], '4x60': ['P.184', ''], '23x50': ['P.115', ''], '6x49': ['P.328', ''], '2x42': ['P.87', ''], '12x51': ['P.81', ''], '7x55': ['P.371', ''], '23x51': ['P.116', ''], '1x44': ['P.61', ''], '4x44': ['P.168', ''], '8x48': ['P.374', ''], '1x57': ['P.74', ''], '2x40': ['P.85', ''], '8x47': ['P.373', ''], '2x43': ['P.88', ''], '3x49': ['P.146', ''], '34x50': ['P.154', ''], '34x55': ['P.159', ''], '3x34': ['P.131', ''], '3x54': ['P.151', ''], '5x59': ['P.229', ''], '1x48': ['P.65', ''], '23x49': ['P.114', ''], '5x41': ['P.210', ''], '5x61': ['P.231', ''], '3x33': ['P.130', ''], '7x45': ['P.361', ''], '4x41': ['P.165', ''], '3x22': ['P.119', ''], '8x56': ['P.382', ''], '2x39': ['P.84', ''], '5x48': ['P.218', ''], '6x27': ['P.306', ''], '1x45': ['P.62', ''], '1x52': ['P.69', ''], '6x54': ['P.333', ''], '6x37': ['P.316', ''], '2x65': ['P.111', ''], '5x67': ['P.237', ''], '3x53': ['P.150', ''], '5x65': ['P.235', ''], '7x41': ['P.358', ''], '6x46': ['P.325', ''], '1x35': ['P.52', ''], '6x56': ['P.335', ''], '3x29': ['P.126', ''], '6x58': ['P.337', ''], '6x60': ['P.339', ''], '3x25': ['P.122', ''], '5x39': ['P.208', ''], '5x37': ['P.206', ''], '1x51': ['P.68', ''], '3x23': ['P.120', ''], '2x59': ['P.105', ''], '5x51': ['P.221', ''], '3x55': ['P.152', ''], '3x26': ['P.123', ''], '3x47': ['P.144', ''], '3x38': ['P.135', ''], '2x64': ['P.110', ''], '1x54': ['P.71', ''], '1x41': ['P.58', ''], '4x42': ['P.166', ''], '5x66': ['P.236', ''], '34x51': ['P.155', ''], '8x51': ['P.377', ''], '7x51': ['P.367', ''], '6x44': ['P.323', ''], '5x49': ['P.219', ''], '1x29': ['P.46', ''], '34x52': ['P.156', ''], '1x39': ['P.56', ''], '45x52': ['P.201', ''], '4x62': ['P.186', ''], '7x48': ['P.364', ''], '7x53': ['P.369', ''], '1x53': ['P.70', ''], '3x40': ['P.137', ''], '2x56': ['P.102', ''], '3x50': ['P.147', ''], '6x47': ['P.326', ''], '2x66': ['P.112', ''], '3x41': ['P.138', ''], '1x55': ['P.72', ''], '4x55': ['P.179', ''], '5x64': ['P.234', ''], '3x36': ['P.133', ''], '1x40': ['P.57', ''], '1x60': ['P.77', ''], '6x50': ['P.329', ''], '3x45': ['P.142', ''], '2x37': ['P.82', ''], '3x42': ['P.139', ''], '4x48': ['P.172', ''], '3x56': ['P.153', ''], '5x46': ['P.215', ''], '1x36': ['P.53', ''], '3x52': ['P.149', ''], '45x51': ['P.200', ''], '3x48': ['P.145', ''], '6x36': ['P.315', ''], '2x44': ['P.89', ''], '7x40': ['P.357', ''], '2x61': ['P.107', ''], '2x54': ['P.99', ''], '1x56': ['P.73', ''], '4x53': ['P.177', ''], '7x52': ['P.368', ''], '8x57': ['P.383', ''], '8x54': ['P.380', ''], '1x34': ['P.51', ''], '5x461': ['P.216', ''], '5x58': ['P.228', ''], '4x63': ['P.187', '']}
+
+ 
+    var i =1;
+    var roundN=1
+    var cluster_pre=clustering.split('"');
+    while( i < cluster_pre.length){
+        cpos_li=cluster_pre[i].split(" ");
+        for (cposN in cpos_li){
+            cpos_p = cpos_li[cposN];
+            cpos=cpos_p.split(".")[1];
+            if (nameToResiTable[cpos]){
+                nameToResiTable[cpos][1]=[roundN]
+            }
+        }
+        i+=2
+        roundN++
+    }
+
+  function nameToResi(name){
+    if( name in nameToResiTable )
+      return nameToResiTable[name][0];
+    else{
+      console.log("Error looking up "+name);
+      return undefined;
+    }
+  }
+  function updateInteractions(frame){
+    viewer.rm('interactions');
+    var cm = viewer.customMesh('interactions');
+    links[frame].forEach(function(d){
+      var name1 = d.name1.substring(d.name1.lastIndexOf(".")+1);
+      var name2 = d.name2.substring(d.name2.lastIndexOf(".")+1);
+      //console.log(name1)
+      if( name1 in toggledNodes || name2 in toggledNodes ){
+        var resi1 = nameToResi(name1);
+        var resi2 = nameToResi(name2);
+        if(resi1!==undefined && resi2!==undefined){
+
+          var atom1 = struc.atom(resi1+'.CA'); 
+          var atom2 = struc.atom(resi2+'.CA');
+          cm.addTube(atom1.pos(), atom2.pos(), 0.3, {cap:false, color:'black'});
+        }
+
+      }
+    });
+
+  }
+
+  tickListeners.push(updateInteractions);
+
+  function indexToClusterColor(idx){
+    var colTab = {"":[0.5,0.5,0.5,1], "1":[0,1,1,1], "2":[1,0,1,1]};
+    for (var key in nameToResiTable) {
+      if (nameToResiTable.hasOwnProperty(key)) {
+        var pos=nameToResiTable[key][0].split(".")[1];
+        if(pos==""+idx) {
+          return colTab[nameToResiTable[key][1]];
+        }
+      }
+    }
+    return colTab[""];
+  }
+
+  function updateColors(clustered){
+    viewer.rm('protein');
+    var geom = viewer.trace('protein', struc, { color : color.ssSuccession() });
+    if(clustered){
+      function clusterCol() {
+        return new pv.color.ColorOp(function(atom, out, index) {
+          var col = indexToClusterColor(atom.residue().num());
+
+          out[index+0] = col[0];
+          out[index+1] = col[1];
+          out[index+2] = col[2];
+        });
+      }
+      geom.colorBy(clusterCol());
+    }
+  }
+  clusterListeners.push(updateColors);
+</script>
+{% endblock %}
+</body>
+</html>
+

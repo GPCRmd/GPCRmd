@@ -1,0 +1,108 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% load static %}
+{% block addon_css %}
+<style>
+  .panel-body {
+    word-break: break-all
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="regForm row">
+  <div class="col-md-8 col-md-offset-2">
+
+    <div class="col-md-12 regPanel panel panel-primary">
+      <div class="panel-body">
+        <h2 class="panel-heading"> Complex Information</h2> 
+      </div>
+    </div>
+
+    <div class="panel panel-primary panel-body">
+
+        {% if answer.proteins %}
+        <p><b>Proteins used in this complex</b>:</p><br>
+        {%for proid in answer.proteins%}
+        <a class='btn btn-info' role='button' href= /dynadb/protein/id/{{proid.0}}>{{proid.1}} ({{proid.2}})</a>
+          {%endfor%} <br>
+          {% endif %}
+          <br>
+          {% if answer.compoundsorto %}
+          <p><b>Orthosteric ligand(s) in this complex</b>:</p><br>
+          {%for comid in answer.compoundsorto %}
+          <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}" height="300" width="300" /> </a>
+        {%endfor%}
+        <br>
+        {% endif %}
+        <br>
+        {% if answer.compoundsalo %}
+        <p><b>Allosteric ligand(s) in this complex</b>:</p><br>
+        {%for comid in answer.compoundsalo %}
+        <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}" height="300" width="300" /> </a>
+        {%endfor%}
+        <br>
+        {% endif %}
+        <br>
+
+        {%if answer.bindlist%}
+        <p><b>Kd values:</b></p><br>
+        {%for datab in answer.bindlist%}
+        <p><b>Kd according to {{datab.3}}:</b> {{datab.0}} nM <a class="textlink" href={{datab.2}} target="_blank"> Original page </a></p><br>
+        {%endfor%}
+        <br>
+        {%endif%}
+
+        {%if answer.efflist%}
+        <p><b>Efficacy values:</b></p><br>
+        {%for datae in answer.efflist%}
+        <p><b>{{datae.4}} according to {{datae.3}}:</b> {{datae.0}} nM <a class="textlink" href={{datae.2}}  target="_blank"> Original page </a></p><br>
+        {%endfor%}
+        <br>
+        {%endif%}
+
+        {%if answer.inhilist%}
+        <p><b>Ki values:</b></p><br>
+        {%for datae in answer.inhilist%}
+        <p><b>Ki according to {{datae.3}}:</b> {{datae.0}} nM <a class="textlink" href={{datae.2}} target="_blank"> Original page </a></p><br>
+        {%endfor%}
+        <br>
+        {%endif%}
+
+        {% if answer.models %}
+        <p><b>Complex structures in which this complex is used: </b></p><br><br>
+        {% for modid in answer.models %}
+        <a class='btn btn-info' role='button' href= /dynadb/model/id/{{modid.0}}>Complex Structure ID: {{modid.0}}</a>
+          {%if modid.1%} using Specific State(s): {%for mol in modid.1%} <a class='btn btn-info' role='button'
+          href= /dynadb/molecule/id/{{mol}}/>Specific State ID: {{mol}}</a> {%endfor%} {%endif%} <br>
+          <hr>
+          <hr>
+          {% endfor %}
+          <br>
+          {% endif %}
+          <br>
+          {% if answer.reference %}
+          <p><b>References for this complex:</b></p><br>
+          {% for reference in answer.reference%}
+          {%if reference.pmid%}
+          <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}}
+            {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a class="textlink"
+              href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a> </p> <br>
+              {%else%}
+              <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}}
+                {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}.</p><br>
+              {%endif%}
+              <hr>
+              <hr>
+              {%endfor%}
+              {% endif %}
+              <br>
+
+
+
+    </div>
+
+  </div>
+</div>
+
+{%endblock content %}

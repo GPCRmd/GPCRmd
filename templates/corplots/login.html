@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+    <h2>Login Corplots</h2><br>
+    {% if next %}
+    <form id="cor_login" method="post" action="cor_login/?next={{next}}">
+    {% else %}
+    <form id="cor_login" method="post" action="cor_login/">
+    {% endif %}
+        {% csrf_token %}
+        <label><b>Password </b></label>
+        <input type="password" name="password" id="password" placeholder="Password">
+        <br><br>
+        <input type="hidden" name="next" value="{{ request.GET.next }}" />
+        <input name="submit" type="submit" id="submit" value="Login">
+    </form>
+    <br>
+    {% if messages %}
+    {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+</body>
+</html>

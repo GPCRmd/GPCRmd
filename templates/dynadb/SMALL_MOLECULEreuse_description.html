@@ -1,0 +1,48 @@
+
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Reuse Crystal-Derived Assembly </h3><h3 style="margin-left:-5%;margin-right:-5%">Step 2:<br>Small Molecule Information</h3>
+        <!--	<h3 > Simulation Submission<br>Step 2 <br>Small Molecule Information </h3>-->
+         </div> 
+     </div>
+     
+<!-- main description -->
+     <div id="square_description" class="col-md-12 panel panel-primary" style="height:300px" >
+         <div class="panel-body" style="margin-bottom:5%;margin-top:4%;margin-left:-3%;margin-right:-5%;overflow:auto;height:91%">
+             
+<!--             <h4>FILL IN THE MOLECULE FORM</h4> -->
+            <div style="text-align:center"> 
+             <h4 style="margin-top:-5%">CHECK THE SMALL MOLECULE INFO</h4>
+	    </div>
+ <p style="text-align: justify">Please, provide a detailed chemical description of the non-protein molecules needed for completing the set of components involved in the simulation to be submitted.</p> 
+  <p style="text-align: justify">Note that this form contains two main blocks. The (<b>1</b>) <b>summary of crystalized components</b> block shows the description of the crystal-derived non-protein molecules involved in the GPCRmd DB item selected to be reused. In the (<b>2</b>) <b>list of bulk components in the simulation</b> block, the user must provide information about the components which have been randomly added during the simulation setup process (solvent, membrane lipids and ions whose coordinates have been ramdonly generated).</p>
+            <p style="text-align: justify">First, check that all molecules with coordinates coming from experimental data and non-protein molecules playing a crucial role in the setup of the simulations you are submitting (not bulk waters, lipids or ions randomly generated), are exactly matching the set of molecules shown in the <b>summary of crystalized components</b>. If so, the set of crystal-derived components retrieved by the GPCRmd DB can be reused provided that the set of proteins in the crystal to be reused (previously checked in the step 1) is exactly the same than the one the user want to submit. Otherwise, please click the ‘New Submission’ button in the initial ‘Simulation Submission’ page and enter your simulations as a new system from scratch.</p>
+
+ <p style="text-align: justify">After cheching the exact match between crystal-derived assemblies, add new bulk components appearing in the simulation to be submitted in the (<b>list of bulk components in the simulation</b>) block. Follow the next steps for every bulk component:</p>
+  <p style="text-align: justify">(<b>A</b>) Upload for each small molecule (non-protein) a '.sdf' or '.mol' file. A 2D chemical structure will be automatically displayed.</p>
+  <p style="text-align: justify">(<b>B</b>) Indicate if the uploaded structure is a co-crystalised molecule or if it belongs to bulk.</p>
+  <p style="text-align: justify">(<b>C</b>) Revise chemoinformatics data retrieved from the upload structure.</p>
+  <p style="text-align: justify">(<b>D</b>) Obtain molecule information from PubChem and ChEMBL databases.</p>
+  <p style="text-align: justify">Click the '+ Add molecule' button on the bottom of the pannel corresponding to the last uploaded molecule to add information about another molecule in your system.</p>
+  <p style="text-align: justify;margin-bottom:-5%;">Molecule data submission can be made individually by clicking the 'Submit molecule' button on the bottom of every molecule pannel or simultaneously by clicking the 'Submit all molecules' button on the bottom of the form.</p>
+
+
+<!--             <p style="text-align: justify">Small molecule information contains data for molecules that are not proteins, including lipids, solvent and ions. General compound information can be retrieved from PubChem Compound and ChEMBL databases. User must upload a MDL Molfile or an SDF file in order to provide information about elemental composition, connectivity, net charge, protonation states and tautomerical form. Isotopical composition is optional. PubChem CIDs for typical molecules as water or most common ions will be provided. 3D coordinates information for the defined molecules must be provided later on complex (step 3) or dynamics forms (step 4).</p>
+
+<p style="text-align: justify">Note, only molecule structures that have coordinates coming from experimental data or that are crucial for the setting of the simulation must be included in complex by checking the field “Important for the biological process” (e. g. crystalized-like waters or very stable ions, but not water molecules or ions with randomly generated coordinates). Otherwise chemical structures must be included into the dynamics form (step 4).</p>-->
+
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+</div>
+
+{% include "dynadb/REUSE_CAPTION.html" %} 
+

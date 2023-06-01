@@ -1,0 +1,65 @@
+<head>
+{% extends "covid19/base_covid19.html" %} 
+{% load static %} 
+{% block addon_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'covid19/css/base.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'covid19/css/success.css' %}" />
+{% endblock %}
+
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+  <base href="your_domain/" target="_PARENT">
+
+</head>
+
+<body style="padding:20px 0">
+{% block content %} 
+
+
+ <!-- description column -->
+<div class="col-md-12 "> 
+
+   <div class="row pagetitle" >  
+       <div >
+          <h2  >Simulation Upload</h2>
+       </div> 
+   </div>
+
+
+
+ <div style="min-width:300px;max-width:1000px;margin:auto;margin-top:40px"> 
+  <div >
+
+    <div class="alert alert-success alert-dismissible fade in">
+      <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+      <strong>Success!</strong> Your simulation was uploaded.
+    </div>
+    <div class="centered_btn">
+         <a href="/covid19/{{ dyn_id }}" class="btn btn-default" role="button">Open simulation</a>
+          <a href="/covid19" class="btn btn-default" role="button">Back to search</a>
+
+     </div>
+   </div>
+
+ </div>
+</div>
+
+
+{% endblock content %}
+{% block addon_js %} 
+
+<!-- From base.html -->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+<!-- END From base.html -->
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+<!--<script  src="{% static 'covid19/js/upload.js' %}"></script>-->
+{% endblock %}
+</body>

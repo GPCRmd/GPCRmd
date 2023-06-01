@@ -1,0 +1,92 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% load static %}
+{% block addon_css %}
+<style>
+  .panel-body {
+    word-break: break-all
+  }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="regForm row">
+
+    <div class="col-md-8 col-md-offset-2">
+
+      <div class="col-md-12 regPanel panel panel-primary">
+        <div class="panel-body">
+          <h2 class="panel-heading"> Protein Information: {{answer.Protein_name}}</h2> 
+        </div>
+      </div>
+
+      <div class="panel panel-primary panel-body">
+        <div class="row">
+          <p class="col-md-8 col-md-offset-1"> Cannonical Uniprot Accesion Number: 
+            <a class="textlink" href=http://www.uniprot.org/uniprot/{{answer.Uniprot_id}}>{{answer.Uniprot_id}} </a>
+          </p> 
+          <a class="col-md-3" href=fasta> <button class="btn-primary btn" type="button">FASTA download</button></a>
+        </div>
+        <pre class="col-md-6 col-md-offset-3">{{answer.Protein_sequence}}</pre>
+      </div>
+    </div>
+
+  <div class="col-md-8 col-md-offset-2">
+    <div class="col-md-12 panel panel-primary">
+      <div class="col-md-10 col-md-offset-1" >
+        <div class="panel-body">
+          <p><b>Scientific name:</b> {{answer.scientific_name}}</p> <br>
+          <p><b>Is this protein a mutant?</b> {{answer.is_mutated}}</p> <br>
+          {% if answer.mutations %}
+            <p><b>Mutations:</b></p><br>
+            {% for mutation in answer.mutations %}
+              <p> Residue {{mutation.0}}: From {{mutation.1}} to {{mutation.2}} </p>
+            {%endfor%}
+          {% endif %}
+
+          {% if answer.activity %}
+            <p><b>Activity (Description, value, units):</b></p><br>
+            {% for values in answer.activity %}
+              <p>{{values.2}},{{values.1}},{{values.0}}</p><br>
+            {% endfor %}
+          {% endif %}
+
+          {% if answer.other_names %}
+            <p><b>Alternative names:</b></p><br>
+            <ul>
+              {% for name in answer.other_names %}
+                <li><p>{{name}}</p></li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          <br>
+          <p><b>Corresponding Cannonical Protein:</b></p> <br>
+          <a class="btn btn-info" role='button' href='/dynadb/protein/id/{{answer.cannonical}}'>Protein ID:
+            {{answer.cannonical}}</a> <br>
+
+          {%if answer.models%}
+            <p>You can find this protein in the following complex structures:</p><br>
+            {% for link in answer.models %}
+              <a class="btn btn-info" role='button' href='/dynadb/model/id/{{link}}'>Complex Structure ID: {{link}}</a>
+            {% endfor %}
+          {% endif %}
+          <br>
+
+          {% if answer.references %}
+            <br><p><b>References in which this protein is mentioned:</b></p><br>
+            {%for reference in answer.references%}
+              <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}}
+                {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a
+                  href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a>
+              </p> 
+            {%endfor%} 
+          {% endif %} 
+        </div>
+      </div>  
+    </div> 
+  </div> 
+
+</div> 
+
+{% endblock content %}

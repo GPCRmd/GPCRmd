@@ -1,0 +1,188 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Simulation Submission<br>Step 2-1:<br>System information<br>(Protein Form) </h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+            <div style="text-align:center"> 
+             <h4>FILL IN THE PROTEIN FORM</h4>
+	    </div>
+             <p>Fill in the form with the relevant data concerning the receptor involved in the simulation.</p>
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-md-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_uniprotkbac"><a title="UNIPROTK Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers for cannonical sequences. Mutations are handled in a different field. ">Uniprotkbac:</a></label></div>
+			<div class="col-md-6"><input id="id_uniprotkbac" maxlength="10" name="uniprotkbac" type="hidden" /></div>
+		<br></div>
+			
+	        <div class="row">
+			<div class="col-md-5"><label for="id_isoform"><a title="Isoform number for a UNIPROTK Accession Number. Cannonical sequences have the value '1'.">Isoform:</a></label></div>
+			<div class="col-md-6"><input id="id_isoform" name="isoform" type="number" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_is_mutated"><a title="This value is TRUE if the protein sequence differs from the one identified at uniprot by “uniprotkac” and “isoform”. Otherwise is set to FALSE.">Is mutated:</a></label></div>
+			<div class="col-md-6"><input id="id_is_mutated" name="is_mutated" type="checkbox" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_name"><a title="Recommended name from  UNIPROTK. ">Name:</a></label></div>
+			<div class="col-md-6"><input id="id_name" maxlength="60" name="name" type="text" /></div>
+		<br></div>
+
+<!--	        <div class="row">
+			<div class="col-md-5"><label for="id_update_timestamp">Update timestamp:</label></div>
+			<div class="col-md-6"><input id="id_update_timestamp" name="update_timestamp" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_creation_timestamp">Creation timestamp:</label></div>
+			<div class="col-md-6"><input id="id_creation_timestamp" name="creation_timestamp" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_created_by_dbengine">Created by dbengine:</label></div>
+			<div class="col-md-6"><input id="id_created_by_dbengine" maxlength="40" name="created_by_dbengine" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_last_update_by_dbengine">Last update by dbengine:</label></div>
+			<div class="col-md-6"><input id="id_last_update_by_dbengine" maxlength="40" name="last_update_by_dbengine" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_created_by">Created by:</label></div>
+			<div class="col-md-6"><input id="id_created_by" name="created_by" type="number" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_last_update_by">Last update by:</label></div>
+			<div class="col-md-6"><input id="id_last_update_by" name="last_update_by" type="number" /></div>
+		<br></div> -->
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_receptor_id_protein"><a title="“Id” for the “protein” stored in GPCRDB. This value must be set if the protein is a GPCR. Otherwise is set to NULL. Foreign key to “protein”.”id”. ">Receptor id protein:</a></label></div>
+			<div class="col-md-6"><select id="id_receptor_id_protein" name="receptor_id_protein">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbProtein object</option>
+				<option value="2">DyndbProtein object</option>
+				<option value="3">DyndbProtein object</option>
+			</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_id_species"><a title="“Id” from GPCRDB for the specie corresponding to this protein sequence. Foreign key to “species”.”id”.">Id species:</a></label></div>
+			<div class="col-md-6"><select id="id_id_species" name="id_species">
+				<option value="" selected="selected">---------</option>
+				<option value="1">Species object</option>
+			</select></div>
+		<br></div>
+	</div>
+</div>
+
+<!--	        <div class="row">
+			<div class="col-md-5"><label for="id_update_timestamp">Update timestamp:</label></div>
+			<div class="col-md-6"><input id="id_update_timestamp" name="update_timestamp" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_creation_timestamp">Creation timestamp:</label></div>
+			<div class="col-md-6"><input id="id_creation_timestamp" name="creation_timestamp" type="text"/></div>
+		<br></div>
+		
+	        <div class="row">
+			<div class="col-md-5"><label for="id_created_by_dbengine">Created by dbengine:</label></div>
+			<div class="col-md-6"><input id="id_created_by_dbengine" maxlength="40" name="created_by_dbengine" type="text" /></div>
+		<br></div>
+	
+	        <div class="row">
+			<div class="col-md-5"><label for="id_last_update_by_dbengine">Last update by dbengine:</label></div>
+			<div class="col-md-6"><input id="id_last_update_by_dbengine" maxlength="40" name="last_update_by_dbengine" type="text" /></div>
+		<br></div>
+			
+	        <div class="row">
+			<div class="col-md-5"><label for="id_created_by">Created by:</label></div>
+			<div class="col-md-6"><input id="id_created_by" name="created_by" type="number" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_last_update_by">Last update by:</label></div>
+			<div class="col-md-6"><input id="id_last_update_by" name="last_update_by" type="number" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_id_ligand">Id ligand:</label></div>
+			<div class="col-md-6"><select id="id_id_ligand" name="id_ligand">
+				<option value="" selected="selected">---------</option>
+				<option value="1">Ligand object</option>
+				<option value="2">Ligand object</option>
+				<option value="3">Ligand object</option>
+				<option value="4">Ligand object</option>
+				<option value="5">Ligand object</option>
+				<option value="6">Ligand object</option>
+				<option value="7">Ligand object</option>
+				<option value="8">Ligand object</option>
+			</select></div>	
+		<br><br></div>
+
+
+<!--        <th><input type="submit" value="Submit" /> </th><br>   -->
+
+<!--           <div id="selection-buttons"> -->
+
+      <div class="col-md-12 panel panel-primary">
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/db_component/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 2-2: System Information (Component Form) </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/db_author_information/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 1: Author Information </a>
+      	  </div>
+      </div>
+
+
+   </div>
+
+{% endblock content %}
+
+
+

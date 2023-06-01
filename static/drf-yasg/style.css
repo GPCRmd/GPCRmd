@@ -1,0 +1,158 @@
+html {
+    box-sizing: border-box;
+    overflow: -moz-scrollbars-vertical;
+    overflow-y: scroll;
+}
+
+*,
+*:before,
+*:after {
+    box-sizing: inherit;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body.swagger-body {
+    background: #fafafa;
+}
+
+.hidden {
+    display: none;
+}
+
+#django-session-auth > div {
+    display: inline-block;
+}
+
+#django-session-auth .btn.authorize {
+    padding: 10px 23px;
+}
+
+#django-session-auth .btn.authorize a {
+    color: #49cc90;
+    text-decoration: none;
+}
+
+#django-session-auth .hello {
+    margin-right: 5px;
+}
+
+#django-session-auth .hello .django-session {
+    font-weight: bold;
+}
+
+.label {
+    display: inline;
+    padding: .2em .6em .3em;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+}
+
+.label-primary {
+    background-color: #337ab7;
+}
+
+.divider {
+    margin-right: 8px;
+    background: #16222c44;
+    width: 2px;
+}
+
+svg.swagger-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+.topbar {
+    visibility: hidden;
+}
+
+.wrapper > .block.col-12.block-desktop.col-12-desktop > .models {
+    display: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-weight: bold;
+    line-height: 51.4333px;
+    font-family: sans-serif;
+}
+
+th, td {
+    font-family: sans-serif;
+    font-size: 14px;
+    text-align: justify;
+}
+
+span {
+    font-family: sans-serif;
+    color: rgb(80, 80, 80);
+    font-size: 14px;
+    text-align: justify;
+}
+
+a.link span {
+    color:rgb(73, 144, 226);
+    font-family: sans-serif;
+    font-size: 12px;
+}
+
+code span {
+    color: whitesmoke;
+    font-size: 12px;
+}
+
+span.headerline {
+    color: whitesmoke;
+    font-size: 12px;
+
+}
+
+h3 a span {
+    color:rgb(59, 65, 81);
+    font-family: sans-serif;
+}
+
+label span {
+    color:rgb(59, 65, 81);
+    font-family: sans-serif;
+    font-size: 12px;
+}
+
+button.btn.authorize.unlocked span {
+    color:rgb(73, 204, 144);
+    font-family: sans-serif;
+    font-size: 20px;
+}
+
+h4 button span {
+    color:rgb(59, 65, 81);
+    font-family: sans-serif;
+}
+
+pre {
+    line-height: 14px;
+    word-break: normal;
+    background-color: transparent;
+    border: 0px solid black;
+    border-radius: 4px;
+}
+
+select{
+    font-family: Arial, Helvetica, sans-serif;
+    color: #171010;
+    font-size: 20px;
+    text-align: justify;
+} 
+

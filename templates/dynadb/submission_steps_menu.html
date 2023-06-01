@@ -1,0 +1,38 @@
+<!-- Submit and go-back green buttons -->
+<div class="col-md-10 col-md-offset-1"> 
+  <div class="col-md-12 panel panel-primary">
+    <div class="panel-body" id="selection-">
+      <div class="panel-body alert alert-danger hidden_sections">
+        <p>The following mandatory fields were not properly fullfilled: </p>
+        <ul class="errorMessages">
+        </ul>
+      </div>
+      <div id="loading_submit" class="hidden_sections">
+        <h3>Please wait</h3>
+        <h4 class="orangeTit" >Your data is being submitted. This may take a few {% if step == '4' %} minutes, depending on the size of the uploaded files{% else %} seconds{% endif %}... </h4>
+        <img id="loading_icon" src="/static/view/images/loading-gear.gif"/>
+      </div>
+      {% if step == '5' %}
+      <a id="id_skip" name="skip" class="btn btn-warning btn-lg btn-block" href="../../submission_summary/{{submission_id}}" /> Skip step </a>
+      {% endif %}
+      <input id="id_submit" name="submit" type="submit" value="Submit " form="mainform" class="btn btn-success btn-lg btn-block has-spinner"  />
+
+    </div>
+    <div class="row" style="text-align:center">
+      <h4 class="orangeTit">Submission steps: </h4>
+    </div>
+    <div class="panel-body" id="selection-">
+      {% for i in '12345'|make_list %}
+      <div id="button_step_{{i}}" class="col-md-5ths">
+        {% if repeated_step %}
+        <a id='selection-button' href="../../step{{i}}/{{submission_id}}" class="btn {% if i == step %} btn-light {% else %} btn-success {% endif %} btn-lg btn-block has-spinner" >
+        {% else %}
+        <a id='selection-button' href="../../step{{i}}/{{submission_id}}" class="btn {% if i == step %} btn-light {% else %} btn-success {% endif %} btn-lg btn-block has-spinner" {% if i > max_step %} disabled {% endif %}>
+        {% endif %}
+          <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> {{i}}
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>    
+</div>

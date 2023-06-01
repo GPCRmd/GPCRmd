@@ -1,0 +1,47 @@
+<head>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"],"language":"en"});
+</script>
+<script>document.domain=document.domain;</script>
+{% extends "home/base.html" %} 
+{% load static %} 
+{% block addon_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+
+
+
+
+</style>
+{% endblock %}
+</head>
+<body>
+
+
+
+{% block content %} 
+<div class="panel panel-primary" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white;">  
+       <div class="panel-body">
+        <h2>GPCRmd response to COVID-19</h2>
+       </div> 
+ </div>
+
+<div class="panel panel-primary">  
+  <div style="margin:40px">
+GPCRmd, in collaboration with <a href="https://www.exscalate4cov.eu/">Exscalate4Cov</a>, contributes to the fight against the COVID-19 pandemic by applying their expertise to develop a web platform for the dissemination of molecular dynamics simulations for SARS-CoV-2 related proteins. For that, it will provide a collection of online tools to easily visualize, analyze and share such data.
+  </div>
+  <div>
+    <center>
+        <img class="img-responsive" style="width:300px" src="{% static 'covid19/images/logo_covid.png' %}">
+    </center>
+  </div>
+</div>
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+{% endblock %}
+
+
+</body>

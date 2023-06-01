@@ -1,0 +1,308 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %}
+
+<form id="small_molecule" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+     
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Reuse Complex <br> Small Molecule Information</h3>
+        <!--	<h3 > Simulation Submission<br>Step 2 <br>Small Molecule Information </h3>-->
+         </div> 
+     </div>
+     
+<!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             
+<!--             <h4>FILL IN THE MOLECULE FORM</h4> -->
+            <div style="text-align:center"> 
+             <h4>CHECK THE SMALL MOLECULE INFO</h4>
+	    </div>
+
+             <p style="text-align: justify">Please, check that all non-protein molecules with coordinates coming from experimental data and non-protein molecules playing a crucial role in the setup of the simulations you are submitting (not bulky waters or ions randomly generated), are included in the list of molecules shown in this Small Molecule form. In addition, the checkbox field “Important for the biological process” concerning every aforementioned molecule must appear in the form as a checked field. If both conditions are fulfilled the set of non-protein molecules in your system is in good agreement with the ones in the complex to be reused. Then, you have to add new molecules appearing in your simulations whose coordinates have been randomly generated and remove molecules from the form which are not used in your simulations. Importantly, molecules to be added or removed must have the checkbox field “Important for the biological process” unchecked.</p>
+             <p style="text-align: justify">Note that, if the set of molecules which are “Important for the biological process” in the form does not match the ones in your simulation, you have to submit it as a new system from scratch by clicking the ‘New Submission’ button in the initial ‘Simulation Submission’ page and following all the steps in the Submission index.</p>
+
+
+<!--             <p style="text-align: justify">Small molecule information contains data for molecules that are not proteins, including lipids, solvent and ions. General compound information can be retrieved from PubChem Compound and ChEMBL databases. User must upload a MDL Molfile or an SDF file in order to provide information about elemental composition, connectivity, net charge, protonation states and tautomerical form. Isotopical composition is optional. PubChem CIDs for typical molecules as water or most common ions will be provided. 3D coordinates information for the defined molecules must be provided later on complex (step 3) or dynamics forms (step 4).</p>
+
+<p style="text-align: justify">Note, only molecule structures that have coordinates coming from experimental data or that are crucial for the setting of the simulation must be included in complex by checking the field “Important for the biological process” (e. g. crystalized-like waters or very stable ions, but not water molecules or ions with randomly generated coordinates). Otherwise chemical structures must be included into the dynamics form (step 4).</p>-->
+
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   _____________________________________________________________________________________________-->
+
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-lg-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+		<div class=row id='PRUEBA'>
+<!-- 			<div style="text-align:center">
+            			<h4><br>Select Complex</h4><br>    
+             			<h4><br>Complex Information</h4><br>
+            		</div>   -->
+
+ 			<div style="text-align:center">
+<!--       			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Reuse Complex Temporarily unavailable</a></h4><br> -->
+             			<h4><br>Complex Information</h4><br>
+<!--             			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Complex Information</a></h4><br> -->
+            		</div>
+                <div class="row">
+		  	<div class="col-md-1"></div><div class="col-md-3" style="text-align:left"><label for="Model">Complex:</label></div>
+		  	<div class="col-md-4" style="text-align:left"> Reuse Complex <input  type="radio" name="Model" checked value="Reuse Model" disabled></div>
+	 		<div class="col-md-4" style="color:gainsboro;text-align:center"><input  type="radio" name="Model" value="New Model" disabled > New Complex</div></div><br>
+	        <div class="row">
+			<div class="col-md-8 col-md-offset-4" style="text-align:left">
+			    <div class="row">
+				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><label for="Choose_reused_model"><a title="Choose a previous complex from the GPCRmd database">Complex ID:</a> </label></div>
+				<div class="col-md-8"><input style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1"  value="{{model_id}}" readonly ></input></div>
+                            </div>{% if message|length > 0 %}  <div class="col-md-12" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><h4> <p style="color:red;font-size:12px;text-align:justify;margin-left:8%;margin-right:8%">{{CHoose_submission_id}}</p></h4></div>{% endif %}
+			    <div class="row">
+			<!--	<div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><label for="Choose_submission_id"><a title="Choose a previous submission from the GPCRmd database">Submission ID:</a> </label></div>
+
+			        <div class="col-md-8"><input style="width:130px" id="Choose_submission_id" value="{{submission_id}}" name="Choose_submission_id" rows="1" readonly ></input></div> -->
+		            </div><br>
+                            </div>
+				
+		<br>
+		</div></div> 
+		</div></div></div>
+
+<!-- middle column -->
+<div id="pmolform"class="col-md-7 "> 
+ {% for o in qMOL %} 	{%for int0 in int_id0%}{% if forloop.counter == forloop.parentloop.counter %}	
+  <div id="molform" class="col-md-12 panel panel-primary"> 
+    <div  class="panel-body">
+            <div id="molnumb" style="text-align:right;color:black" > 
+             <h4>SMALL MOLECULE #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4>
+	    </div>
+
+            <div style="text-align:center"> 
+             <h4><br>Molecule information</h4>
+	    </div><br>
+
+	        <div class="row">
+		<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_type"><a title="Type: Type of the compound that forms part of a complex.">Type:</a></label></div>
+		<div class="col-md-4"><select id="id_type" readonly name="form-{{int0}}-type" rows="2" style="width:300px" disabled placeholder=" Allosteric Ligand" style="width:300px">
+                  
+                      <option value="{{t}}" > {% for t in labtypel %}
+                      {% if forloop.counter == forloop.parentloop.counter %}{{t}}{%endif%} {%endfor%}</option>
+                        </select></div>
+		</div><br>
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-9"><label for="id_is_present"><a title="Important for the biological process: Check this field if the molecule is considered as a biologically relevant component of the system. Remember that only molecules that have coordinates coming from experimental data or that are crucial for the experimental hypothesis must be considered 'important' (Provide coordinates information in step 3). Otherwise they must be included into the 'Dynamics form'(step 4), i.e. solvent and lipid membrane molecules, ions and other molecules whose coordinates are randomly generated or not specified when building the system.">Important for the biological process:</a></label></div>
+                   {% for i in imp %}
+                      {% if forloop.counter == forloop.parentloop.counter %}
+                         {% if i == True %}
+			<div class="col-md-2"><input id="id_is_present" name="form-{{int0}}-is_present" type="checkbox" disabled checked value="1" /></div> <!--  # !!!! is_present = NOT (not_in_Model)!!!!! table dyndb_submission_molecule!!!! -->
+                          {%else%}
+			<div class="col-md-2"><input id="id_is_present" name="form-{{int0}}-is_present" type="checkbox"  disabled value="0" /></div> <!--  # !!!! is_present = NOT (not_in_Model)!!!!! table dyndb_submission_molecule!!!! -->
+                    {%endif%}{%endif%} {%endfor%}
+		</div><br>
+               
+		<div class=row id='PRUEBA'>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_molsdf"><a title="Upload .mol, .sdf: Upload either a .mol or a .sdf file describing geometry of the small molecule"> Upload .mol, .sdf </a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_molsdf" name="form-{{int0}}-molsdf" style="height:25px;text-align:center;" readonly type="file" placeholder="   "/></td></tr></div>
+      		</div>
+
+		<div class=row id='PRUEBA'>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"></div>
+			<div class="col-md-6"><button id="id_upload_button" name="form-{{int0}}-upload_button" style="width:90px;height:30px;text-align:center;vertical-align:text-middle;" type="button">Upload</button></div>
+      		</div><br>
+
+
+                        <table align='center'>
+				<tr><th style="width:80px;text-align:center"><label for="id_upload_mol"><a title="Graphical representation of the uploaded molecule if provided">Uploaded Molecule</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_stdform"><a title="Graphical representation of the standard form of the molecule">Standard form</a></label></th>
+
+				<tr><td style="padding:5px 5px 5px 5px"><textarea rows="3"style="width:200px;" id="id_upload_mol" readonly name="form-{{int0}}-upload_mol" placeholder="  " /></textarea></td>
+					<td style="padding:5px 5px 5px 5px"><textarea rows="3"style="width:200px;" id="id_stdform" readonly name="form-{{int0}}-stdform" placeholder="   "/></textarea></td>
+				</tr>
+			</table><br>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_inchi"><a title="InChI: IUPAC International Chemical Identifier (InChI) of the molecule.">InChI:</a></label></div>
+			<div class="col-md-6"><textarea style="width:300px" cols="40" id="id_inchi" name="form-{{int0}}-inchi" readonly rows="2" >{{o.inchi}}</textarea></div><!-- placeholder=" 1S/C18H19ClN4/c1-22-8-10-23(11-9-22)18-14-4-2-3-5-15(14)20-16-7-6-13(19)12-17(16)21-18/h2-7,12,20H,8-11H2,1H3"-->	
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_sinchikey"><a title="SInChIKey: Molecule Standard InChI's hash">SInChIKey:</a></label></div>
+             {% for com in qCOMP %}
+                {% if forloop.counter == forloop.parentloop.counter %}
+			<div class="col-md-3"><input style="width:300px" id="id_sinchikey" maxlength="27" name="form-{{int0}}-sinchikey" readonly value="{{com.sinchikey}}" type="text" /></div> <!--placeholder=" ZUXABONWMNSFBN-UHFFFAOYSA-N" -->
+		</div>{%endif%} {%endfor%}
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_net_charge"><a title="Net charge: Net charge of the molecule structure.">Net charge:</a></label></div>
+			<div class="col-md-6"><input style="width:300px" id="id_net_charge" name="form-{{int0}}-net_charge" type="number" value="{{o.net_charge}}" readonly /></div> <!-- placeholder=" 0" -->
+		<br></div>
+	
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_inchikey"><a title="InChIKey: Molecule InChI's hash">InChIKey:</a></label></div>
+			<div class="col-md-3"><input style="width:300px" id="id_inchikey" maxlength="27" name="form-{{int0}}-inchikey"  value="{{o.inchikey}}" type="text" readonly  /></div> <!--  placeholder=" ZUXABONWMNSFBN-UHFFFAOYSA-N"-->
+		<br></div>
+	        
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_smiles"><a title="Open SMILES: Canonical SMILES representation of the molecule.">Open SMILES:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" style="width:300px" id="id_smiles" name="form-{{int0}}-smiles" rows="2" readonly > {{o.smiles}}</textarea> <!--placeholder=" CN1CCN(CC1)C2=Nc3cc(Cl)ccc3Nc4ccccc24"-->
+		</div><br></div>
+                <br>
+		<div class=row id='PRUEBA'>
+			<div class="col-md-12"style="height:30px"><p style="font-size:11px;text-align:justify;margin-left:10%;margin-right:14%">The data above are generated by Open Babel. Please check for potential errors in chemical structure in terms of protonation state, tautomery or isotopical composition (if needed). Please provide also a brief description about these properties.</p></div>
+		</div><br><br>
+
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_description"><a title="Description: Description about which specific protonation, resonance state or confomation is represented in this “molecule”.">Description:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" style="width:300px" id="id_description" name="form-{{int0}}-description" rows="2" readonly placeholder="Neutral form. Closest Nitrogen to the piperizine ring protonated.">{{o.description}}</textarea></div>
+		</div><br>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div>
+			<div class="col-md-9"><label for="id_is_present"><a title="Check this field if you could not find the compound in these databases "> The compound is not available in PubChem and ChEMBL: </a></label></div><div class="col-md-1"><input id="id_is_present" name="form-{{int0}}-is_present" type="checkbox" disabled/></div>
+		</div>
+
+	        <div class="row">
+			<div class="col-md-4" style="height:30px"></div><div class="col-md-4"><button title="Retrieve compound information searching by Standard InChIKey." style="width:180px;text-align:center;margin-right:5%" type="button" ="Retrieve the the standard form for this compound from the database or from external sources." onclick=" "> Retrieve data </button></div><div class="col-md-4"></div>
+		</div><br>
+
+
+
+
+             {% for com in qCOMP %}
+                {% if forloop.counter == forloop.parentloop.counter %}
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_name"><a title="Name: First name in the list of names in PubChem or 'compound name' in ChEMBL if there is no entry in PubChem.">Name:</a></label></div>
+			<div class="col-md-6"><input  style="width:300px" id="id_name" maxlength="60" name="form-{{int0}}-name" type="text" value={{com.name}} /></div> <!-- placeholder=" Clozapine"--> 	</div>
+			
+
+	        <div class="row">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_iupac_name"><a title="IUPAC name: IUPAC name downloaded from PubChem.">IUPAC name:</a></label></div>
+			<div class="col-md-6"><input id="id_iupac_name" style="width:300px" maxlength="500" name="form-{{int0}}-iupac_name" type="text" value={{com.iupac_name}} /></div> <!-- placeholder=" 3-chloro-6-(4-methylpiperazin-1-yl)-5H-benzo[b][1,4]benzodia" -->
+		</div>
+			
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_pubchem_cid"><a title="PubChem cid: PubChem chemical identifier">PubChem cid:</a></label></div>
+			<div class="col-md-3"><input id="id_pubchem_cid" name="form-{{int0}}-pubchem_cid"  style="width:145px;margin-right:4%" type="number" value={{com.pubchem_cid}} /></div> <!--placeholder=" 2818" -->
+	 		<div class="col-md-3"><button style="width:145px;text-align:center;margin-left:4%;" type="button" >Update</button></div>
+		</div>
+			
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_chembleid"><a title="ChEMBL ID: id in ChEMBL.">ChEMBL ID:</a></label></div>
+			<div class="col-md-3"><input id="id_chembleid" name="form-{{int0}}-chembleid" type="number" style="width:145px;margin-right:4%" value={{com.chembleid}} /></div> <!--  placeholder=" 42"-->
+			<div class="col-md-3"><button style="width:145px;text-align:center;margin-left:4%" type="button" >Update</button></div>
+		</div>
+
+ {%endif%} {%endfor%}
+	       <!-- <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_std_id_molecule"><a title="Std ID molecule: Molecule ID that represents the standard form of the compound, here the properties downloaded directly from PubChem or ChEMBL.">Std ID molecule:</a></label></div>
+			<div class="col-md-6"><select id="id_std_id_molecule" name="form-{{int0}}-std_id_molecule"  style="width:300px" placeholder=" 1">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbMolecule object</option>
+				<option value="3">DyndbMolecule object</option>
+				<option value="4">DyndbMolecule object</option>
+				<option value="5">DyndbMolecule object</option>
+				<option value="6">DyndbMolecule object</option>
+				<option value="7">DyndbMolecule object</option>
+				<option value="2">DyndbMolecule object</option>
+			</select></div>
+		</div>a-->
+	
+	        <div class="row">
+<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_other_names"><a title="Aliases: Other names that are obtained from PubChem or otherwise from ChEMBL.">Aliases:</a></label></div><div class="col-md-6">
+		<textarea cols="40" id="id_other_names" name="form-{{int0}}-other_names" rows="2" style="width:300px" >{% for llo in alias %}{% if forloop.counter == forloop.parentloop.counter %}{{llo}}{%endif%}{%endfor%}</textarea></div> <!--placeholder=" Clozaril; Fazaclo; Fazaclo Odt; HF-1854"-->
+		</div><br>
+
+		<div class=row id='PRUEBA'>
+			<div class="col-md-12"style="height:30px"><p style="font-size:11px;text-align:justify;margin-left:10%;margin-right:14%">Please check the retrieved information is correct. If it is not correct, optionally provide a more suitable PubChem CID or ChEMBL ID and press update to retrieve data again from these databases.</p></div>
+		</div><br>
+
+
+
+
+
+
+
+			<br>
+ 		 	<div style="text-align:center">
+	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
+			     		<input type="button" value="+ Add molecule" id="id_add_molecule" name="form-{{int0}}-add_molecule" style="height:30px;width:160px" onClick="addSmallmol();">
+		        	</div> 		
+	 			<div class="col-md-4" style="text-align:center">
+			     		<input type="button" value="- Remove molecule" id="id_del_molecule" name="form-{{int0}}-del_molecule"  style="height:30px;width:160px" onClick="delSmalmol();">
+		        	</div> 		
+			<br><br>
+
+  </div><br>
+        <th><input id="id_submit" name="form-{{int0}}-submit" type="submit" value="Submit" /> </th><br>   
+</div><br>
+   </div>  
+{%endif%} {%endfor%}
+{%endfor%}
+
+   </div>  
+</form>
+
+
+
+<div class="col-md-7 col-md-offset-4"> 
+      <div class="col-md-12 panel panel-primary">
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/proteinreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Protein Information (Step 1)</a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/modelreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Complex Information (Step 3)</a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/dynamicsreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
+      	  </div>
+      </div>
+  </div>
+
+
+
+
+
+
+
+</div>
+
+{% endblock content %}
+
+{% block addon_js %} 
+    <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+    <script src="{% static 'dynadb/generateInChi.js' %}"></script>
+    <script src="{% static 'dynadb/addSmallmol.js' %}"></script>
+    <script src="{% static 'dynadb/delSmalmol.js' %}"></script>
+
+{% endblock %}
+
+
+

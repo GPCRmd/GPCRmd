@@ -1,0 +1,58 @@
+
+  <!-- filters -->
+  <div class="col-md-12 panel panel-primary">
+    <div class="panel-body">
+
+      <!-- middle column -->
+      <div class=row id='PRUEBA'>
+        <div style="text-align:center">
+          <h3 class="orangeTit"><br>Simulation Identifiers</h3><br>
+        </div>
+        <div class="row" id="PR">
+
+          <div class="row input_row">
+            <div class="col-md-3 col-md-offset-2 rightTextLabel">
+              <label for="submissionid">
+                <a title="Identifier associated to this submission entry"><p>Submission ID:</p></a>
+              </label>
+            </div>
+            <div class="col-md-7">
+              <input required id="submissionid" name="submissionid" type="text" value="{{submission_id}}" readonly />
+            </div>
+          </div>
+
+          <div class="row input_row">
+            <div class="col-md-3 col-md-offset-2 rightTextLabel">
+              <label for="dynid">
+                <a title="Unique identifier of this dynamic simulation in the GPCRmd database."><p>Dynamics ID:</p></a>
+              </label>
+            </div>
+            <div class="col-md-7">
+              <input required id="dynid" name="dynid" type="text" value="{{dynid}}" readonly />
+            </div>
+          </div>
+
+          <div class="row input_row">
+            <div class="col-md-12 center_div">
+              <a href="/view/{{dynid}}/" class="btn btn-default" role="button"><p>Visualize simulation in <b>GPCRmd
+                  workbench</b></p></a>
+            </div>
+          </div>
+          <div class="row input_row">
+            <div class="col-md-12 center_div">
+              <a href="/dynadb/dynamics/id/{{dynid}}/" class="btn btn-default" role="button"><p>Simulation
+                report</p></a>
+            </div>
+          </div>
+          <br>
+
+          {% if SUMMARY %}
+          <div style="text-align:center;height:30px;margin-top:red">
+            <a id="id_download_pdb" style="color:red" name="download_pdb" noreferrer noopener href="{{urlsummary}}?"
+              target="_blank">Download submission summary file.</a>
+          </div>
+          {%endif%}
+        </div>
+      </div>
+    </div>
+  </div>

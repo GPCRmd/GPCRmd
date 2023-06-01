@@ -1,0 +1,101 @@
+{% load site_title %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% site_title %}:{{long_name}}</title>
+    <script src="{% static 'home/js/jquery.js' %}"></script>
+    <!-- Bootstrap -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles -->
+    <link href="{% static 'home/css/style.css' %}" rel="stylesheet">
+
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="{% static 'home/js/jquery.js' %}"></script>
+    <!-- jQueryUI -->
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.min.css' %}" type="text/css" media="all" />
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.theme.min.css' %}" type="text/css" media="all" />
+    <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+    <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <!-- Include custom ajax functions -->
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+    <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+    <script src="{% static 'dynadb/uploadDynFiles.js' %}"></script>
+    </head>
+    
+  <body style="padding-top:{%if new_window > 0 %}70{%else%}0{%endif%}px;width:100%;overflow:auto;overflow-y:hidden;">
+
+    <form id="upload_dynform" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+    <input type="hidden" name="file_type" value="{{file_type}}"/>
+    <input type="hidden" name="filekey" value="{{file_type}}"/>
+    <input type="hidden" name="new_window" value="{{new_window}}"/>
+    <input type="hidden" name="no_js" value="{{no_js}}"/>
+    <div id="{{file_type}}_div" >
+        <div class="row" style="width:80%;margin-left:20%" id='PRUEBA'>
+                <div class="col-md-4" style="height:45px;float:left;width:35%;padding:0px">
+                    <label style="cursor:pointer;font-weight:normal;margin-left:10px"for="id_{{file_type}}"><a title="{{long_name}}: {{description}}">{{long_name}}</a> </label>
+                </div>
+                <div class="col-md-8" style="float:left;width:65%;padding:0px">
+                    <div class="row" style="height:30px;width:100%;margin:0px">
+                        <div class="col-md-6" style="float:left;width:100%">
+                            <input style="max-width:100%;width:100%;" class="file" id="id_{{file_type}}" name="{{file_type}}" type="file"  accept="{{accept_ext}}" {% if file_type == "traj" %} multiple{%endif%}/>
+                        </div>
+                    </div>
+                    <div class="row" style="width:100%;margin:0px">
+                        <div class="col-md-3" style="height:26px;float:left;width:25%">
+                            <button style="" type="submit" id="id_{{file_type}}_upload" name="{{file_type}}_upload"/>Upload</button>
+                        </div>
+                        <div class="row" style="width:100%;margin:0px">
+                            {%if download_urls and file_type == "traj"%}
+                            <div class="row" style="width:100%;margin:0px">
+                            <button style="" type="submit" id="id_{{file_type}}_delete_all" name="{{file_type}}_delete_all" value="1"/>Delete trajectories</button>
+                            </div>
+                            {%endif%}
+                        <div class="col-md-9" style="float:left;width:75%">
+                            {%for download_url in download_urls%}
+                            <div id="id_{{file_type}}_download_url_div" class="row" style="width:100%;margin:0px">
+                            <a style="vertical-align:middle;line-height:26px;cursor:pointer;font-weight:normal" href="{{download_url}}" id="id_{{file_type}}_download_url-{{forloop.counter0}}" noreferrer target="_blank">Download uploaded file{%if file_type == "traj"%} {{forloop.counter}}{%endif%}.</a>
+                            </div>
+                            {%empty%}
+                            <div id="id_{{file_type}}_download_url_div" class="row" style="width:100%;margin:0px;">
+                            <a style="vertical-align:middle;line-height:26px;" href="" id="id_{{file_type}}_download_url" hidden noreferrer target="_blank">Download uploaded file.</a>
+                            </div>
+                            {%endfor%}
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </form>
+  {% if new_window > 0 or no_js > 0 and not get %}
+  <br>
+  {% if success %}
+  <h4 style="text-align:center">Upload success!</h4>
+  <br>
+  {% if new_window > 0%}
+  <h4 style="text-align:center">If you want to be able to download the file that you have uploaded DO NOT CLOSE OR REFRESH this window.</h4>
+  {%endif%}
+  {%else%}
+  <h4 style="text-align:center">{{error}}</h4>
+  {%endif%}
+  {%endif%}
+
+  </body>
+</html>
+

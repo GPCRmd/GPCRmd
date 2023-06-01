@@ -1,0 +1,27 @@
+{% extends "dynadb/base.html" %}
+{% load static %}
+{% load static %} 
+{% block addon_css %}
+  <style>
+  .panel-body {
+    word-break:break-all
+}
+  
+  </style>
+{% endblock %}
+{% block content %}
+    <div class="container">
+    <div class="panel panel-danger">
+    <div class="panel-heading"><b>{{answer.title}}</b></div>
+    <div class="panel-body">
+    {% if '<br>' in answer.errmess %}  
+      {% autoescape off %}{{answer.errmess}}{% endautoescape %}
+    {% else %}
+      {{answer.errmess}}
+    {% endif %}
+    </div>
+    </div>
+    </div>
+
+{%endblock content %}
+

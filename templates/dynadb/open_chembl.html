@@ -1,0 +1,40 @@
+{% load site_title %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% site_title %}</title>
+    <script src="{% static 'home/js/jquery.js' %}"></script>
+
+    <script>
+        window.opener = null;
+        $(document).ready(function() {
+    
+            // create session ID, submit query and get url to retrieve the query results
+            $("#open_chembl").submit();
+            $("#iframe1").load(function() {
+                $("#iframe1").remove();
+                $("#chembl_results_url").submit();
+            });
+    
+        });
+    </script>
+    </head>
+  <body>
+    <h1>Redirecting to your CHEMBL query...</h1>
+    <form id="open_chembl" method="post" action="{{ action }}" target="iframe1" enctype="application/x-www-form-urlencoded">
+        <input type="hidden" id="compound_list" name="compound_list" value="{{ query }}">
+    </form>
+    
+    <form id="chembl_homepage" method="get" action="{{ chembl_root_url }}" enctype="application/x-www-form-urlencoded"></form>
+    <form id="chembl_results_url" method="get" action="{{ chembl_results_url }}" enctype="application/x-www-form-urlencoded"></form>    
+    <iframe id="iframe1" name="iframe1" src="{% url 'dynadb:blank' %}" style="display:none"></iframe>
+  </body>
+</html>
+
+
+
+

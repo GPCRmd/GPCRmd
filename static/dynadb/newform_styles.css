@@ -1,0 +1,174 @@
+a {
+color: #555;
+}
+label{
+cursor:pointer;
+font-weight:normal
+}
+
+.input_step {
+  width: 100%;
+}
+
+.input_row {
+  padding-bottom: 15px;
+}
+
+.panel_input {
+  padding-bottom: 3%;
+}
+.section_title {
+  text-align: center;
+}
+
+.btn-light {
+  border-color: #337ab7;
+}
+.download_uploaded_div {
+  text-align:right;
+  margin-right:5%;
+  height:50px;
+}
+#main_loading_div {
+  text-align: center;
+  padding: 3%;
+}
+.hidden_sections {
+  display: none;
+}
+
+#loading_icon {
+  margin: 5%;
+}
+
+.form_title {
+  background-color:#3278B4;
+  text-align:center;
+  color:white;
+}
+
+.smalmol_title, .prot_title {
+  background: #BF3C1F;
+  color: white;
+}
+
+.align_right {
+  text-align: right;
+}
+
+.initial-text {
+  font-size: initial;
+}
+
+.inchikey_hidden, .alignment_error {
+  margin-top: 5px;
+  display: none;
+}
+
+.remove_smalmol, .remove_prot, .remove_mut, .remove_seg {
+  cursor:  pointer;
+  margin-top:10%;
+}
+
+#add_new_smalmol, #add_new_prot {
+  cursor:  pointer;
+  color:  #3278B4;
+  text-align: center;
+}
+
+.error_loading {
+  text-align: left;
+  font-size: small;
+  margin-top: 5%;
+  margin-bottom: 5%;
+  display: none;
+}
+
+.readonly_text {
+  color: gray;
+  border-color: lightgray;
+}
+
+.input_coord {
+  width: 100%;
+}
+
+.labelrow {
+  text-align: center;
+  font-size: medium;
+}
+
+.isoform_inputs {
+  margin-top: 3%;
+}
+
+.instructions {
+  .font-size: initial;
+}
+
+.addmuts {
+  font-size: x-large;
+  color: #3278B4;
+  border-color: #3278B4;
+  background-color: white;
+}
+
+#loading_submit {
+  text-align: center;
+}
+
+.shadow_error {
+  box-shadow: rgb(255 0 0) 0px 0px 10px;
+}
+
+/*Shamelessly stole this class from bootstrap. Its from a newer version, unavalible in GPCRmd*/
+.btn-outline-primary{
+  color:#BF3C1F;
+  background-color:transparent;
+  background-image:none;
+  border-color:#BF3C1F;
+}
+
+.btn-outline-primary:hover{
+  color:#423F3E;
+  background-color: #D96B52;
+  border-color:#D96B52;
+}
+.btn-outline-primary.focus,.btn-outline-primary:focus{
+  box-shadow:0 0 0 .2rem rgba(0,123,255,.5)
+}
+.btn-outline-primary.disabled,.btn-outline-primary:disabled{
+  color:#423F3E;
+  background-color:transparent;
+}
+.btn-outline-primary:not(:disabled):not(.disabled).active,.btn-outline-primary:not(:disabled):not(.disabled):active,.show>.btn-outline-primary.dropdown-toggle{
+  color:#fff;
+  background-color:#BF3C1F;
+  border-color:#BF3C1F;
+}
+.btn-outline-primary:not(:disabled):not(.disabled).active:focus,.btn-outline-primary:not(:disabled):not(.disabled):active:focus,.show>.btn-outline-primary.dropdown-toggle:focus{
+  box-shadow:0 0 0 .2rem rgba(0,123,255,.5)
+}
+
+#ref_info {
+  margin-bottom: 15px;
+  border-color: #BF3C1F;
+  border: 1px solid;
+  border-radius: 4px;
+}
+
+.col-md-5ths {
+    position: relative;
+    min-height: 1px;
+    padding-right: 15px;
+    padding-left: 15px;
+    width: 20%;
+    float: left;
+  }
+.leftText{
+  text-align: left;
+}
+.segDivv{
+  margin-bottom: 3%;
+}
+

@@ -1,0 +1,21 @@
+
+{% load view_custom %}         
+<select  id="input_{{ref}}_cs" data-type="{{ref}}" class="input_{{ref}}_cs selectpicker cs_selectpicker trigger_cs_update" {% if mul %} multiple data-live-search="true" {% endif %}   >
+  {% for res_opt in option_list %}
+    <option class="input_{{ref}}_cs_opt " {% if type == 'atom' and res_opt == 'CA'%} selected {% endif %} value={{res_opt}}>{{res_opt}}</option>
+  {% endfor %}
+</select>
+{% if mul %}
+<button class="cs_all" data-selector="input_{{ref}}_cs">Select all</button>
+<button class="btn btn-link cs_clear remove_icon_btn" data-target="#input_{{ref}}_cs" ><span class="glyphicon glyphicon-remove-circle"></span></button>
+{% endif %}
+{% if ref == 'compresid' or ref == '2dresid' %}
+</td>
+</tr>
+<tr>
+  <td></td>
+  <td>
+    <div style="width: 220px; text-align: center;">
+      <i>or</i>
+    </div>
+{% endif %}

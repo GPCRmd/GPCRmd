@@ -1,0 +1,274 @@
+<head>
+
+<!-- for NGL iframe-->
+<script>document.domain=document.domain;</script>
+{% extends "sc2md/base_sc2md.html" %} 
+
+{% load static %} 
+
+{% load covid_custom %} 
+{% block addon_css %}
+    <style>
+    #content{
+        width:80%;
+    }
+    .panel-body {
+        /*word-break:break-all;*/
+        padding: 30px 40px 30px 40px;
+    }    
+
+    .carousel .item img{
+        margin: 0 auto; /* Align slide image horizontally center */
+    }
+
+    .miniscroll{
+        overflow-y:auto;
+        overflow:auto;
+        max-height:140px;
+        height:130px;
+        <!--width: 40%;-->
+    }
+
+    .bs-example{
+        margin: 20px;
+    }
+
+    .mol-container {
+      width: 80%;
+      height: 400px;
+      position: relative;
+    }
+
+    .ortoligand{
+
+    }
+
+    .glyphicon glyphicon-chevron-left:hover{
+        opacity:0.7;
+    }
+    .techinfo{
+        text-align: center
+    }
+    .techinfo_content{
+        display: inline-block; 
+        text-align: left;
+    }
+
+    .techinfo_title{
+        margin-bottom:20px;
+        font-size: 20px;
+    }
+    .dyn_info_title{
+        font-size: 20px;
+    }
+    .table-curved {
+        border-collapse: separate;
+    }
+    .table-curved {
+        border: solid #ccc 1px;
+        border-radius: 6px;
+        border-left:0px;
+    }
+    .table-curved td, .table-curved th {
+        border-left: 1px solid #ccc;
+        border-top: 1px solid #ccc;
+    }
+    .table-curved th {
+        border-top: none;
+    }
+    .table-curved th:first-child {
+        border-radius: 6px 0 0 0;
+    }
+    .table-curved th:last-child {
+        border-radius: 0 6px 0 0;
+    }
+    .table-curved th:only-child{
+        border-radius: 6px 6px 0 0;
+    }
+    .table-curved tr:last-child td:first-child {
+        border-radius: 0 0 0 6px;
+    }
+    .table-curved tr:last-child td:last-child {
+        border-radius: 0 0 6px 0;
+    }
+
+    </style>
+{% endblock %}
+
+
+</head>
+
+<body style="padding:20px">
+{% block content %} 
+
+     <div class="col-md-12" style="background-color:#3278B4;text-align:center;margin-bottom:15px;color:white;padding:15px;background-color:#1ABC9C">  
+
+         <div >
+            <h2 >Simulation report</h2>
+         </div> 
+     </div>
+
+    <div class="col-md-12" style="padding:0">
+    <div>
+    <div style="width:1000px;margin:auto">
+
+        <div class="row" style="margin-bottom:15px">
+            <div class="col-md-4 ">
+                <p class="dyn_info_title">General information</p>
+                    <div class="techinfo_content">
+                        <p><b>Name</b>: {{dyn_name}} </p>
+                        {% if final_proteins %}
+                            <p><b>Included proteins</b>: {{final_proteins|list_to_str}}</p>
+                        {% endif %}
+                        <p><b>Uniprot ID</b>: <a href="https://www.uniprot.org/uniprot/P0DTD1">{{uniprotkbac}}</a> </p>
+                        {% if species %}
+                            <p><b>Species</b>: <span style=" font-style: italic;">{{species}}</span></p>
+                        {% endif %}                        
+                        {% if pdbid %}
+                            <p><b>PDB ID</b>{% if model_source == 1 %}(template for theoretical model){% endif %}: {{pdbid}}</p>
+                        {% endif %}
+                        {% if description %}
+                            <p style="height:200px;overflow:auto"><b>Description</b>: {{description}}</p>
+                        {% endif %}
+                        {% if extracted_from_db %}
+                            <p><b>Extracted from</b>: {{extracted_from_db}} {% if extracted_from_db_entry %}(ID: {{extracted_from_db_entry}}){% endif %}</p>
+                            {% if submitted_by %}
+                                <p><b>Author</b>: {{submitted_by}}</p>
+                            {% endif %}
+                        {% else %}
+                            {% if submitted_by %}
+                                <p><b>Submitted by</b>: {{submitted_by}}</p>
+                            {% endif %}
+                        {% endif %}
+
+                    </div>
+            </div>
+            <div class="col-md-4 ">
+                <p class="dyn_info_title" style="">System setup</p>
+                    <div class="techinfo_content">
+                        {% if ligands %}
+                            <p style="margin-bottom:5px"><b>Ligands</b>: </p>
+                                <div style="margin-left:20px">
+                                {% for mylig in ligands %}
+                                    <p>{{mylig.0}}  {% if mylig.1 %}({{mylig.1}}){% endif %}</p>
+                                {% endfor %}
+                                </div>
+                        {% else %}
+                            <p style="margin-bottom:5px"><b>Ligands</b>: None</p>
+                        {% endif %}
+                        {% if membrane %}
+                            <p style="margin-bottom:5px"><b>Membrane composition</b>: </p>
+                                <div style="margin-left:20px">
+                                {% for mymemb in membrane %}
+                                    <p>{{mymemb}}</p>
+                                {% endfor %}
+                                </div>
+                        {% else %}
+                            <p style="margin-bottom:5px"><b>Membrane composition</b>: None</p>
+                        {% endif %}
+                    {% if atom_num %}
+                        <p><b>Total number of atoms</b>: {{atom_num}}</p>
+                    {% endif %}
+
+                    </div>
+            </div>
+            <div class="col-md-4 ">
+                <p class="dyn_info_title" style="">Simulation details</p>
+                <div class="techinfo_content">
+                    {%if software %}
+                        <p><b>Software and version</b>: {{software}} {{sversion}} </p>
+                    {%endif%}
+
+                    {%if ff %}
+                        <p><b>Forcefield and version</b>: {{ff}} {{ffversion}} </p>
+                    {%endif%}
+
+                    {%if timestep %}
+                        <p><b>Time step <span title="Time interval between the computation of new atom positions" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></span></b>: {{timestep}} fs </p>
+                    {%endif%}
+
+                    {%if delta%}
+                        <p><b>Delta <span title="Time gap between frames" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></span></b>: {{delta}} ns </p>
+                    {%endif%}
+                    {%if replicates%}
+                        <p><b>Replicates</b>: {{replicates}}</p>
+                    {%endif%}
+                    {%if accum_time %}
+                        <p><b>Accumulated simulation time</b>: {{accum_time}} <span>&#181;</span>s</p>
+                    {%endif%}
+
+                    
+                </div>
+            </div> 
+        </div>
+        <hr style="margin:40px 0">
+        <div class="row" style="margin-bottom:15px">
+            {% if not files_other %}
+            <div class="col-md-3"></div>
+            {% endif %}
+            <div id='middlecol' class="col-md-6 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;">
+                <p class="techinfo_title">Simulation output files</p>
+                <div class="techinfo_content">
+                    <div id='allfiles' >
+                        {% for fileid, myfile in files_simulation.items %}
+                            <!--<a href=/dynadb/files/Dynamics/dyn{{answer.nglviewer_id}}/{{dyn.1}}><button class="btn btn-default" type="button">Download {{dyn.1}}</button></a><br>-->
+                            <a href={{myfile.url}}><button style="width:250px;text-align: center" class="btn btn-default" type="button">{{myfile.type}} file (ID: {{fileid}})</button></a><br>
+                        {% endfor %}
+                    </div> <!--allfiles-->
+                </div>
+            </div> <!--end middle col div-->
+
+            <div id='rightcol' class="col-md-6 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;" >
+                {% if files_other %}
+                <p class="techinfo_title">Simulation protocol & starting files <span style="cursor: default;font-size:15px" title="Download the starting structures, input files, parameters..." class="glyphicon glyphicon-info-sign" data-toggle="tooltip"  data-container="body"></span></p>
+                <div class="techinfo_content">
+                    <div  id='paramfiles'>
+                        {% for fileid, myfile in files_other.items %}
+                            <a  href={{myfile.url}}><button style="width:250px;text-align: center" class="btn btn-default" type="button">{{myfile.type}} file (ID: {{fileid}})</button></a><br>
+                        {% endfor %}
+                    </div> 
+                </div>
+                {% endif %}
+
+            </div> <!--end right col div-->
+        </div> <!-- end row-->
+
+    {% if citation  %}
+    <hr style="margin:40px 0">
+
+        <div class="techinfo">
+            <p class="techinfo_title" style="text-align:center">References</p>
+            <div class="techinfo_content" >
+                <p>{{citation}}</p>
+<!--            {%for reference in answer.references%}
+                <p>{{reference.authors}}. {{reference.pub_year}}. <span style="font-weight:bold;">{{reference.title}}</span>. {{reference.journal}}{% if reference.volume %} {{reference.volume}}{%endif%}{% if reference.issue %} ({{reference.issue}}){%endif%}. doi: {{reference.doi}}.                    
+                    {%if reference.url%}
+                         (<a href="{{reference.url}}">{{reference.url}}</a>)                
+                    {%elif reference.pmid%}
+                        (<a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}</a>)
+                    {%endif%}
+                </p><br>
+            {%endfor%}-->
+          </div>
+        </div>
+    {% endif %}
+    </div>
+    </div>
+    </div>
+
+
+
+    
+
+{% endblock content %}
+{% block addon_js %} 
+
+<!-- My imports-->
+    <script type="text/javascript" >
+    $(document).ready(function(){
+      $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
+
+{% endblock %}
+</body>

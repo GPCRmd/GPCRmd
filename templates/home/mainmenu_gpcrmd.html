@@ -1,0 +1,107 @@
+<!-- top menu: Tools     Simulations     Submissions   Cite us   More-->
+<ul class="nav navbar-nav navbar-right">
+    <!-- Tools -->
+    <li class="dropdown" id="Analysis_li">
+      <a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools
+      <span id= "caret-white" class="caret"></span></a>
+      <ul class="dropdown-menu" data-pointto="Analysis_li">
+        <li id="contmaps"><a href="/contmaps/?itype=hb&cluster=3&prtn=prt&rev=norev&stnd=cmpl">Receptor meta-analysis</a></li>
+        <li ><a class= "toolsLink" onclick="go_to_tools()">Simulation tools</a></li>
+        <li ><a href="/api/"> Web services (dev)</a></li>
+      </ul> 
+    </li>
+
+    <!-- Simulations -->
+    <li class="dropdown" id="simulations">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Simulations
+        <span id= "caret-white" class="caret"></span></a>
+        <ul class="dropdown-menu" data-pointto="simulations">
+          <li ><a href="/gpcrtree/">Family tree</a></li>
+          <li id="datasets"><a href="/dynadb/datasets/">GPCRmd simulations</a></li>   
+          <li ><a href="/dynadb/search/" ></span> Search</a></li>
+        </ul>
+    </li>
+
+    <!-- Submission -->
+    <li id="Submission_li" >
+      <a class="menuItem" href="/accounts/memberpage/">Submission</a>
+    </li>
+
+    <!-- Cite us -->
+    <li >
+      <a class="menuItem" href="https://develgpcrmd-docs.readthedocs.io/en/latest/source/citing-gpcrmd.html" target="_blank">Cite us</a>
+    </li>
+
+    <!-- More -->
+    <li class="dropdown" id="about">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#">More
+        <span id= "caret-white" class="caret"></span></a>
+        <ul class="dropdown-menu" data-pointto="about">           
+            <li id="news"><a href="/news/" >News</a></li>    
+            <li id="community"><a href="/community/" >About us</a></li>            
+            <li><a href="{% url 'covid19:home' %} " target="_blank" >Response to COVID-19</a></li>
+            <li><a href="https://develgpcrmd-docs.readthedocs.io/en/latest/" target="_blank">Documentation</a></li>
+            <li id="contact"><a href="/contact/" >Contact</a></li>
+        </ul>
+    </li>    
+</ul>
+
+
+<!-- Make active the selected button in navbar -->
+<script>
+    function activate_option(id){
+      document.getElementById(id).classList += " active";
+    }
+    var path_list = location.pathname.split("/");
+    switch (path_list[1]){
+      // Tools
+      case "view":
+        activate_option("Analysis_li");
+        break;
+      case "contmaps":
+        activate_option("Analysis_li");
+        break;
+      // Simulations (search and dataset in dynadb)
+      case "gpcrtree":
+        activate_option("simulations");
+        break;
+      // Submission  (references in dynadb)   
+      case "accounts":
+        activate_option("Submission_li");
+        break;
+      // More
+      case "contact":
+        activate_option("about");
+        break;
+      case "community":
+        activate_option("about");
+        break; 
+      case "news":
+        activate_option("about");
+        break;      
+      
+      case "dynadb":
+        switch (path_list[2]){
+          case "references":
+            activate_option("Submission_li");
+            break
+          case "search":
+            activate_option("simulations");
+            break
+          case "datasets":
+            activate_option("simulations");
+            break
+          default:
+            activate_option("submission");
+        }
+
+    }
+
+</script>
+
+<!-- Go to tools section with the menu button -->
+<script>
+  function go_to_tools() {
+    window.location = "/#md_tools";
+  }
+</script>

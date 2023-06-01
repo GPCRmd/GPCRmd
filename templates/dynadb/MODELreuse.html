@@ -1,0 +1,294 @@
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %}
+
+<form method="post" id="myform" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+
+ <!-- description column -->
+ <div class="col-md-4">
+     
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Reuse Complex <br> Complex Information</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+            <div style="text-align:center"> 
+             <h4>CHECK THE COMPLEX INFO</h4>
+            </div>
+             <p style="text-align: justify;" >Please, find here the information on the complex you have requested to be reused in your simulation submission. Make sure the data contained here matches the one corresponding to your simulation.</p>
+             <p style="text-align: justify;" >Information appearing in the ‘Residues assignment and protein coordinate sources’ section must be identical to the one concerning your simulation. Resname, Mol name, Num of mol and Type fields in the ‘Other Molecules in the Complex” section must match data in your simulation as well. </p>
+
+             <p style="text-align: justify;"> If a perfect match exists, please click the 'Check Protein Information' and 'Check Small Molecule Information' links at the bottom of the form to confirm matching of further system details. Otherwise, you have to submit your simulation as a new system from scratch by clicking the ‘New Submission’ button in the initial ‘Simulation Submission’ page and following the whole Submission index. </p>
+<!--              <p style="text-align: justify;" >Fill in the form with information on the curated pdb protein (loops, mutations, etc)</p>
+             <p style="text-align: justify;" >Contains structural information about proteins or “molecular complexes” in PDB format similar to the PDB database: structure and coordinates of protein, ligand and/or  molecules crystallized with proteins, crystallized or user-predicted stable waters and ions.</p>
+
+             <p style="text-align: justify;">Note, do not include coordinates of solvent, ions, membrane lipids or other molecules which are part of the general solvation environment specially if their coordinates are randomly generated. </p> -->
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-lg-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+		<div class=row id='PRUEBA'>
+<!-- 			<div style="text-align:center">
+            			<h4><br>Select Complex</h4><br>    
+             			<h4><br>Complex Information</h4><br>
+            		</div>   -->
+
+ 			<div style="text-align:center">
+<!--       			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Reuse Complex Temporarily unavailable</a></h4><br> -->
+             			<h4><br>Complex Information</h4><br>
+<!--             			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Complex Information</a></h4><br> -->
+            		</div>
+                <div class="row">
+		  	<div class="col-md-1"></div><div class="col-md-3" style="text-align:left"><label for="Model">Complex:</label></div>
+		  	<div class="col-md-4" style="text-align:left"> Reuse Complex <input  type="radio" name="Model" checked value="Reuse Model" disabled></div>
+	 		<div class="col-md-4" style="color:gainsboro;text-align:center"><input  type="radio" name="Model" value="New Model" disabled > New Complex</div></div><br>
+	        <div class="row">
+			<div class="col-md-8 col-md-offset-4" style="text-align:left">
+			    <div class="row">
+				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><label for="Choose_reused_model"><a title="Choose a previous complex from the GPCRmd database">Complex ID:</a> </label></div>
+				<div class="col-md-8"><input style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1"  value="{{model_id}}" readonly ></input></div>
+                            </div>{% if message|length > 0 %}  <div class="col-md-12" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><h4> <p style="color:red;font-size:12px;text-align:justify;margin-left:8%;margin-right:8%">{{CHoose_submission_id}}</p></h4></div>{% endif %}
+			    <div class="row">
+			<!--	<div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><label for="Choose_submission_id"><a title="Choose a previous submission from the GPCRmd database">Submission ID:</a> </label></div>
+
+			        <div class="col-md-8"><input style="width:130px" id="Choose_submission_id" value="{{submission_id}}" name="Choose_submission_id" rows="1" readonly ></input></div> -->
+		            </div><br>
+                            </div>
+				
+		<br>
+		</div></div> 
+		</div></div> 
+    <!-- filters -->
+  <div class="col-lg-12 panel panel-primary"> 
+  <div class="row"> 
+     <br><br>
+               <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_name"><a title="Choose a name for your complex" > Complex Name:</a></label></div>
+			<div class="col-md-6"><input cols="40" id="id_name" type="text" name="name" rows="2"  style="width:300px" readonly value="{{p.values.0.name}}" ></input></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_type"><a title="Complex Type: Type of structure that is modeled." > Complex Type:</a></label></div>
+				<div class="col-md-6" style="height:30px"><select id="id_type" name="type"  readonly style="width:300px" >
+                                        <option value="{{p.values.0.type}}" >{{Type}}</option>
+				<!--	<option value="0">Protein Apoform </option>
+					<option value="1"> Protein-Protein or Protein-Ligand Complex</option> -->
+				</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_pdbid"><a title="PDB ID: PDB ID from Protein Data Bank database. It should contain chain code when necessary (e.g. 4IAR.A). " >PDB ID:</a></label></div>
+			<div class="col-md-6"><input id="id_pdbid" maxlength="6" name="pdbid" type="text"  value="{{p.values.0.pdbid}}" readonly    style="width:300px"/></div>
+		<br></div>
+
+	        <div class="row">
+		<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_description"><a title="Description: Description of the complex containing information that is not provided in other field such as procedure followed for the construction of the model. " >Description:</a></label></div>
+			<div class="col-md-6"><input type="text" cols="40" id="id_description" name="description" value="{{p.values.0.description}}" readonly rows="2"  style="width:300px"></textarea></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_source_type"><a title="Source Type: Source of the coordinates of the “complex”. Loop repairs and other replaced missing protein residues on X-ray or NMR structures are not taken into account for setting the value of this field. In order to set the value to X-ray or NMR all the coordinates (including relative positions between different components) of protein complexes and their components should come from an X-ray or an NMR experiment." >Source Type:</a></label></div>
+				<div class="col-md-6" style="height:30px"><select id="id_source_type" name="source_type"   readonly style="width:300px" >
+					<option value="{{p.values.0.source_type}}" >{{SType}}</option>
+				</select></div>
+		<br></div>
+
+
+	        <div class="row">
+                	<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="upload_pdb"><a title="Upload PDB file: Provide the PDB file which contains the 3D structure of the model (Max. size of the file is 50 MB)" >Upload PDB file:</a></label></div>
+			<div class="col-md-3"><input type="file"  name="file_source"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input"  id="PDBcoor" readonly /></div>
+		</div>
+
+			<div style="text-align:right;margin-right:5%"><input type="submit" value="Upload" name="upload`_pdb"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" id="PDBcoor" readonly /></div>
+			
+  <br></div>
+		<div class=row id='PRUEBA1'>
+ 			<div style="text-align:center">
+
+             			<h4>Residues assignment and protein coordinate sources</h4><br>
+                        <div class="col-md-12" style="heigh:30px">
+                                <p style="font-size:12px;text-align:justify;margin-left:10%;margin-right:10%">In order to assign correctly the canonical GPCR numbering to your simulation system, please match the residue ID used in your simulation system with the standard/referemce residue id of the UNIPROT sequence</p><br>
+                                </div>
+            		</div>
+
+
+                        <table style="text-align=center;width:96%;margin-left:2%;margin-right:2%;"> 
+                                <thead><tr><th style="width:40px;text-align:center"><label style="writing-mode: vertical-rl;text-align:right;height:65px"for="id_prot" size='10'><a title="Ordinal number corresponding to the records containing sequence information that was provided in the protein form ">Prot</a></label></th>
+					<!--<th style="width:70px;text-align:center"><label for="id_id_protein" size='10'><a title="Protein ID: ID of the protein that is modeled in this fragment.">Protein ID</a></label></th>-->
+					<th style="width:70px;text-align:center"><label style="writing-mode: vertical-rl;height:65px;text-align:right"for="id_chain" size='10'><a title="Chain: Chain identifier for the model in PDB format. ">Chain</a></label></th>
+					<th style="width:70px;text-align:center"><label style="writing-mode: vertical-rl;height:65px;text-align:right"for="id_segid" size='10'><a title="Segid: segment identifier for the model in charmm PDB format. ">Segid</a></label></th>
+					<th style="width:70px;text-align:center"><label style="writing-mode: vertical-rl;height:65px;text-align:right" for="id_resid_from" size='10'><a title="Res from: Starting PDB file resid of the protein fragment. ">Res from</a></label></th>
+					<th style="width:70px;text-align:center"><label style="writing-mode: vertical-rl;height:65px;text-align:right"for="id_resid_to"><a title="Resid to: ending PDB file resid of the protein fragment.">Res to</a></label></th>
+					<th style="width:70px;text-align:center"><label style="writing-mode: vertical-rl;height:65px;text-align:right"for="id_seq_resid_from"><a title="Seq Resid to: Starting resid of the protein fragment in the protein sequence numbering."> Seq Res from</a></label></th>
+					<th style="width:70px;text-align:center"><label style="writing-mode: vertical-rl;height:65px;text-align:right"for="id_seq_resid_to"><a title=" Seq Resid to: ending resid of the protein fragment in the protein sequence numbering."> Seq Res to</a></label></th>
+					<th style="width:70px;text-align:center"><label style="writing-mode: vertical-rl;height:65px;text-align:right"for="id_id_bonded_to_previous"><a title="Bond?: check this box if the fragment is covalently bonded to the C-terminal of the prevous one."> Bond?</a></label></th>
+					<th style="width:70px;text-align:center"><label style="writing-mode: vertical-rl;height:65px;text-align:right"for="id_pdbidps"><a title="PDB ID: PDB ID from Protein Data Bank database. It should contain chain code when necessary (e.g. 4IAR.A). Must be empty when the source of the modeled residues is not X-ray or NMR. ">PDB ID</a></label></th>
+					<th style="width:70px;text-align:center"><label style="writing-mode: vertical-rl;height:65px;text-align:right"for="id_source_typeps"><a title="Source type: Source of the coordinates of the protein fragment.">Source type</a></label></th>
+<!--					<th style="width:70px;text-align:center"><label style="writing-mode: vertical-rl;height:65px;text-align:right"for="id_template_id_model"><a title="Template id model: ID of the model used as template if “Source type” is set to 'Homology'. ">Template model ID</a></label></th></tr> -->
+                                </thead>
+                                <tbody id="pElement1">
+{% for o in rowsMR.values %} 		{%for intps0 in lformps%}{% if forloop.counter == forloop.parentloop.counter %}{{intps0}}	
+                         	<tr id="Element1_{{intps0}}"><td style="padding:5px 5px 5px 5px"><input id="id_prot" value="{{intps0|add 1}}"  name="formps-{{intps0}}-prot" type="number" style="width:45px"  readonly /></td>
+				<!--<td style="padding:5px 5px 5px 5px"><input id="id_id_protein" value=  name="formps-{{intps0}}-id_protein" type="number" style="width:60px" placeholder=" 1"/></td>-->
+				<td style="padding:5px 5px 5px 5px"><input id="id_chain" maxlength="1" value="{{o.chain}}"  name="formps-{{intps0}}-chain" type="text" style="width:45px"  readonly /></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_segid" maxlength="4" value="{{o.segid}}"  name="formps-{{intps0}}-segid" type="text" style="width:45px"  readonly/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_resid_from" value="{{o.resid_from}}"  name="formps-{{intps0}}-resid_from" type="text"  style="width:45px" readonly/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_resid_to" value="{{o.resid_to}}"  name="formps-{{intps0}}-resid_to" type="text" style="width:50px"  readonly/></td>
+                              <td style="padding:5px 5px 5px 5px"><input id="id_seq_resid_from" value="{{o.seq_resid_from}}"  name="formps-{{intps0}}-seq_resid_from" type="text"  style="width:50px" readonly/></td>
+                              <td style="padding:5px 5px 5px 5px"><input id="id_seq_resid_to" value="{{o.seq_resid_to}}"  name="formps-{{intps0}}-seq_resid_to" type="text"  style="width:50px" readonly/></td>
+                              <td style="padding:5px 5px 5px 10px"><input id="id_bonded_to_id_modeled_residues" value="{{o.bonded_to_id_modeled_residues_id}}"  name="formps-{{intps0}}-bonded_to_id_modeled_residues" style="aligned:center" type="checkbox" checked /></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_pdbidps" maxlength="6" value="{{o.pdbid}}"  name="formps-{{intps0}}-pdbidps" type="text"  style="width:50px"  readonly/></td>
+		<!--		<td style="padding:5px 5px 5px 5px"><input id="id_source_typeps" value="{{o.source_type}}"  name="formps-{{intps0}}-source_typeps" type="text"  style="width:50px" /></td>-->
+				<td style="padding:5px 5px 5px 5px"><select id="id_source_typeps"   name="formps-{{intps0}}-source_typeps" style="width:50px" readonly >	
+                                       {% for ll in lmol_MOD_type_tup %}
+                                           {% if forloop.counter == forloop.parentloop.counter %}
+					   <option value="{{ll.0}}">{{ll.1}}</option>
+                                           {%endif%}
+                                       {%endfor%}	</select></td>
+
+	<!--				<option value="1">NMR</option>
+					<option value="2">Ab-initio</option>
+					<option value="3">Threading</option>
+					<option value="4">Homology</option>
+					<option value="5">Threading</option>
+					<option value="6">Other Computational Methods</option>
+				</select></td> 
+			<td style="padding:5px 5px 5px 5px"><input id="id_template_id_model" style="width:60px"  value= name="template_id_model" type=text></td>   -->
+				</tr>
+                                           {%endif%}
+                                       {%endfor%}
+{% endfor %}   </tbody> </table>
+			<br>
+		        <script src="{% static 'dynadb/addFields.js' %}"></script>		
+<!-- 			<div style="text-align:center">
+			     <input type="button" value="+ Add protein coordinates source"  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement1();"><br>
+			     <input type="button" value="- Remove protein coordinates source"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement1();">
+		        </div>	
+ 			<div style="text-align:right;margin-right:5%">
+                                        <input type="submit" value="Validate"  style="height:30px;margin: 15px 5px 0px 0px;width:100px"id="pdbchecker2" > 
+                                        <input type="submit" value="Autocomplete resid" style="height:30px;margin: 15px 0px 0px 0px;width:100px" id="pdbchecker1" >                                        
+		        </div> 	--> 	
+		        </div><br>
+
+		<div class=row id='PRUEBA2'>
+ 			<div style="text-align:center">
+             			<h4><a style="color:black" title="Do not include molecule types which are part of the general solvation environment">Other Molecules in the Complex</a></h4><br>
+            		</div>
+
+ 			<div style="text-align=center">
+                        <table style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
+				<thead><tr><th style="width:90px;text-align:center"><label for="id_resname"><a title="Resname: Resname present on simulation topology file. Atom names and residue names from Protein Data Bank are prefered but not mandatory.">Resname</a></label></th>	
+					<th style="width:90px;text-align:center"><label for="molecule"><a title="Ordinal number corresponding to the records containing sequence information that was provided in the small molecule form. ">Molecule</a></label></th>
+					<th style="width:90px;text-align:center"><label for="id_id_molecule"><a title="Mol ID: ID of the chemical model (“molecule”) present in “model”. ">Mol ID</a></label></th>
+					<th style="width:90px;text-align:center"><label for="id_namemc"><a title="Mol name: Name of the component">Mol name</a></label></th>
+					<th style="width:90px;text-align:center"><label for="id_numberofmol"><a title="Number of molecules: Number of molecules belonging to an specific residue type present on simulation topology. ">Num of mol</a></label></th>
+					<th style="width:90px;text-align:center"><label for="id_typemc"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
+				</thead>
+                                <tbody id="pElement2">
+{% for o in rowsMC.values %}  {% for intmc0 in lformmc %}  {% if forloop.counter == forloop.parentloop.counter %}
+                                	<tr id="Element2_{{intmc0}}"><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
+ 
+                                        {% for d in l_ord_mol %}{% if forloop.counter == forloop.parentloop.counter %}
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule"  maxlength="4" name="formmc-{{intmc0}}-molecule" type="text"  readonly value="{{d}}"/></td>
+                                        {%endif%}{%endfor%}
+
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_id_molecule" value="{{o.id_molecule_id}}" name="formmc-{{intmc0}}-id_molecule" type="text" readonly  ></td>
+                                        {% for name in lcompname %}  {% if forloop.counter == forloop.parentloop.counter %}
+ 
+					<td style="padding:5px 5px 5px 5px"><input id="id_namemc" maxlength="60" name="formmc-{{intmc0}}-namemc" type="text" style="width:70px" value="{{name}}" readonly /></td>                        {%endif%}{%endfor%}
+					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol"  name="formmc-{{intmc0}}-numberofmol" value="{{o.numberofmol}}" type="number" style="width:70px" readonly  /></td>
+
+                                {% for ll in lmtype %}
+                                   {% if forloop.counter == forloop.parentloop.counter %}
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_typemc" readonly name="typemc" value= "{{ll}}"  type="text" style="width:70px" /></td>
+                                   {% endif %}
+                                {% endfor %}
+
+                                           {%endif%}
+                                       {%endfor%}
+						</tr> {% endfor %}
+                        </tbody>
+			</table>
+	               <br>
+ 		<!--  	<div style="text-align:center" style="margin: 5px 0px 5px 0px" >
+			     <input type="button" value="+ Add Molecule"  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement2();"><br>
+			     <input type="button" value="- Remove Molecule"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement2();">
+		        </div> 		
+
+ 			<div style="text-align:right;margin-right:5%">
+					<button onclick="addFields()" style="height:30px;margin: 15px 0px 0px 0px;width:100px"> Validate </button> 
+		        </div> 		
+
+
+
+
+        <th><input type="submit" value="Submit" /> </th><br>   -->
+<br><div>
+		       </div> 	
+		        </div> 		
+		        </div> 		
+</form>
+
+
+
+</div>
+
+  <div id="selection-buttons">
+      <div class="col-md-12 panel panel-primary" >
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/proteinreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Protein Information (Step 1)</a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/moleculereuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Small Molecule Information (Step 2)</a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/dynamicsreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
+      	  </div>
+      </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block addon_js %}
+    <script src="{% static 'dynadb/pdbchecker.js' %}"></script>
+    <script src="{% static 'dynadb/upfile.js' %}"></script>
+    <script src="{% static 'dynadb/upload_searchtop.js' %}"></script>
+    <script src="{% static 'dynadb/searchtop.js' %}"></script>
+    <script src="{% static 'dynadb/addModeledelement1.js' %}"></script>
+    <script src="{% static 'dynadb/delModeledelement1.js' %}"></script>
+    <script src="{% static 'dynadb/addModeledelement2.js' %}"></script>
+    <script src="{% static 'dynadb/delModeledelement2.js' %}"></script>
+<!-- <script src="{% static 'dynadb/Modelsourcetypeps.js' %}"></script> -->
+
+{% endblock %}

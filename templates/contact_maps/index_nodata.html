@@ -1,0 +1,79 @@
+<head>
+
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script>document.domain=document.domain;</script>
+
+<!--Bootstrap things-->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+<!--Load javascripts -->
+<script src="../static/contact_maps/contmaps_main.js"></script>
+
+<!--Personal styles-->
+<link rel="stylesheet" type="text/css" href="../static/contact_maps/contmaps_main.css">
+<link rel="stylesheet" href="../mdsrv/webapp/css/main.css" />
+
+{% extends "home/base.html" %} 
+{% load static %} 
+{{staticfiles}}
+
+{% block addon_css %}
+
+{% endblock %}
+
+</head>
+<body>
+
+{% block content %} 
+{% csrf_token %}
+
+ <!-- description  -->
+<div id="outer" class="col-xs-12">
+  <div class=" panel panel-primary" id="inner_fixed">  
+     <div class="panel-body">
+        <h2>Receptor meta-analysis</h2>
+        <h4>Residue interaction frequency: <span style="font-weight: bold">{{itype_name}}</span></h4>
+     </div> 
+  </div>
+</div>
+
+<div id="inner_remaining">
+  <div class="col-xs-12" id="retracting_parts" style="padding-bottom:10px">
+    <div class="row">
+      <div class="col-xs-12" id="plot_col">
+        <div class="panel panel-primary" id="main_plot_body">
+          <div class="panel-body" style="padding-left: 0px">
+            <div id="menus" class="container-fluid">
+              {% include 'contact_maps/menus.html' %}
+            </div>
+            <div class="container" style="min-height: 70%">
+            <div id="second_col" class="col-xs-12">
+              <h1 id="not_avalible_text"><center>No {{itype_name}} interactions avalible for these simulations</scenter></h1>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>    
+    {% include 'contact_maps/docs.html' %}
+  </div>
+</div>
+
+
+{% endblock content %} 
+
+
+{% block addon_js %} 
+
+<script src="{% static 'gpcrome/emb_crossgpcr.js' %}"></script>
+
+<!-- Bokeh -->
+<link href="https://cdn.pydata.org/bokeh/release/bokeh-1.4.0.min.css" rel="stylesheet" type="text/css">
+<link href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.4.0.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-1.4.0.min.js"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.4.0.min.js"></script>
+{{ script | safe }}
+{% endblock %}
+
+</body>
+

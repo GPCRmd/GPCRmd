@@ -1,0 +1,9 @@
+
+
+<div class="row subsectionbody">
+    <p class="var_impact_selected_none">Please select a variant from the sequence above.</p>
+    <div style="display:none" class="var_impact_selected">
+        <p>{{analysis_type}} of residue <span class="var_impact_selected_resseq" style="font-weight: bold"></span> (ResID <span class="var_impact_selected_resid"></span>, chain <span class="var_impact_selected_chain"></span>)</p>
+        <div  class="timeDep_chart" data-type="{% if analysis_type_short %}{{analysis_type_short}}{% else %}{{analysis_type}}{% endif %}" ></div>
+    </div>
+</div>

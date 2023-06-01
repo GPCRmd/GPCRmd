@@ -1,0 +1,244 @@
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+ {% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">
+{% csrf_token %}
+    <input type="hidden" name="extra" value="{{extra}}">
+
+    <fieldset>
+        <legend> Protein Form </legend>	
+        {{ fdb_ProteinForm.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+_______________________________________________
+<button onmouseover="alert('You Clicked');">
+     Click ME
+</button>
+
+
+_______________________________________________
+
+
+
+    <fieldset>
+        <legend> Other_Protein_NamesForm </legend>	
+        {{ fdb_Other_Protein_NamesForm.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Protein_SequenceForm </legend>	
+        {{ fdb_Protein_SequenceForm.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+__________________________________________________________
+    <fieldset>
+        <legend> fdb_Cannonical_ProteinsForm </legend>	
+        {{ fdb_Cannonical_ProteinsForm.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Protein_MutationsForm </legend>	
+        {{ fdb_Protein_MutationsForm.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_CompoundForm </legend>	
+        {{ fdb_CompoundForm.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Other_Compound_Names </legend>	
+        {{ fdb_Other_Compound_Names.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Molecule </legend>	
+        {{ fdb_Molecule.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Files </legend>	
+        {{ fdb_Files.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Files_Molecule </legend>	
+        {{ fdb_Files_Molecule.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Complex_Exp </legend>	
+        {{ fdb_Complex_Exp.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Complex_Protein </legend>	
+        {{ fdb_Complex_Protein.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdd_Complex_Molecule </legend>	
+        {{ fdd_Complex_Molecule.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Complex_Molecule_Molecule  </legend>	
+        {{ fdb_Complex_Molecule_Molecule.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Modeled_Residues </legend>	
+        {{ fdb_Modeled_Residues.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Files_Model </legend>	
+        {{ fdb_Files_Model.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Dynamics </legend>	
+
+
+<tr><th><label for="id_id_model">Id model:</label></th><td><select id="id_id_model" name="id_model">
+<option value="" selected="selected">---------</option>
+<option value="1">DyndbModel object</option>
+</select></td></tr>
+<tr><th><label for="id_id_dynamics_methods">Id dynamics methods:</label></th><td><select id="id_id_dynamics_methods" name="id_dynamics_methods">
+<option value="" selected="selected">---------</option>
+<option value="8">DyndbDynamicsMethods object</option>
+<option value="6">DyndbDynamicsMethods object</option>
+<option value="5">DyndbDynamicsMethods object</option>
+<option value="9">DyndbDynamicsMethods object</option>
+<option value="7">DyndbDynamicsMethods object</option>
+<option value="1">DyndbDynamicsMethods object</option>
+<option value="4">DyndbDynamicsMethods object</option>
+<option value="3">DyndbDynamicsMethods object</option>
+<option value="2">DyndbDynamicsMethods object</option>
+</select></td></tr>
+<tr><th><label for="id_software">Software:</label></th><td><input id="id_software" maxlength="30" name="software" type="text" /></td></tr>
+<tr><th><label for="id_sversion">Sversion:</label></th><td><input id="id_sversion" maxlength="15" name="sversion" type="text" /></td></tr>
+<tr><th><label for="id_ff">Ff:</label></th><td><input id="id_ff" maxlength="20" name="ff" type="text" /></td></tr>
+<tr><th><label for="id_ffversion">Ffversion:</label></th><td><input id="id_ffversion" maxlength="15" name="ffversion" type="text" /></td></tr>
+<tr><th><label for="id_id_assay_types">Id assay types:</label></th><td><select id="id_id_assay_types" name="id_assay_types">
+<option value="" selected="selected">---------</option>
+<option value="1">DyndbAssayTypes object</option>
+<option value="2">DyndbAssayTypes object</option>
+<option value="3">DyndbAssayTypes object</option>
+<option value="4">DyndbAssayTypes object</option>
+<option value="5">DyndbAssayTypes object</option>
+<option value="6">DyndbAssayTypes object</option>
+<option value="7">DyndbAssayTypes object</option>
+</select></td></tr>
+<tr><th><label for="id_description">Description:</label></th><td><input id="id_description" maxlength="150" name="description" type="text" /></td></tr>
+<tr><th><label for="id_id_dynamics_membrane_types">Id dynamics membrane types:</label></th><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types">
+<option value="" selected="selected">---------</option>
+<option value="3">DyndbDynamicsMembraneTypes object</option>
+<option value="2">DyndbDynamicsMembraneTypes object</option>
+<option value="1">DyndbDynamicsMembraneTypes object</option>
+</select></td></tr>
+<tr><th><label for="id_id_dynamics_solvent_types">Id dynamics solvent types:</label></th><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types">
+<option value="" selected="selected">---------</option>
+<option value="1">DyndbDynamicsSolventTypes object</option>
+<option value="7">DyndbDynamicsSolventTypes object</option>
+<option value="5">DyndbDynamicsSolventTypes object</option>
+<option value="6">DyndbDynamicsSolventTypes object</option>
+<option value="2">DyndbDynamicsSolventTypes object</option>
+<option value="3">DyndbDynamicsSolventTypes object</option>
+<option value="4">DyndbDynamicsSolventTypes object</option>
+</select></td></tr>
+<tr><th><label for="id_solvent_num">Solvent num:</label></th><td><input id="id_solvent_num" name="solvent_num" type="number" /></td></tr>
+<tr><th><label for="id_update_timestamp">Update timestamp:</label></th><td><input id="id_update_timestamp" name="update_timestamp" type="text" /></td></tr>
+<tr><th><label for="id_creation_timestamp">Creation timestamp:</label></th><td><input id="id_creation_timestamp" name="creation_timestamp" type="text" /></td></tr>
+<tr><th><label for="id_created_by_dbengine">Created by dbengine:</label></th><td><input id="id_created_by_dbengine" maxlength="40" name="created_by_dbengine" type="text" /></td></tr>
+<tr><th><label for="id_last_update_by_dbengine">Last update by dbengine:</label></th><td><input id="id_last_update_by_dbengine" maxlength="40" name="last_update_by_dbengine" type="text" /></td></tr>
+<tr><th><label for="id_created_by">Created by:</label></th><td><input id="id_created_by" name="created_by" type="number" /></td></tr>
+<tr><th><label for="id_last_update_by">Last update by:</label></th><td><input id="id_last_update_by" name="last_update_by" type="number" /></td></tr>
+<tr><th><label for="id_submission_id">Submission id:</label></th><td><input id="id_submission_id" name="submission_id" type="number" /></td></tr>
+
+
+
+
+
+
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Dynamics_tags </legend>	
+        {{ fdb_Dynamics_tags.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Dynamics_Tags_List </legend>	
+        {{ fdb_Dynamics_Tags_List.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Files_Dynamics </legend>	
+        {{ fdb_Files_Dynamics.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Related_Dynamics </legend>	
+        {{ fdb_Related_Dynamics.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Related_Dynamics_Dynamics </legend>	
+        {{ fdb_Related_Dynamics_Dynamics.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Model </legend>	
+        {{ fdb_Model.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--        <div style="text-align: right">
+        {% if not edit%}
+            <input type="submit" name="action" value="Create">
+        {% else %}
+            <input type="submit" name="action" value="Edit">
+        {% endif %}
+        </div>
+    </form> -->
+
+{% endblock content %}
+
+
+

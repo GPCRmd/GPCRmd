@@ -1,0 +1,234 @@
+{% extends "home/base.html" %} 
+{% load static %} 
+{% block addon_css %}
+  <style>
+  .ui-autocomplete {
+    max-height: 100px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+  }
+  /* IE 6 doesn't support max-height
+   * we use height instead, but this forces the menu to always be this tall
+   */
+  * html .ui-autocomplete {
+    height: 100px;
+  }
+  th {
+    width:80px;
+    text-align:center;
+  }
+  td {
+    padding: 5px 5px 5px 5px;
+  }
+  </style>
+{% endblock %}
+{% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Simulation Submission<br>Step 1:<br>Protein Information</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+
+            <div style="text-align:center"> 
+             <h4>FILL IN THE PROTEIN FORM</h4>
+	    </div>
+             <p style="text-align: justify;">Fill in the form with the relevant data concerning the receptor and other proteins involved in the simulation.</p>
+             <p style="text-align: justify;">Protein information is linked to a cannonical sequence obtained from UniProtKB and identified by a UniProtKB accession number (AC).</p>
+
+ 
+	     <p style="text-align: justify;">Mutated proteins must be specified by providing wild type UniProtKB AC and the alignment between the wild type sequence and the mutated one in fasta format.<p>
+
+	     <p style="text-align: justify;">Several proteins can be added in a single submission but at least one must be a G protein-coupled receptor (GPCR) whose sequence must have been deposited on GPCRdb. </p>
+
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+             </p>
+         </div>
+     </div>
+ </div>
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div id="pprotform" class="col-md-7 "> 
+  <div id="protform" class="col-md-12 panel panel-primary"> 
+    <div class="panel-body">
+      <div style="text-align:right;color:black" > 
+             <h4 id="protlabnum">PROTEIN  #1</h4>
+	    </div>
+                <div style="text-align:center">
+             			<h4><br>Protein Sequence Details</h4>
+                </div><br>
+	        <div class="row">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_name"><a title="Name: Recommended name from UniProtKB. ">Name:</a></label></div>
+			<div class="col-md-6"><input id="id_name" maxlength="60" readonly  name="name" type="text" style="width:300px" value="{{o.1.name}}" placeholder=" 5-HT1B receptor"/></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_uniprotkbac"><a title="UniProtKB AC: UniProtKB Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers pointing to cannonical sequences. Mutations are handled in a different field. ">UniProtKB AC:</a></label></div>
+			<div class="col-md-6"><input id="id_uniprotkbac" maxlength="10" name="uniprotkbac" style="width:300px" type="text" value="{{o.uniprotkbac}}"  placeholder=" P28222"/></div>
+		<br></div>
+			
+	        <div class="row">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_isoform"><a title="Isoform: Isoform number for a UniProtKB Accession Number. Cannonical sequences have the value '1'.">Isoform:</a></label></div>
+			<div class="col-md-3"><input id="id_isoform" name="isoform" type="number" style="width:140px" value="{{o.isoform}}" placeholder=" 1"/></div>
+			<div class="col-md-3" style="margin-left:1.5%"><!-- jQuery static/retrieve_data.js --><button style="width:140px;" type=button id="id_get_data_upkb" name="get_data_upkb">Retrieve data</button></div>
+		<br></div>
+		<div class="row" style="padding:10px 0px 0px 0px">
+                        <div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_is_not_uniprot"><a title="Not in UniprotKB: NOT RECOMENDED. This value must be checked if the protein sequence is not found in UniProtKB. This protein could be difficult to find in future queries!">Not in UniprotKB?</a></label></div>
+                        <div class="col-md-5"><input id="id_is_not_uniprot"  name="is_not_uniprot" value="{{o.is_not_uniprot}}" type="checkbox" /></div>
+                </div>
+	        <div class="row" style="padding:0px 0px 0px 0px">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_receptor"><a title="Receptor: This value must be checked if the protein is a GPCR.">Is it a receptor? </a></label></div>
+			<div class="col-md-5"><input id="id_receptor" name="receptor" type="checkbox" checked disabled value='1'  /></div>
+	        </div>
+		<div class="row" style="padding:0px 0px 10px 0px">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_is_mutated"><a title="Mutant: This value must be checked if the protein sequence differs from the one identified at UniProtKB by “UniProtKB AC” and “isoform”.">Is it a mutant?</a></label></div>
+			<div class="col-md-1"><input id="id_is_mutated" name="is_mutated" type="checkbox" value='1'/></div>
+		</div>
+                <br>
+	        <div class="row">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_id_species"><a title="Species: Protein sequence species. Type scientific name or UniprotKB mnemonic inside brackets and select the appropiate entry. Use &quot;synthetic&quot; for artficial sequences or &quot;unidentified&quot for unknown sources.">Species:</a></label></div>
+			<div class="col-md-7" style="height:30px;display:inline-block;">
+			<input id="id_id_species" name="id_species" type="hidden" value="{{o.id_species}}"/>
+<!--                         <input id="id_id_species_autocomplete" maxlength="200" name="id_species_autocomplete" type="text" style="width:300px" placeholder="Homo Sapiens (HUMAN)"/> -->
+                        </div>
+		</div>
+		<div class="row">
+		<div class="col-md-4" style="height:90px"></div>
+		<div class="col-md-7">
+		<p style='margin-top: 10px;' align="justify">You can search for scientific names and UniprotKB mnemonics <a href="http://www.uniprot.org/taxonomy/" target="_blank">here</a>. Also, you can download <a href="http://www.uniprot.org/docs/speclist" target="_blank">UniprotKB species list</a> and species <a href="download_specieslist/" target="_blank">not included there</a>.</p>
+		</div>
+		</div>
+                <br>
+	        <div class="row">
+                <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_other_names"><a title="Aliases: Other names that are obtained from UniProtKB/Swiss-Prot.">Aliases:</a></label></div><div class="col-md-6">
+		<textarea cols="40" id="id_other_names" name="other_names" readonly rows="2"  value="{{o.other_names}}" style="width:300px"></textarea></div>
+		</div><!--placeholder=" 5-hydroxytryptamine receptor 1B; Serotonin receptor 1B"-->
+
+            {% for o in dictprot.items %}
+	        <div class="row">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_sequence"><a title="Wild type sequence: Wild-type sequence of the protein in IUPAC one letter code.">Wild type sequence:</a></label></div>
+			<div class="col-md-7"><textarea cols="40" id="id_sequence" name="sequence" readonly rows="2" style="width:300px" value="{{o.sequence}}"></textarea></div>
+		<br></div>
+<!--placeholder=" MEEPGAQCAPPPPAGSETWVPQANLSSAPSQNCSAKDYIYQDSISLPWKVLLVMLLALITLATTLSNAFVIATVYRTRKLHTPANYLIASLAVTDLLVSILVMPISTMYTVTGRWTLGQVVCDFWLSSDITCCTASILHLCVIALDRYWAITDAVEYSAKRTPKRAAVMIALVWVFSISISLPPFFWRQAKAEEEVSECVVNTDHILYTVYSTVGAFYFPTLLLIALYGRIYVEARSRILKQTPNRTGKRLTRAQLITDSPGSTSSVTSINSRVPDVPSESGSPVYVNQVKVRVSDALLEKKKLMAARERKATKTLGIILGAFIVCWLPFFIISLVMPICKDACWFHLAIFDFFTWLGYLNSLINPIIYTMSNEDFKQAFHKLIRFKCTS"-->
+                <div class="row">
+                        <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_alignment"><a title="Sequence alignment: alignment in fasta format between the wild type sequence (1st sequence entry in fasta) and the mutant one (2nd sequence entry in fasta).">Sequence alignment:</a></label></div>
+                        <div class="col-md-7"><textarea cols="40" id="id_alignment" name="alignment" disabled autofocus rows="2" style="width:300px"  value="{{o.alignment}}" placeholder=""></textarea></div>
+                {% endfor %}
+                <br></div>
+	        <div class="row">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_msequence"><a title="Mutant sequence: Contains mutations and deletions indicarted with the hyphen character '-'.">Mutant sequence:</a></label></div>
+			<div class="col-md-7"><textarea cols="40" id="id_msequence" name="msequence" disabled rows="2" style="width:300px" placeholder=""  value="{{o.msequence}}"></textarea></div>
+		<br></div>
+               <br>
+
+	        <div class="row" style="height:30px">
+
+                                <div class="col-md-1" style="height:30px"></div>
+                                <div class="col-md-3" style="height:30px"></div>
+                                <div class="col-md-7" style="height:30px;text-align: left">
+                                <button type='button' id='id_get_align' disabled name='get_align' title="Perform an alignment between Wild type and Mutant sequence. The result will be displayed in the Sequence alignment box for editing and in pop up." style="width:60px;" disabled>
+                                Align</button>
+                                <button type='button' id='id_get_mutations'  name='get_mutations' title="Mutations are identified after comparing the sequence supplied in the 'Sequence' field with the wild type sequence from UniProtKB." style="width:110px;" disabled>
+                                Get mutations</button>
+                                <button type='button' id='id_clean_mutations'  name='clean_mutations' title="Cleans assigned mutations and allows a new alignment." style="width:122px;" disabled>
+                                Clean mutations</button>
+                                </div>
+                </div>
+
+                <br>
+		<div class=row>
+			
+ 			<div style="text-align:center;height:40px">
+             			<h4>Protein Mutations</h4>
+            		</div>
+
+                        <table id="mutationtable" align='center'>
+				<tr>	<th><label for="id_resid"><a title="Resid: Residue number that its mutated on wild type protein.">Resid</a></label></th>
+					<th><label for="id_resletter_from"><a title=" Resletter from: Residue name in IUPAC one letter code that is present on wild type protein. '-' character is used in case of insertions.">Resletter from</a></label></th>
+					<th><label for="id_resletter_to"><a title=" Resletter to: Residue name in IUPAC one letter code that is present on mutated protein. '-' character is used in case of deletions and 'X' for engineered residues.">Resletter to</a></label></th></tr>
+				<tr> 	<td><input style="width:140px;" disabled id="id_resid" name="resid" type="number"  value="{{o.number}}"/></td> <!--placeholder=" 95"-->
+					<td><input style="width:140px;" id="id_resletter_from" maxlength="1" disabled name="resletter_from" value="{{o.resletter_from}}" type="text"  /></td> <!--placeholder=" D" -->
+					<td><input style="width:140px;" id="id_resletter_to" maxlength="1" disabled name="resletter_to" type="text" value="{{o.resletter_to}}" /></td>	<!--placeholder=" A"-->	
+				</tr>
+
+			</table>
+                </div>
+<!--	<div class="col-md-6">
+		<p style="margin-right:10%;margin-left:40%;padding:5px 5px 5px 5px"><button style="width:120px;" onclick="addFields()" title="Manually requested mutations in the Receptor Mutation section are applied after clicking herein. 'Sequence' field is automatically updated with the mutated sequence."> Apply mutations</button></p>
+	</div> -->
+			<br>
+                <div class=row style="text-align:center">
+                        <table align='center'>
+                        <tr><td>
+                                <button type="button" id="id_add_protein" name="add_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;">+ Add Protein</button>
+                        </td><td>
+                                <button type="button" id="id_del_protein" name="del_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;" disabled>- Remove Protein</button>
+                        </td><td>
+                                <button type="button" id="id_reset" name="reset"  style="height:30px;width:140px;margin-left:5px;margin-right:5px;">Clean form</button>
+                        </td></tr>
+                        </table>
+                        
+                </div> 		
+                <br><br>
+                <div class=row>
+                          <input id="id_submit" name="submit" type="submit" value="Submit" />
+                </div>
+                <br>
+    </div>
+  </div>
+</div>
+</form>
+<!--           <div id="selection-buttons"> -->
+
+<div class="col-md-7 col-md-offset-4"> 
+      <div class="col-md-12 panel panel-primary">
+          <!--Submit prueba -->
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/molecule/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 2: Small Molecule Information </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/db_inputform/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to index </a>
+      	  </div>
+      </div>
+
+
+</div>
+
+
+{% endblock content %}
+
+
+{% block addon_js %}
+    <script src="{% static 'dynadb/protein_alignment_autocomplete.js' %}"></script>
+    <script src="{% static 'dynadb/notUniprotProtein.js' %}"></script>
+    <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+    <script src="{% static 'dynadb/autocomplete_species.js' %}"></script>
+    <script src="{% static 'dynadb/resetProtein.js' %}"></script>
+    <script src="{% static 'dynadb/addProtein.js' %}"></script>
+    <script src="{% static 'dynadb/delProtein.js' %}"></script>
+    <script src="{% static 'dynadb/getDataUPKB.js' %}"></script>
+    <script src="{% static 'dynadb/getMutations.js' %}"></script>
+    <script src="{% static 'dynadb/changeMutant.js' %}"></script>
+    
+    
+
+{% endblock %}

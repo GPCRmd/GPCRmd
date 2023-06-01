@@ -1,0 +1,164 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">
+
+ <!-- description column -->
+ <div class="col-md-4">
+     
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Simulation Submission<br>Step 2-3:<br>System information<br>(Model Form)</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+            <div style="text-align:center"> 
+             <h4>FILL IN THE MODEL FORM</h4>
+            </div>
+             <p>Fill in the form with information on the curated pdb protein (loops, mutations, etc)</p>
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-md-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+
+
+	        <div class="row">
+	 		<div class="col-md-5">	<label for="id_id_model"> <a title="id for the “model” that have been used for obtaining the topology and initial coordinates for the simulation. Foreign key to “dyndb_model”.”id”.">Id model:</a> </label> </div>  
+			<div class="col-md-6"><select id="id_id_model" name="id_model">  
+        			<option value="" selected="selected">---------</option>
+        			<option value="1">DyndbModel object</option>
+        			</select></div>
+		<br></div>
+
+
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_type"><a title="Type of structure that it is modelled. VALUES: ('Protein','Complex'). 'Complex' is set when an “molecular complex” is modelled." > Type:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" id="id_type" name="type" rows="2"></textarea></div>
+		<br></div>
+
+			
+	        <div class="row">
+			<div class="col-md-5"><label for="id_id_protein"><a title="Id for the protein apoform that is being modelled. If “dyndb_model”.”type” is set to 'Complex', this value have to be set to 'NULL'. Foreign key to “dyndb_protein”.”id”. " >Id protein:</a></label></div>
+			<div class="col-md-6"><select id="id_id_protein" name="id_protein">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbProtein object</option>
+				<option value="2">DyndbProtein object</option>
+				<option value="3">DyndbProtein object</option>
+			</select></div>
+		<br></div>
+	
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_id_complex_molecule"><a title="Id for the “molecular complex” that is being modelled. If “dyndb_model”.”type” is set to 'Protein', this value have to be set to 'NULL'. Foreign key to “dyndb_complex_molecule”.”id”." >Id complex molecule:</a></label></div>
+			<div class="col-md-6"><select id="id_id_complex_molecule" name="id_complex_molecule">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbComplexMolecule object</option>
+			</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_source_type"><a title="Source of the coordinates of the “model”. Loop repairs and other replaced missing protein residues on X-Ray or NMR structures are not taking into account for setting the value of this field. In order to set the value to X-ray or NMR all the coordinates (including relative positions between different components) of protein complexes and their components should come from an X-Ray or an NMR experiment. Other 'VALUES: ( 'X-Ray', 'NMR', 'Docking', 'MD', 'Other')." >Source Type:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" id="id_source_type" name="source_type" rows="2"></textarea></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_pdbid"><a title="PDB ID from Protein Data Bank database . It should contain chain code when necessary (e.g. 4IAR.A). NULL when “dyndb_model”.”source_type” is not X-Ray or NMR." >Pdbid:</a></label></div>
+			<div class="col-md-6"><input id="id_pdbid" maxlength="6" name="pdbid" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_description"><a title="Description of the model containing information that is not provided in other filed such as procedure followed for the construction of the model. " >Description:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" id="id_description" name="description" rows="2"></textarea></div>
+		<br></div>
+	        
+<!--		<div class="row">
+			<div class="col-md-5"><label for="id_template_id_model"><a title=" " >:</a>Template id model:</label></div>	
+			<div class="col-md-6"><select id="id_template_id_model" name="template_id_model">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbModel object</option>
+			</select></div>
+		<br></div>   -->
+<!--
+		<div class="row">
+			<div class="col-md-5"><label for="id_update_timestamp">Update timestamp:</label></div>
+			<div class="col-md-6"><input id="id_update_timestamp" name="update_timestamp" type="text" /></div>
+		<br></div>
+
+		<div class="row">
+			<div class="col-md-5"><label for="id_creation_timestamp">Creation timestamp:</label></div>
+			<div class="col-md-6"><input id="id_creation_timestamp" name="creation_timestamp" type="text" /></div>
+		<br></div>
+		
+		<div class="row">
+			<div class="col-md-5"><label for="id_created_by_dbengine">Created by dbengine:</label></div>
+			<div class="col-md-6"><input id="id_created_by_dbengine" maxlength="40" name="created_by_dbengine" type="text" /></div><br></div>
+
+		<div class="row">
+			<div class="col-md-5"><label for="id_last_update_by_dbengine">Last update by dbengine:</label></div>
+			<div class="col-md-6"><input id="id_last_update_by_dbengine" maxlength="40" name="last_update_by_dbengine" type="text" /></div><br></div>
+
+		<div class="row">
+			<div class="col-md-5"><label for="id_created_by">Created by:</label></div>
+			<div class="col-md-6"><input id="id_created_by" name="created_by" type="number" /></div><br></div>
+
+		<div class="row">
+			<div class="col-md-5"><label for="id_last_update_by">Last update by:</label></div>
+			<div class="col-md-6"><input id="id_last_update_by" name="last_update_by" type="number" /></div><br></div>
+		
+		<div class="row">
+			<div class="col-md-5"><label for="id_id_structure_model">Id structure model:</label></div>
+			<div class="col-md-6"><select id="id_id_structure_model" name="id_structure_model">
+				<option value="" selected="selected">---------</option>
+			</select></div>
+		<br><br></div>	  
+
+        <th><input type="submit" value="Submit" /> </th><br>  -->  
+   </div>
+  </div>
+
+  <div id="selection-buttons">
+      <div class="col-md-12 panel panel-primary">
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href=/dynadb/db_dynamics/  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 3: MD protocol </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/db_component/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 2-2: System Information (Component Form) </a>
+      	  </div>
+      </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+
+

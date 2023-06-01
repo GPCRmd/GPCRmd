@@ -1,0 +1,220 @@
+<head>
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script type="text/javascript">
+    google.load("visualization", "1", { packages: ["corechart"], "language": "en" });
+  </script>
+  <script>document.domain = document.domain;</script>
+  {% extends "home/base.html" %}
+  {% load static %}
+  {% block addon_css %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  {% endblock %}
+</head>
+
+<body>
+
+  {% block content %}
+  <div class="row">
+      <div class="col-sm-10 col-sm-offset-1">
+      <div class="panel panel-primary newsHeading">
+        <div class="panel-body">
+          <h2 class="panel-heading">News</h2>
+        </div>
+      </div>
+
+      <div class="row newsRow">
+        <div class="panelLeft col-xs-12 col-md-8">
+          <!-- First piece of news -->
+          <!-- Remember to use the number in all FOUR ids for the show/hide to work! -->
+          <div id="div_news1" class="subPanelLeft panel panel-primary">
+            <div class="news">
+              <h2 class="newTitle">8th and Final ERNEST Meeting to Take Place in Crete with Participation from GPCR Drug Discovery Group</h2>
+              <p id="news1_ab" style="display: block;">
+                The 8th and final meeting of the European Research 
+                Network on Signal Transduction (<a class="textlink" href="https://ernest-gpcr.eu/8th-and-final-ernest-meeting-may-3-7-2023-in-crete/"
+                target="_blank">ERNEST</a>) is set to take place from May 3-7, 2023 in Crete. 
+                This event promises to be an exciting gathering of scientists from around the world who are 
+                interested in the latest developments in signal transduction research. Among the attendees 
+                will be several members of the G protein-coupled receptor (GPCR) Drug Discovery Group from 
+                the <a class="textlink" href="http://grib.imim.es/" target="_blank">GRIB</a> in Barcelona...<a id="news1" class="textlink" onclick="showDiv(this)">Show all</a>
+              </p>
+              <p id="news1_all"  style="display: none;">The 8th and final meeting of the European Research 
+                Network on Signal Transduction (<a class="textlink" href="https://ernest-gpcr.eu/8th-and-final-ernest-meeting-may-3-7-2023-in-crete/"
+                target="_blank">ERNEST</a>) is set to take place from May 3-7, 2023 in Crete. 
+                This event promises to be an exciting gathering of scientists from around the world who are 
+                interested in the latest developments in signal transduction research. Among the attendees 
+                will be several members of the G protein-coupled receptor (GPCR) Drug Discovery Group from 
+                the <a class="textlink" href="http://grib.imim.es/" target="_blank">GRIB</a> in Barcelona.<br> 
+                <br>
+                ERNEST is a collaborative network of European research institutions that was established to 
+                promote scientific excellence and cooperation in the field of signal transduction. The network 
+                has been in operation for eight years, during which time it has fostered numerous successful 
+                collaborations and research projects. The final meeting of ERNEST promises to be a fitting 
+                conclusion to this productive period, and will feature presentations from some of the leading 
+                lights in the field of signal transduction research. <a id="hide_news1" class="textlink" onclick="hideDiv(this)">Hide</a><br>
+              </p>
+            </div>
+          </div>
+
+          <!-- 2nd piece of news -->
+          <div id="div_news2" class="subPanelLeft panel panel-primary">
+            <div class="news">
+              <a href="/news/2ndround/">
+                <h2 class="newTitle">Revolutionary Alpha Fold Algorithm Unveiled: A Game-Changer for Protein Folding and Drug Discovery</h2>
+              </a>
+              <p id="news2_ab" style="display: block;">In a groundbreaking new publication, researchers have unveiled 
+                the latest advancements in the field of protein folding. The publication, titled "<a class="textlink"
+                 href="https://www.nature.com/articles/s41586-021-03819-2" target="_blank">Alpha Fold: a 
+                solution to a 50-year-old grand challenge in biology,</a>" details the creation of a powerful algorithm 
+                that can predict the three-dimensional structures of proteins with unprecedented accuracy. This 
+                breakthrough has the potential to revolutionize drug discovery, as it provides a more efficient way 
+                to design and develop new drugs that can target specific proteins...<a id="news2" class="textlink" onclick="showDiv(this)">Show all</a>
+              </p>
+              <p id="news2_all"  style="display: none;">In a groundbreaking new publication, researchers have unveiled 
+                the latest advancements in the field of protein folding. The publication, titled "<a class="textlink"
+                 href="https://www.nature.com/articles/s41586-021-03819-2" target="_blank">Alpha Fold: a 
+                solution to a 50-year-old grand challenge in biology,</a>" details the creation of a powerful algorithm 
+                that can predict the three-dimensional structures of proteins with unprecedented accuracy. This 
+                breakthrough has the potential to revolutionize drug discovery, as it provides a more efficient way 
+                to design and develop new drugs that can target specific proteins.<br>
+                <br>
+                The research was carried out by a team at the University of Cambridge, led by Dr. Demis Hassabis, 
+                co-founder of DeepMind, and Dr. John Jumper. The team used artificial intelligence to analyze the 
+                genetic code of proteins and predict their structure. This is a significant development because, 
+                until now, scientists have struggled to determine the structure of proteins, which has limited their 
+                ability to understand how they function and develop drugs that can target them.<br>
+                <br>                
+                The publication has already generated a great deal of excitement in the scientific community, with 
+                many experts hailing it as a major breakthrough in the field. The ability to predict protein 
+                structures with such accuracy has the potential to revolutionize drug discovery and lead to the 
+                development of more effective treatments for a range of diseases. The research has been widely 
+                praised for its innovative use of AI and for the significant advances it represents in our 
+                understanding of protein folding. <a id="hide_news2" class="textlink" onclick="hideDiv(this)">Hide</a><br>
+              </p>
+            </div>
+          </div>
+
+          <!-- 3rd piece of news-->
+          <div id="div_news3" class="subPanelLeft panel panel-primary">
+            <div class="news">
+              <h2 class="newTitle">Second simulation round</h2>
+              <p id="news3_ab" style="display: block;">After our first successful <a class="textlink"
+                  href="https://www.nature.com/articles/s41592-020-0884-y" target="_blank">publication in Nature
+                  Methods</a>, we are back to increase the data coverage of GPCRmd in a 2nd simulation 
+                  round...<a id="news2" class="textlink" onclick="showDiv(this)">Show all</a>
+              </p>
+              <p id="news3_all"  style="display: none;">After our first successful <a class="textlink"
+                href="https://www.nature.com/articles/s41592-020-0884-y" target="_blank">publication in Nature
+                Methods</a>, we are back to increase the data coverage of GPCRmd in a 2nd simulation 
+                round.<br>
+                <br>
+                In this round, we will focus on simulating all remaining PDB IDs which correspond to 
+                <strong>GPCRs which are not in complex with G proteins, arrestins, or nanobodies</strong>. 
+                Note that GPCR-G protein/arrestin/nanobody complexes will be addressed in the 3rd simulation 
+                round starting in January 2021. <a id="hide_news3" class="textlink" onclick="hideDiv(this)">
+                Hide</a><br>
+              </p>
+            </div>
+          </div>
+
+          <!-- 4rd piece of news -->
+          <div id="div_news4" class="subPanelLeft panel panel-primary">
+            <div class="news">
+              <h2 class="newTitle">Nature publication: GPCRmd uncovers the dynamics 
+                of the 3D-GPCRom</h2>
+              <p id="news4_ab" style="display: block;">A groundbreaking paper titled <a class="textlink"
+                href="https://www.nature.com/articles/s41592-020-0884-y" target="_blank">"GPCRmd uncovers the dynamics 
+                of the 3D-GPCRome"</a> has just been published, offering new insights into the dynamics of G 
+                protein-coupled receptors (GPCRs), a class of proteins that play a crucial role in signaling 
+                pathways. The paper details the findings of the GPCRmd project, a collaborative effort between 
+                several research institutions to create a comprehensive database of GPCR molecular dynamics 
+                simulations...<a id="news4" class="textlink" onclick="showDiv(this)">Show all</a>
+              </p>
+              <p id="news4_all"  style="display: none;">A groundbreaking paper titled <a class="textlink"
+                href="https://www.nature.com/articles/s41592-020-0884-y" target="_blank">"GPCRmd uncovers the dynamics 
+                of the 3D-GPCRome"</a> has just been published, offering new insights into the dynamics of G 
+                protein-coupled receptors (GPCRs), a class of proteins that play a crucial role in signaling 
+                pathways. The paper details the findings of the GPCRmd project, a collaborative effort between 
+                several research institutions to create a comprehensive database of GPCR molecular dynamics 
+                simulations.<br>
+                <br>
+                The GPCRmd project used state-of-the-art molecular dynamics simulations to explore the behavior of 
+                GPCRs in 3D space. The project was led by researchers from the Institute of Institut Hospital del Mar 
+                d'Investigacions Mèdiques (IMIM) and the University Pompeu Fabra of Barcelona, in collaboration with several other institutions. 
+                The resulting database provides a wealth of information about the behavior of GPCRs, including their 
+                interactions with ligands and their structural changes over time.<br>
+                <br>                
+                The publication of this paper is a significant milestone in the field of GPCR research, offering new 
+                insights into the dynamics of these important proteins. The findings of the GPCRmd project have the 
+                potential to drive the development of new drugs that target GPCRs, which are involved in a wide range 
+                of physiological processes. The database created by the project is freely available in our website to the scientific
+                community, providing a valuable resource for future research into GPCR dynamics and signaling 
+                pathways. <a id="hide_news4" class="textlink" onclick="hideDiv(this)">Hide</a><br>
+              </p>
+            </div>
+          </div>
+
+          
+
+        </div>
+
+        <!-- Twitter section -->
+        <div class="subPanelRight">
+          <div id="twitter_sect" class=" twPanel panel panel-primary text_col col-xs-12 col-md-4">
+            <a class="twitter-timeline" data-height="700" href="https://twitter.com/GPCRmd?ref_src=twsrc%5Etfw">News by
+              GPCRmd</a>
+            <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endblock content %}
+
+
+  {% block addon_js %}
+  <!-- Show/hide complete piece of news -->
+  <script>
+    function showDiv(mylink) {
+      var myId = mylink.getAttribute('id');
+      document.getElementById(myId+'_all').style.display = "block"; 
+      document.getElementById(myId+'_ab').style.display = "none";
+      document.getElementById("div_"+myId).classList = "subPanelLeft panel panel-primary selNews";
+    }
+
+    function hideDiv(mylink) {
+      var myIdList = mylink.getAttribute('id').split('_');
+      var myId=myIdList[1]
+      document.getElementById(myId+'_ab').style.display = "block"; 
+      document.getElementById(myId+'_all').style.display = "none";
+      document.getElementById("div_"+myId).classList = "subPanelLeft panel panel-primary";
+    }
+
+  </script>
+
+  <!-- If page reached from the selection of a piece of news from the homepage show it complete -->
+  <script>
+  //Make visible the selected piece of news from the homepage
+    $(document).ready(function() {      
+      var path = window.location.href.split("/");
+      var myId=path.at(-1)//select the last element of the url 
+      if (myId.charAt(0) == '#') { //check if is is an 'id'
+        document.getElementById(myId.slice(1)+'_all').style.display = "block"; 
+        document.getElementById(myId.slice(1)+'_ab').style.display = "none";
+
+        var raw_id = myId.slice(1)
+        var element = document.getElementById("div_"+raw_id);
+        document.getElementById("div_"+raw_id).classList = "subPanelLeft panel panel-primary selNews";
+        
+        // scroll to the correct height
+        var pos= element.offsetTop;
+        var offset = document.documentElement.scrollHeight*0.03;
+        window.scrollTo(0, pos-offset);
+      }
+    })
+  </script>
+  {% endblock %}
+
+
+</body>

@@ -1,0 +1,122 @@
+{% extends "dynadb/base.html" %}
+{% load static %}
+{% load static %}
+{% load dynadb %}
+{% block addon_css %}
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+  <style>
+  .panel-body {
+    word-break:break-all
+}
+
+  </style>
+{% endblock %}
+{% block content %}
+
+    <div style="width:100%;" class="panel panel-info">
+    <div class="panel-heading"><b> These are the lines which could define the start of a new protein segment. Next to each one, you have the result of trying to convert their residues into a protein sequence. Please, include in your "Curated Data Protein" table those segments which retrieve a correct protein sequence. That most likely means the segments whose sequence is not only composed by "X"s, although this may not be true, as in the case of a segment composed by artificial residues which we do not know about. This is the reason why we need you! </b></div>
+    <div class="panel-body">
+    {% if '<br>' in answer.segments.1 %}  
+      {% autoescape off %}{{answer.segments.1}}{% endautoescape %}
+    {% else %}
+      {{answer.segments.1}}
+    {% endif %}
+    </div>
+    </div>
+
+
+
+    <div style="width:100%;" class="panel panel-info">
+    {%if answer.result_header%}
+        <div class="panel-heading"><center><b>{{answer.result_header}}</b></center></div>    
+    {%else%}
+        <div class="panel-heading"><center><b>All right: PDB and submited sequence match!</b></center></div>
+
+    {%endif%}
+    <div class="panel-body">
+
+   {%for key,values in answer.table.items%}
+        <center><div class="panel panel-info" style="width:85%;">
+
+        <div class="panel-heading"> Results for {{ key.0}}</div>
+        <div class="panel-body">
+        <center> <a href={{ key.1}}><button type="button"> Download the corrected PDB </button></a></center>
+            <table id="table_id" class="tablejs">
+              <thead>
+              <tr>
+                <th>PDB(resid:resname)</th>
+                <th>Submited sequence (resid:resname)</th>
+              </tr>
+              </thead>
+              <tbody>
+              {%for minilist in values%}
+                  <tr>
+                  {%if minilist.0.2%}
+                    <td>{{minilist.0.2}} : {{minilist.0.0}}</td>
+                    <td>{{minilist.1.1}} : {{minilist.1.0}}</td>
+                  {%else%}
+                    <td>{{minilist.0.0}}</td>
+                    <td>{{minilist.1.1}} : {{minilist.1.0}}</td>
+                  {%endif%}
+              {%endfor%}
+              </tr>
+              </tbody>
+            </table>
+        </div>
+        </div></center>
+
+    {%endfor%}
+
+    {%if answer.tuple_errors%}
+
+        {%for key,values in answer.tuple_errors.items%}
+
+            <center><div class="panel panel-warning" style="width:85%;">
+            <div class="panel-heading style='background-color:red; color:white' "><b>{{key}}</b>; {{values.0}} </div>
+            <div class="panel-body">
+                <table id="table_id" class="tablejs">
+                  <thead>
+                  <tr>
+                    <th>PDB(resname and resid)</th>
+                    <th>Submited sequence(resname and resid)</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {%for minilist in values.1%}
+                      <tr>
+                        <td>{{minilist.0}}</td>
+                        <td>{{minilist.1}}</td>
+                  {%endfor%}
+                  </tr>
+                  </tbody>
+                </table>
+            </div>
+            </div></center>
+        {%endfor%}
+
+
+    {%endif%}
+
+    </div>
+    </div>
+    
+    <hr><hr>
+
+
+{% endblock content %}
+
+{% block addon_js %}
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+<script>
+$.extend( true, $.fn.dataTable.defaults, {
+    "searching": false,
+    "ordering": false
+} );
+
+
+$(document).ready(function() {
+    $('.tablejs').DataTable();
+} );
+
+</script>
+{% endblock %}

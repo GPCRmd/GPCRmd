@@ -1,0 +1,236 @@
+
+<head>
+    {% load covid_custom %}         
+    <style>
+
+    .carousel .item img{
+        margin: 0 auto; /* Align slide image horizontally center */
+    }
+
+    .miniscroll{
+        overflow-y:auto;
+        overflow:auto;
+        max-height:140px;
+        height:130px;
+        <!--width: 40%;-->
+    }
+
+    .bs-example{
+        margin: 20px;
+    }
+
+    .mol-container {
+      width: 80%;
+      height: 400px;
+      position: relative;
+    }
+
+    .ortoligand{
+
+    }
+
+    .techinfo{
+        text-align: center
+    }
+    .techinfo_content{
+        display: inline-block; 
+        text-align: left;
+    }
+
+    .techinfo_title{
+        margin-bottom:20px;
+        font-size: 20px;
+    }
+    .dyn_info_title{
+        font-size: 20px;
+    }
+
+    </style>
+</head>
+
+<body style="padding:20px">
+
+
+
+<div class="col-md-12" style="padding:0">
+<div >
+<div style="width:1000px;margin:auto">
+
+    <div class="row" style="margin-bottom:15px">
+        <div class="col-md-4 ">
+            <p class="dyn_info_title">General information</p>
+                <div class="techinfo_content">
+                    <p><b>Name</b>: {{dyndata.dyn_name}} </p>
+                    {% if dyndata.final_proteins %}
+                        <p><b>Included proteins</b>: {{dyndata.final_proteins|list_to_str}}</p>
+                    {% endif %}
+                    <p><b>Uniprot ID</b>: <a href="https://www.uniprot.org/uniprot/{{dyndata.uniprotkbac}}">{{dyndata.uniprotkbac}}</a> </p>
+                    {% if dyndata.species %}
+                        <p><b>Species</b>: <span style=" font-style: italic;">{{dyndata.species}}</span></p>
+                    {% endif %}                        
+                    {% if dyndata.pdbid %}
+                        <p><b>PDB ID</b>{% if dyndata.model_source == 1 %}(template for theoretical model){% endif %}: {{dyndata.pdbid}}</p>
+                    {% endif %}
+                    {% if dyndata.description %}
+                        <p style="max-height:200px;overflow:auto"><b>Description</b>: {{dyndata.description}}</p>
+                    {% endif %}
+                    {% if dyndata.extracted_from_db %}
+                        <p><b>Extracted from</b>: {{dyndata.extracted_from_db}} {% if dyndata.extracted_from_db_entry %}(ID: {{dyndata.extracted_from_db_entry}}){% endif %}</p>
+                        {% if dyndata.submitted_by %}
+                            <p><b>Author</b>: {{dyndata.submitted_by}}</p>
+                        {% endif %}
+                    {% else %}
+                        {% if dyndata.submitted_by %}
+                            <p><b>Submitted by</b>: {{dyndata.submitted_by}}</p>
+                        {% endif %}
+                    {% endif %}
+                    {% if dyndata.submission_date %}
+                        <p><b>Submission date</b>: {{dyndata.submission_date}}
+                    {% endif %}
+                </div>
+        </div>
+        <div class="col-md-4 ">
+            <p class="dyn_info_title" style="">System setup</p>
+                <div class="techinfo_content">
+                    {% if dyndata.ligands %}
+                        <p style="margin-bottom:5px"><b>Ligands</b>: </p>
+                            <div style="margin-left:20px">
+                            {% for mylig in dyndata.ligands %}
+                                <p>{{mylig.0}}  {% if mylig.1 %}({{mylig.1}}){% endif %}</p>
+                            {% endfor %}
+                            </div>
+                    {% else %}
+                        <p style="margin-bottom:5px"><b>Ligands</b>: None</p>
+                    {% endif %}
+                    {% if dyndata.membrane %}
+                        <p style="margin-bottom:5px"><b>Membrane composition</b>: </p>
+                            <div style="margin-left:20px">
+                            {% for mymemb in dyndata.membrane %}
+                                <p>{{mymemb}}</p>
+                            {% endfor %}
+                            </div>
+                    {% else %}
+                        <p style="margin-bottom:5px"><b>Membrane composition</b>: None</p>
+                    {% endif %}
+                    {% if dyndata.solvent_type %}
+                        <p style="margin-bottom:5px"><b>Solvent type</b>: {{dyndata.solvent_type}}
+                            {% if dyndata.solvent_type != "Implicit" and dyndata.solvent_type != "None" and dyndata.solvent_is_filtered %}
+                                (water was filtered out of the simulation output)
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                {% if dyndata.atom_num %}
+                    <p><b>Total number of atoms</b>: {{dyndata.atom_num}}</p>
+                {% endif %}
+
+                </div>
+        </div>
+        <div class="col-md-4 ">
+            <p class="dyn_info_title" style="">Simulation details</p>
+            <div class="techinfo_content">
+                {%if dyndata.software %}
+                    <p><b>Software and version</b>: {{dyndata.software}} {{dyndata.sversion}} </p>
+                {%endif%}
+
+                {%if dyndata.ff %}
+                    <p><b>Forcefield and version</b>: {{dyndata.ff}} {{dyndata.ffversion}} </p>
+                {%endif%}
+
+                {%if dyndata.timestep %}
+                    <p><b>Time step <span title="Time interval between the computation of new atom positions" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></span></b>: {{dyndata.timestep}} fs </p>
+                {%endif%}
+
+                {%if dyndata.delta%}
+                    <p><b>Delta <span title="Time gap between frames" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></span></b>: {{dyndata.delta}} ns </p>
+                {%endif%}
+                {%if dyndata.replicates%}
+                    <p><b>Replicates</b>: {{dyndata.replicates}}</p>
+                {%endif%}
+                {%if dyndata.accum_time %}
+                    <p><b>Accumulated simulation time</b>: {{dyndata.accum_time|floatformat:4}} <span>&#181;</span>s</p>
+                {%endif%}
+
+                
+            </div>
+        </div> 
+    </div>
+    <hr style="margin:40px 0">
+    <div class="row" style="margin-bottom:15px">
+        {% if not dyndata.files_other %}
+        <div class="col-md-3"></div>
+        {% endif %}
+        <div id='middlecol' class="col-md-6 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;">
+            <p class="techinfo_title">Simulation output files</p>
+            <div class="techinfo_content">
+                <div id='allfiles' >
+                    {% for fileid, myfile in dyndata.files_simulation.items %}
+                        <!--<a href=/dynadb/files/Dynamics/dyn{{answer.nglviewer_id}}/{{dyn.1}}><button class="btn btn-primary" type="button">Download {{dyn.1}}</button></a><br>-->
+                        <a href={{myfile.url}}><button style="width:250px;text-align: center" class="btn btn-primary" type="button">{{myfile.type}} file (ID: {{fileid}})</button></a><br>
+                    {% endfor %}
+                </div> <!--allfiles-->
+            </div>
+        </div> <!--end middle col div-->
+
+        <div id='rightcol' class="col-md-6 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;" >
+            {% if dyndata.files_other %}
+            <p class="techinfo_title">Simulation protocol & starting files <span style="cursor: default;font-size:15px" title="Download the starting structures, input files, parameters..." class="glyphicon glyphicon-info-sign" data-toggle="tooltip"  data-container="body"></span></p>
+            <div class="techinfo_content">
+                <div  id='paramfiles'>
+                    {% for fileid, myfile in dyndata.files_other.items %}
+                        <a  href={{myfile.url}}><button style="width:250px;text-align: center" class="btn btn-primary" type="button">{{myfile.type}} file (ID: {{fileid}})</button></a><br>
+                    {% endfor %}
+                </div> 
+            </div>
+            {% endif %}
+
+        </div> <!--end right col div-->
+    </div> <!-- end row-->
+
+{% if dyndata.citation or dyndata.doi %}
+<hr style="margin:40px 0">
+
+    <div class="techinfo">
+        <p class="techinfo_title" style="text-align:center">References</p>
+        <div class="techinfo_content" >
+            <p>
+            {% if dyndata.citation %}
+                {% autoescape off %}
+                    {{dyndata.citation}}
+                {% endautoescape %}
+            {% endif %}
+            {% if dyndata.doi %}
+                DOI: <a href="http://doi.org/{{dyndata.doi}}">{{dyndata.doi}}</a>
+            {% endif %}
+            </p>
+<!--            {%for reference in answer.references%}
+            <p>{{reference.authors}}. {{reference.pub_year}}. <span style="font-weight:bold;">{{reference.title}}</span>. {{reference.journal}}{% if reference.volume %} {{reference.volume}}{%endif%}{% if reference.issue %} ({{reference.issue}}){%endif%}. doi: {{reference.doi}}.                    
+                {%if reference.url%}
+                     (<a href="{{reference.url}}">{{reference.url}}</a>)                
+                {%elif reference.pmid%}
+                    (<a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}</a>)
+                {%endif%}
+            </p><br>
+        {%endfor%}-->
+      </div>
+    </div>
+{% endif %}
+
+<hr style="margin:40px 0">
+            <p style="text-align: justify;">Visualization and trajectory sharing powered by <a href="http://nglviewer.org/ngl/api/index.html" target="_blank" >NGL Viewer</a> and <a href="http://nglviewer.org/mdsrv/" target="_blank" >MDsrv</a>.</p>    
+            <p style="text-align: justify;">The interaction network has been generated using <a href="https://github.com/GPCRviz/flareplot" target="_blank" >Flare Plots</a>, powered by R. Fonseca and A. J. Venkatakrishnan.</p>
+
+
+</div>
+</div>
+</div>
+
+
+
+<script type="text/javascript" >
+$(document).ready(function(){
+  $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+
+
+</body>

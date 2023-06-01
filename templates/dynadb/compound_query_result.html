@@ -1,0 +1,117 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% block addon_css %}
+<style>
+  .panel-body {
+    word-break: break-all
+  }
+
+  .mol-container {
+    width: 80%;
+    height: 400px;
+    position: relative;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="regForm row">
+
+  <div class="col-md-8 col-md-offset-2">
+
+    <div class="col-md-12 regPanel panel panel-primary">
+      <div class="panel-body">
+        <h2 class="panel-heading"> Standard Form Name: {{answer.name}}</h2>
+      </div>
+    </div>
+
+    <div class="panel panel-primary panel-body">
+      {%if answer.othernames%}
+      <p><b>Other Names</b>:</p>
+      {%for oname in answer.othernames%}
+      <li style="margin-left:39px"><p>{{oname}}</p></li>
+      {%endfor%}
+      {%endif%}
+      <br>
+      {%if answer.iupac_name%}
+      <p><b>IUPAC name</b>:<br> {{answer.iupac_name}}</p> <br>
+      {%endif%}
+      <br>
+      {%if answer.pubchem_cid%}
+      <p><b>PUBCHEM</b>:<br> <a class="btn btn-primary" role='button'
+        href=https://pubchem.ncbi.nlm.nih.gov/compound/{{answer.pubchem_cid}}#section=Top> {{answer.pubchem_cid}}</a></p>
+        <br>
+        {%endif%}
+        <br>
+        {%if answer.chembleid%}
+        <p><b>ChEMBLE</b>:<br> <a class="btn btn-primary" role='button'
+          href=https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL{{answer.chembleid}}> {{answer.chembleid}}</a> <br></p>
+          {%endif%}
+          <br>
+          {%if answer.sinchikey%}
+          <p><b>InChIKey</b>:<br>{{answer.sinchikey}}</p> <br>
+          {%endif%}
+          <br>
+          {%if answer.sinchi%}
+          <p><b>InChI</b>:<br><p class="inchitext">{{answer.sinchi}}</p></p> <br>
+          {%endif%}
+          <br>
+          <p><b>Image of the Standard Form:</b></p> <br>
+          <div id='leftdiv' class="col-sm-6">
+            <center><button style="display:none;" type="button" class="btn btn-primary ortoligand" id={{answer.myid}}>
+                See 3D </button></center><br>
+            <center><img src="{{answer.imagelink}}" /></center>
+          </div>
+          <div id='rightdiv' class="col-sm-6">
+            <div id="container-01" class="mol-container"></div>
+          </div>
+          <br>
+          {% if answer.references %}
+          <br><p><b>References in which this Standard Form is mentioned</b>:</p><br>
+
+          {%for reference in answer.references%}
+            {% autoescape off %}
+              <p>{{reference}}</p>
+            {% endautoescape %}
+          {%endfor%}
+
+          {% endif %}
+
+    </div>
+
+  </div>
+
+  <div class="col-md-8 col-md-offset-2">
+    <div class="panel panel-primary panel-body">
+      <div style="text-align:center;margin-top:3%">
+          <h4 class="orangeTit">Corresponding Specific State(s)</h4> 
+      </div>    
+
+      {%if answer.link_2_molecule%}
+      <table class="table table-bordered">
+        <tr>
+          {% for url in answer.related_mol_images %}
+          <td align="center"><a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}}> Specific
+              State ID: {{url.0}}</a> </td> {% endfor %} </tr> <tr>
+              {% for url in answer.related_mol_images %}
+          <td align="center"><a href= /dynadb/molecule/id/{{url.0}}> <img src={{url.1}}> </a></td>
+          {% endfor %}
+
+        </tr>
+      </table>
+      {%endif%}
+
+    </div>
+  </div>
+
+</div>
+{% endblock content %}
+
+{% block addon_js %}
+<script src="{% static 'dynadb/mol3dv.js' %}"></script>
+<script src="https://3Dmol.csb.pitt.edu/build/3Dmol-nojquery.js"></script>
+<script type="text/javascript">
+  $(document).ready(function () {
+    $('.ortoligand:first').click();
+  });
+</script>
+{% endblock%}

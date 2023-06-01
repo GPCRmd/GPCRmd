@@ -1,0 +1,26 @@
+{% load site_title %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% site_title %}</title>
+    <script src="{% static 'home/js/jquery.js' %}"></script>
+    <script>
+    window.opener = null;
+    $(document).ready(function() {
+        $("#open_pubchem").submit();
+    });
+    </script>
+    
+    </head>
+  <body>
+    <h1>Redirecting to your PubChem query...</h1>
+    <form id="open_pubchem" method="post" action="{{ action }}" enctype="application/x-www-form-urlencoded">
+        <input type="hidden" id="term" name="term" value="{{ query }}">
+    </form>
+  </body>
+</html>
+

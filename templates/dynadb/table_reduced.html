@@ -1,0 +1,152 @@
+<head>
+<script>
+    document.domain=document.domain;
+</script>
+{% load static %} 
+
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="{% static 'home/logo/gpcrmd/main_circle.png' %}">
+    <!-- Bootstrap -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles -->
+    <link href="{% static 'home/css/style.css' %}" rel="stylesheet">
+
+{% load dynadb %}
+{% block addon_css %}
+<style>
+.container{
+    width: 90%;
+}
+.dataTables_wrapper .myfilter .dataTables_filter{
+    float:left;
+    font-size:16px;
+    margin:10px 0;
+}
+.dataTables_wrapper .mylength .dataTables_length{
+    float:right;
+    font-size:16px;
+    margin:10px 0;
+}
+</style>
+{% endblock %}
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<base href="your_domain/" target="_PARENT">
+</head>
+
+<body style="padding:0">
+{% block content %}
+<table id="table_id" class="display" style="display: none;">
+    <thead>
+        <tr>
+            <th style> </th>
+            <th>Receptor</th>
+            <th>Uniprot entry name</th>
+            <th>Uniprot ID</th>
+            <th>Family</th>
+            <th>Class</th>
+            <th>PDB ID</th>
+            <th>Species</th>
+            <th>Ligand(s)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for data in tabledata %}
+        {% if not data.not_GPCR %}
+        <tr >
+            <td class="links">
+              <a id="/view/{{data.dyn_id}}/" onclick="go_to_tool(this)" class="submitBtn btn btn-default" role="button">View</a>
+            </td>
+            <td class="receptor">
+                {% if data.not_GPCR %}
+                    {{data.prot_name}}
+                {% else %}
+                    <!-- <a href="/dynadb/protein/id/{{data.prot_id}}/">{{data.prot_name}}</a> -->
+                    {{data.prot_name}}
+                {% endif %}
+            </td>
+            <td class="uniprotentryname">
+                {% for up in data.uprot_entry %}
+                    {{up}}
+                {% endfor %}
+            </td>
+            <td class="uniprotid">
+                {% for up in data.uniprot %}
+                    <!-- <a target="_blank" href="https://www.uniprot.org/uniprot/{{up}}">{{up}}</a> -->
+                    {{up}}
+                {% endfor %}
+            </td>
+            <td  class="family">{{data.fam_name}}</td>
+            <td  class="gpcrclass">{{data.class_name}}</td>
+            {% if tabledata.is_hm %}
+                <td  class="pdbid">{{data.pdb_namechain}}</td>
+            {% else %}
+                <td class="pdbid">
+                  {{data.pdb_namechain}}
+                  <!-- <a target="_blank" href="https://www.rcsb.org/structure/{{data.pdbid}}">{{data.pdb_namechain}}</a> -->
+                </td>
+            {% endif %}
+            <td  class="species"><i>{{data.species}}</i></td>
+            <td class="ligands">
+                {% if data.not_GPCR %}
+                    {% for lig in data.lig_li %}
+                        {% autoescape off %}{{lig | limitlength:60}}{% endautoescape %}
+                    {% endfor %}
+                {% else %}
+                    {% for lig in data.lig_li %}
+                        {% if lig.2 %} <!-- Protein ligand -->
+                            <!-- <a href="/dynadb/protein/id/{{lig.1}}/">{% autoescape off %}{{lig.0 | limitlength:60}}{% endautoescape %}</a> -->
+                            {% autoescape off %}{{lig.0 | limitlength:60}}{% endautoescape %}
+                        {% else %}
+                            <!-- <a href="/dynadb/molecule/id/{{lig.1}}/">{% autoescape off %}{{lig.0 | limitlength:60}}{% endautoescape %}</a> -->
+                            {% autoescape off %}{{lig.0 | limitlength:60}}{% endautoescape %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock content %}
+{% block addon_js %} 
+
+<!-- From base.html -->
+    <script src="{% static 'home/js/jquery.js' %}"></script>
+    <!-- jQueryUI -->
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.min.css' %}" type="text/css" media="all" />
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.theme.min.css' %}" type="text/css" media="all" />
+    <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+    <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+<!-- END From base.html -->
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+<script type="text/javascript" src="{% static 'dynadb/searchtable_reduced.js' %}"></script>
+
+<!-- Selected simulation, go to workbench with the corresponding tab visible -->
+<script>
+  function go_to_tool(button) {
+    var simPath = button.getAttribute('id');
+    // get the tool name from the iframe URL
+    var toolid = location.href.split('?')[1];
+    console.log(simPath+ '#' + toolid)
+    window.top.location.href = simPath+ '#' + toolid;//NOT WORKING
+  }
+</script>
+{% endblock %}
+</body>

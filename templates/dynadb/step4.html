@@ -1,0 +1,143 @@
+{% extends "home/base.html" %} 
+{% load static %} 
+
+<!-- Form styles -->
+{% block addon_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'dynadb/newform_styles.css' %}" />
+{% endblock %}
+
+<!--Form javascripts -->
+{% block addon_js %}
+<script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+<script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+<script src="{% static 'dynadb/searchtop.js' %}"></script>
+<script src="{% static 'dynadb/required_fields.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<!--The main submission form tag. All the input tags refering to it will have form="mainform"-->
+<div class="regForm row">
+  <form  method="post" id="mainform" onsubmit="return createAllErrors('mainform','loading_submit')" action="/dynadb/step4_submit/{{submission_id}}/" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="col-md-10 col-md-offset-1">
+      <div class="col-md-12 regPanel panel panel-primary ">   
+        <div class=" panel-body">
+          <h2 class="panel-heading">Step 4: Simulation files</h2>
+      </div> 
+      </div>
+      <!-- Main Files div -->
+      <div id="main_prot_div" action="/dynadb/step4_submit/{{submission_id}}/">
+        <div class='col-md-12 panel panel-primary panel-body'>
+          <h4>Please, introduce the topology, trajectory and parameters files of your simultion, as well as any other file you might consider necessary 
+          </h4>
+        </div>
+        <div class="col-md-12 panel panel-primary panel-body">    
+          <!--topology file-->
+          <div class="row input_row">
+            <div class="col-md-3 label_div">
+              <label for="dyn">
+                <p>
+                  <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title="" data-original-title="Topology file used in your simulation."></span>
+                  Topology file:
+                </p>
+              </label>
+            </div>
+            <div class="col-md-4">
+              <input type="file" required name="dyn"  class="validate[required,length[0,100]] feedback-input" placeholder="" accept=".psf,.top" id="dyn" />
+            </div>
+            <div>
+              <i>Accepted formats: psf, top </i>
+            </div>
+
+          </div>
+
+          <!--trjs-->
+          <div class="row input_row">
+            <div class="col-md-3 label_div">
+              <label for="trj">
+                <p>
+                  <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title="" data-original-title="Trajectory file/s of your simulation (Multiple files allowed)."></span>
+                  Trajectory file/s:
+                </p>
+              </label>
+            </div>
+            <div class="col-md-4">
+              <input type="file" required name="trj"  class="validate[required,length[0,100]] feedback-input" placeholder="" accept=".xtc,.dcd,.trj,.trr" id="trj" multiple />
+            </div>
+            <div>
+              <i>Accepted formats: dcd, xtc, trj, trr </i>
+            </div>
+          </div>
+
+          <!--Parameter files-->
+          <div class="row input_row">
+            <div class="col-md-3 label_div">
+              <label for="prm">
+                <p>
+                  <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title="" data-original-title="Parameters file used in this simulation (In .prm or .prmtop formats. If more than one file was used, submit them as a compressed .tar.gz or .tgz file)"></span>
+                  Simulation parameters:
+                </p>
+              </label>
+            </div>
+            <div class="col-md-4">
+              <input type="file" required name="prm" placeholder="" accept=".prm,.prmtop,.tar.gz,.tgz" id="prm"/>
+            </div>
+            <div>
+              <i>Accepted formats: prm, prmtop, tar.gz, tgz </i>
+            </div>
+
+          </div>
+
+          <!--Protocol files-->
+          <div class="row input_row">
+            <div class="col-md-3 label_div">
+              <label for="prt">
+                <p>
+                  <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title="" data-original-title="Simulation protocol files used in this simulation (Submit them as a compressed .tar.gz or .tgz file)"></span>
+                  Simulation protocol:
+                </p>
+              </label>
+            </div>
+            <div class="col-md-4">
+              <input type="file"  name="prt" placeholder="" accept=".zip,.tar.gz,.tgz" id="prt"/>
+            </div>
+            <div>
+              <i>Accepted formats: zip, tar.gz, tgz </i>
+            </div>
+
+          </div>
+
+          <!--Other files-->
+          <div class="row input_row">
+            <div class="col-md-3 label_div">
+              <label for="oth">
+                <p>
+                  <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title="" data-original-title="Any other file relevant for this simulation (submit them as a compressed .tar.gz or .tgz file)"></span>
+                  Other files:
+                </p>
+              </label>
+            </div>
+            <div class="col-md-4">
+              <input type="file"  name="oth" placeholder="" accept=".tar.gz,.tgz" id="oth"/>
+            </div>
+            <div>
+              <i>Accepted formats: tar.gz, tgz </i>
+            </div>
+
+          </div>
+
+
+        </div>  
+
+
+      </div>
+    </div>
+    {% include "dynadb/submission_steps_menu.html" %}
+  </form>
+
+  
+</div>
+
+{% endblock content %}
+

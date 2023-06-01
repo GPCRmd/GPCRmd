@@ -1,0 +1,59 @@
+{% extends "dynadb/base.html" %}
+{% load static %}
+{% load static %} 
+{% block addon_css %}
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+  <style>
+  .panel-body {
+    word-break:break-all
+}
+  
+  </style>
+{% endblock %}
+{% block content %} 
+
+    <div class="container">
+    <div class="panel panel-danger">
+    <div class="panel-heading style='background-color:red; color:white' "><b>{{answer.title}}</b></div>
+    <div class="panel-body">
+
+
+
+    <table id="table_id" class="display">
+      <thead>
+      <tr>
+        <th>PDB(resname and resid)</th>
+        <th>FASTA(resname and resid)</th>
+      </tr>
+      </thead>
+      <tbody>
+      {%for minilist in answer.mismatchlist%}
+      <tr>
+        <td>{{minilist.0}}</td>
+        <td>{{minilist.1}}</td>
+      {%endfor%}
+      </tr>
+      </tbody>
+    </table> 
+
+    </div>
+    </div>
+    </div>
+
+{% endblock content %}
+
+{% block addon_js %}
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+<script>
+$.extend( true, $.fn.dataTable.defaults, {
+    "searching": false,
+    "ordering": false
+} );
+ 
+ 
+$(document).ready(function() {
+    $('#table_id').DataTable();
+} );
+
+</script>
+{% endblock %}

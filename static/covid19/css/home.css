@@ -1,0 +1,22 @@
+  .mydatatable{
+    display: none;
+    font-size: 13px;
+  }
+.dataTables_wrapper .myfilter .dataTables_filter{
+    float:left;
+    font-size:16px;
+    margin:10px 0;
+}
+.dataTables_wrapper .mylength .dataTables_length{
+    float:right;
+    font-size:16px;
+    margin:10px 0;
+}
+
+.head_info{
+    margin:20px 0;
+}
+
+.head_info span{
+    font-size:13px;
+}

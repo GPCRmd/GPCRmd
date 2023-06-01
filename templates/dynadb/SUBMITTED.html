@@ -1,0 +1,87 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %}
+{% load static %}
+
+
+{% block content %}
+<div class="regForm">
+  <form method="post" class="row" action="{{ action }}" enctype="multipart/form-data">
+
+    <!-- description column -->
+    <div class="col-md-3 col-md-offset-1">
+
+      <div class="col-md-12 regPanel panel panel-primary">
+        <div class="panel-body">
+          <h3 class="panel-heading"> Simulation Submission<br>Index</h3>
+        </div>
+      </div>
+      <!-- main description -->
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <p>Follow the 4 steps for uploading simulations.</p>
+        </div>
+      </div>
+
+      <!-- link to docs -->
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <p>For more information on this form, see the <a class="textlink" alt="Work in progress.">docs</a>.
+          </p>
+        </div>
+      </div>
+
+    </div>
+    <!--   _____________________________________________________________________________________________-->
+
+    <!-- middle column -->
+    <div class="col-md-6">
+      <!-- filters -->
+      <div class="col-md-12 panel panel-primary">
+
+        <div style="text-align:center; margin-top:2%; margin-bottom:2%;">
+          <h4 class="orangeTit">Molecular Dynamics Database For Crystallized GPCR Complexes</h4>
+        </div>
+
+        <div class="panel-body" id="selection-">
+          <a id='selection-button' href="/dynadb/protein/{{submission_id}}/"
+            class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 1:<br> Protein information </a>
+        </div>
+
+
+        <div class="panel-body" id="selection-">
+          <a id='selection-button' href="/dynadb/molecule/{{submission_id}}/"
+            class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 2:<br> Small molecules information
+          </a>
+        </div>
+
+        <div class="panel-body" id="selection-">
+          <a id='selection-button' href="/dynadb/model/{{submission_id}}/"
+            class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 3:<br> Complex information </a>
+        </div>
+
+        <div class="panel-body" id="selection-">
+          <a id='selection-button' class="btn btn-success btn-lg btn-block has-spinner"
+            href="/dynadb/dynamics/{{submission_id}}/">
+            <span class="spinner"><i class="fa fa-spinner fa-spin" style="background-color:grey!important"></i></span>
+            Step 4:<br> Dynamics information </a>
+        </div>
+
+      </div>
+
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body" id="selection-">
+          <a id='selection-button' class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"
+                style="background-color:grey"></i></span>Confirm<br>submission </a>
+        </div>
+      </div>
+
+    </div>
+
+  </form>
+</div>
+{% endblock content %}

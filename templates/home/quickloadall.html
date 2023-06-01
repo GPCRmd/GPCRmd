@@ -1,0 +1,60 @@
+<head>
+
+<!-- for NGL iframe-->
+<script>document.domain=document.domain;</script>
+
+{% load static %} 
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="{% static 'home/logo/gpcrmd/main_circle.png' %}">
+  <!-- Bootstrap -->
+  <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+  <!-- Custom styles -->
+  <link href="{% static 'home/css/style.css' %}" rel="stylesheet">
+
+{% load covid_custom %}         
+
+
+{% block addon_css %}
+
+{% endblock %}
+
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+  <base href="your_domain/" target="_PARENT">
+
+</head>
+
+<body style="padding:20px 0">
+{% block content %} 
+
+
+<div style="max-width:550px ;overflow-y: hidden;overflow-x:auto; margin: 15px auto; max-height: 405px;border:1px solid #e6e6e6;">
+    <!--<iframe style="border: 0px none; margin-left: -130px; height: 1000px; margin-top: -640px; width: 800px;" src="/view/{{answer.nglviewer_id}}" scrolling="no"></iframe>-->
+    <iframe  style="border: 0px none;width: 545px;margin-top:-35px;" id="embed_mdsrv" src="{{mdsrv_url}}/html/embed_loadall.html" scrolling="no" height="400px" width="590px" data-filesli="{{filesli}}" ></iframe>
+</div>
+{% endblock content %}
+{% block addon_js %} 
+
+<!-- From base.html -->
+    <script src="{% static 'home/js/jquery.js' %}"></script>
+    <!-- jQueryUI -->
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.min.css' %}" type="text/css" media="all" />
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.theme.min.css' %}" type="text/css" media="all" />
+    <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+    <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+<!-- END From base.html -->
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+{% endblock %}
+</body>

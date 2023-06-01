@@ -1,0 +1,31 @@
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+ {% block content %}
+
+<form method="post" action="/dynadb/thanks/" enctype="multipart/form-data">
+        {% csrf_token %}
+            <input type="hidden" name="extra" value="{{extra}}">
+            <fieldset>
+            {{ formset.management_form }}
+                {% for form in formset %}
+                    {{ form.as_p }}
+                {% endfor %}
+                <input type="submit" name="action" value="+">
+            </fieldset>
+        <div style="text-align: right">
+        {% if not edit%}
+            <input type="submit" name="action" value="Create">
+        {% else %}
+            <input type="submit" name="action" value="Edit">
+        {% endif %}
+        </div>
+
+        <p> {{non_field_errors}} </p>
+    </form>
+
+{% endblock content %}
+
+
+

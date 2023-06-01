@@ -1,0 +1,46 @@
+<head>
+<script>
+    document.domain=document.domain;
+</script>
+{% extends "home/base.html" %} 
+{% load static %} 
+{% block addon_css %}
+<style>
+#content{
+    width:100%;
+}
+
+</style>
+{% endblock %}
+</head>
+<body>
+{% block content %}
+
+<!--<div style="max-width:1300px ;overflow-y: hidden;overflow-x:auto; margin: 15px auto; max-height: 1000px;">
+    <iframe  style="border: 0px none;width: 545px;margin:-15px;width:1310px;height:1030px" src="{{mdsrv_url}}/html/public_html_dwn/index.html#cont" scrolling="no" ></iframe>
+</div>
+-->
+<div class="row">
+    <div style="margin:20px 20px 0 30px;" id="sync">
+        Syncronize with GPCRmd viewer
+        <div class="btn-group btn-group-xs">
+          <button type="button" data-state="on"  class="btn btn-default syncronize_opt active" style="padding:2px 5px 2px 5px;">On</button>
+          <button type="button" data-state="off" class="btn btn-default syncronize_opt" style="padding:2px 5px 2px 5px;">Off</button>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div  style="width:870px ;overflow-y: hidden;overflow-x:auto; margin: 15px; max-height: 660px;float:left">
+        <iframe   id="embed_metadynview" style="border: 0px none;margin:-15px;width:870px;height:660px" src="{{mdsrv_url}}/html/metadyndiet/index.html#hil={{ hills_path }}&mes=true" scrolling="no" ></iframe>
+    </div>
+
+    <div style="max-width:550px ;overflow-y: hidden;overflow-x:auto; margin: 35px 15px 15px 15px; max-height: 465px;border:1px solid #e6e6e6;float:left">
+        <iframe  id="embed_mdsrv" class="str_file traj_file lig_element" data-resname="8NU"   style="border: 0px none;width: 545px;margin-top:-35px;" id="embed_mdsrv" src="{{mdsrv_url}}/html/embed_metadyn.html" scrolling="no" height="461px" width="545px" data-struc_file="{{structure_file}}" data-traj_file="{{traj_file}}" ></iframe>
+    </div>
+</div>
+{% endblock content %}
+{% block addon_js %} 
+      <script src="{% static 'view/metadynview.js' %}"></script>
+
+{% endblock %}
+</body>

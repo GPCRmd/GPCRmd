@@ -1,0 +1,773 @@
+<head>
+
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+  google.charts.load('45', {packages: ['corechart']});
+//  google.charts.setOnLoadCallback(drawChart);
+</script>
+
+    <!-- for NGL iframe-->
+    <script>document.domain=document.domain;</script>
+{% extends "sc2md/base_sc2md.html" %} 
+
+{% load static %} 
+
+{% load covid_custom %}         
+{% block addon_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'sc2md/css/dynanalysis.css' %}" />
+
+{% endblock %}
+
+
+</head>
+
+<body style="padding:20px">
+{% block content %} 
+
+
+ <!-- description column -->
+<div class="col-md-12 "> 
+
+   <div class="row panel panel-primary title_pannel" style="">  
+       <div class="panel-body" style="min-width:400px;padding-bottom:10px">
+          <div >
+          <h2 >Workbench</h2>
+          </div>
+       </div> 
+   </div>
+
+  <div class="row" id="inner_remaining" >
+    <div id="group_height" class="col-md-12"> 
+
+      <div class="row" id="row_info" style="padding:0 7px">
+       <div class="panel panel-primary" >
+           <div id="show_hide_info" class="section_pan"  data-target="#more_info" data-toggle="collapse" style="cursor:pointer"><span id="show_hide_info_text" style="margin-left:5px;font-size:12px">Show info </span><span class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+       </div>
+
+       
+       <div class="panel panel-primary collapse" id="more_info" >
+           <div class="panel-body">
+            <p style="text-align: justify;">Visualization and trajectory sharing powered by <a href="http://nglviewer.org/ngl/api/index.html" target="_blank" >NGL Viewer</a> and <a href="http://nglviewer.org/mdsrv/" target="_blank" >MDsrv</a>.</p>        
+            
+            <p style="text-align: justify;">The interaction network has been generated using <a href="https://github.com/GPCRviz/flareplot" target="_blank" >Flare Plots</a>, powered by R. Fonseca and A. J. Venkatakrishnan.</p>
+            
+           <p style="text-align: justify;margin-bottom:4px;font-weight:bold;color:#337AB7">Mouse controls:</p>
+              <span><p class="falselist">Left button hold and move: rotate camera around center.</p>
+              <p class="falselist">Left button click: pick atom or distance.</p>
+              <p class="falselist">Middle button hold and move: zoom camera in and out.</p>
+              <p class="falselist">Middle button click: center camera on atom.</p>
+              <p style="padding-left:15px" >Right button hold and move: translate camera in screen plane.</p></span>
+
+        </div>
+       </div>
+      </div> <!-- End page_info-->
+
+
+      <div  class="row" id="viewer_and_analysis"> 
+        {% if variant_genome %}
+          <div class="panel panel-primary" id="var_info_pannel" style="margin:0 7px 15px 7px">
+            <div class="panel-body">
+              <p style="margin-bottom: 0">Displaying mutations found in <a href="/sc2md/allprot/{{variant_genome}}"><span style="font-size:13px" class="label label-primary">{{variant_genome}}</span></a></p>
+            </div>
+          </div>
+        {% endif %}
+        <div id="" class="col-lg-6 halfpage" > 
+          <div id="leftPanel" class="col-md-12 panel panel-primary " > 
+            <div class="panel-body halfpanelbody">
+              <div id="alloptionsdiv">
+                <div class="row sectiontitle" id="VisualizationDiv" >
+                    <h4>Viewer
+                    </h4>
+                </div>
+                <div class="row subsectiontitle">
+
+                  {% if dyn_name %}
+                  {{dyn_name}}
+                  {% endif %}
+                  {% if dyn_name and pdbid %}({% endif %}{% if pdbid %}{% if model_source %}{{model_source}}, template:{% endif %} {{pdbid}}{% endif %}{% if dyn_name and pdbid %}){% endif %}
+
+
+                  <a href="{% url 'sc2md:report' dyn_id=dyn_id %}" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-download-alt"  style="padding:0 5px"></span> Simulation report and files</a>
+                </div>
+
+<!-- ============= NGL =========== -->
+                <span id="loading">
+                  <center >
+                    <img src="{% static 'view/images/loading-gear.gif' %}" />
+                  </center>
+                </span>
+                <div id="view_screen" class="row str_file panelrow" data-struc_file="{{files.pdb.path}}" data-struc_file_id="{{files.pdb.id}}" data-dyn_id="{{dyn_id}}" data-delta="{{delta}}"  data-light_sel="{{light_sel}}" data-heavy_comp_sel="{{heavy_comp_sel}}" > 
+                  <div >
+                    <div id="dropdownAndIframe" >
+                    
+                          <div id="trajsDropdown" class="dropdown showWhenNGLLoad" style="z-index:11;visibility:hidden">
+                            <button id="selectedTraj" class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown"  data-tpath={{files.traj.0.path}} data-fplot_file="{{files.traj.0.fplot.0.2}}" data-trajidtoframenum="{{trajidToFramenum}}"> 
+                              <span class="pull-left"  >
+                                <b>Trajectory ID:</b> <span id="selectedTraj_id">{{ files.traj.0.id }}</span>
+                                <span id="selectedTraj_note">
+                                </span>
+                              </span>
+                              <span class="caret pull-right" style="margin-top:7px"></span>
+                            </button>
+                            <ul class="dropdown-menu" >
+                              <li class="traj_element tsel" style="background-color:#FFF7F7" id="traj_id_{{files.traj.0.id}}" data-tpath={{files.traj.0.path}} data-fplot_file="{{files.traj.0.fplot.0.2}}"  
+                              {% for e in files.traj.0.fplot %}
+                                data-{{e.0}}="{{e.2}}"
+                              {% endfor %}
+                              >Trajectory {{files.traj.0.id}}
+                            </li>
+                            {% for traj in files.traj|slice:"1:" %}
+                              <li class="traj_element"  id="traj_id_{{traj.id}}" data-tpath={{traj.path}} data-fplot_file={{traj.fplot.0.2}} 
+                              {% for e in traj.fplot %}
+                                data-{{e.0}}="{{e.2}}"
+                              {% endfor %}
+                              >Trajectory {{traj.id}}
+                              </li>
+                            {% endfor %}
+                            </ul>
+                          </div> <!-- END trajsDropdown -->
+                                                  
+                        <iframe style="border:none;position:absolute;top:-30px;" id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed_sc2md.html" scrolling="no" height="1000px" width="620px"></iframe>
+
+                    </div>
+
+                  </div>          
+                </div>   
+               
+                <div id="speed_warnings" class="row panelrow" data-warning_load="{{warning_load}}">
+                  <div id="speed_warnings_light">
+                  </div>
+                  <div id="speed_warnings_heavy">
+                  </div>
+                </div>
+<!-- ============= END NGL =========== -->
+<!-- ============= Apply buttonss =========== -->
+                 <div class="row panelrow" style="margin-top:5px;margin-bottom:10px;" >
+                   <div style="padding-right:3px;padding-left:3px"> 
+                      <button  class="btn btn-danger btn-xs" id="clearAll" style="margin-top:5px">Clear All</button>
+                                           
+                      <div class="pull-right">
+                          <button id="restartPos" type="button" class="btn btn-link settingsB" title="Reset position" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-repeat"></span></button>       
+                          <button id="center" type="button" class="btn btn-link settingsB" title="Center" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-record"></span></button>
+                          <button id="background" type="button" class="btn btn-link settingsB light" title="Dark background" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-adjust"></span></button>
+                          <button id="screenshot" type="button" class="btn btn-link settingsB" title="Take screenshot" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-camera"></span></button>                                    
+<!--                          <a id="to_mdsrv" class="btn btn-link settingsB" href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank" style="padding:7px;color:#585858" title="Advanced visualization"><span class="glyphicon glyphicon-cog"></span></a>-->
+                        
+                          <div  id="moreSettings_div" class="dropdown displaydrop pull-right" >
+                            <button id="moreSettings" type="button" class="btn btn-link settingsB dropbtn_opt" title="More setting options" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-plus-sign"></span></button>
+                            <div class="dropdown-content" style="padding: 7px; background-color: white; width: 252px; display: block; border: 1px solid #808080; border-radius:2px;display:none;left:-222px;position:absolute">
+                                    <div style="margin-bottom:10px;">
+                                        Show H atoms 
+                                         <div class="btn-group btn-group-xs">
+                                          <button type="button" id="showHOn" class="btn btn-default showHSet" style="padding:2px 5px 2px 5px;">On</button>
+                                          <button type="button" id="showHOff" class="btn btn-default active showHSet" style="padding:2px 5px 2px 5px;">Off</button>
+                                        </div> 
+                                    </div>                                  
+                                    <div style="margin-bottom:10px;">
+                                        Projection 
+                                         <div class="btn-group btn-group-xs">
+                                          <button type="button" id="projOrtho" class="btn btn-default projectionOP" style="padding:2px 5px 2px 5px;width:85px">Orthographic</button>
+                                          <button type="button" id="projPersp" class="btn btn-default active projectionOP" style="padding:2px 5px 2px 5px;width:85px">Perspective</button>
+                                        </div> 
+                                    </div>
+                                    <div style="margin-bottom:10px;">
+                                        Spin 
+                                         <div class="btn-group btn-group-xs">
+                                          <button type="button" id="spinOn" class="btn btn-default spinSet" style="padding:2px 5px 2px 5px;">On</button>
+                                          <button type="button" id="spinOff" class="btn btn-default active spinSet" style="padding:2px 5px 2px 5px;">Off</button>
+                                        </div> 
+                                    </div>
+                                    <div style="margin-bottom:10px;">
+                                        Trajectory step size: <input class="form-control input-sm rvSpaces" id="trajStep"  type="number" placeholder=3 style="width:50px;padding-left:7px;padding-right:2px;">
+                                    </div>
+                                    <div style="margin-bottom:10px;">
+                                        Trajectory timeout: <input class="form-control input-sm rvSpaces" id="trajTimeOut"  type="number" placeholder=50 style="width:50px;padding-left:7px;padding-right:2px;"> ms
+                                    </div>
+                                    
+                                    <div >
+                                        Interpolation type: 
+                                            <select id="trajIntType" name="trajIntTypeNm">
+                                                <option   value="spline">spline</option> 
+                                                <option   value="linear">linear</option>
+                                                <option  selected value="">none</option>
+                                            </select>    
+                                    </div>
+
+                                  
+                            </div>
+                          </div>
+   
+                      </div>
+                   </div>
+                </div>
+<!-- ============= SELECTION =========== -->
+                <div class="row sectiontitle" id="MySelectionDiv" >
+                    <h4>Selection
+                    </h4>
+                </div>
+                <div id ="allSelTools" class="alltools">
+
+      <!-- ============= Comp buttonss =========== -->
+                  <div id="quicksel_all" >
+                      <div class="row" >
+                          <div class="section_pan subsectiontitle collapsable_sec" data-toggle="collapse" data-target="#quicksel"><span>Quick selection </span><span  class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+                      </div>
+                      <div id="quicksel" class="collapse" >
+                          <div class="row" class="subsectionbody">
+                            <div class="row" id="componentbuttons">
+                              <center>
+                                  <button class="btn btn-default active nglCallBtn changefocus clickUnclick rep_element" data-nglname="protein" id="proteinbtn">
+                                  Protein
+                                </button>
+                                {% for mol in molecules %}
+                                  {% if mol.is_ligand %}
+                                    <button class="btn btn-default active nglCallBtn changefocus clickUnclick rep_molecule rep_element" data-nglname="ligand_{{forloop.counter0}}" data-selection="{{ mol.resname }}" data-datatype="ligand"  title="{{resname}}">
+                                      {{ mol.molecule_name }}
+                                    </button>
+                                  {% elif mol.is_membrane %}
+                                    <button class="btn btn-default nglCallBtn changefocus clickUnclick rep_molecule rep_element" data-nglname="membmol_{{forloop.counter0}}" data-selection="{{ mol.resname }}" data-datatype="membmol" title="{{resname}}">
+                                      {{ mol.molecule_name }}
+                                    </button>
+                                  {% else %}
+                                    <button class="btn btn-default nglCallBtn changefocus clickUnclick rep_molecule rep_element" data-nglname="othermol_{{forloop.counter0}}" data-selection="{{ mol.resname }}" data-datatype="othermol"  title="{{resname}}">
+                                      {{ mol.molecule_name }}
+                                    </button>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if molecules|length > 1%}
+                                <button  class="btn btn-default nglCallBtn changefocus" id="btn_all" >All</button>
+                                <button  class="btn btn-link nglCallBtn" id="btn_clear" style="color:#DC143C;">Clear</button>
+                                {% endif %}
+                              </center>
+                            </div>
+                          </div>  
+
+
+                  <!--   <div class="row" style="margin-top:15px">
+                     
+                      <div class="sel_within subsectionbody">
+                        <div class="dist_sel" id="row0" style="margin-bottom:5px">
+                          <span class="tick" ></span>
+                          <span class="always" style="margin-left:14px">
+                           Show 
+                              <select class="resWthComp nglCallChangeWth" name="rescomp">
+                                  <option  selected value="protein">residues</option> 
+                                 {% for mol in molecules %}
+                                      <option   value="{{mol.resname}}" >{{mol.molecule_name}}</option>
+                                 {% endfor %}
+                              </select>                     
+                            within 
+                          <input class="form-control input-sm inputdist nglCallChangeWth" type="text" style="width:40px;padding-left:7px;">
+                            &#8491; of
+                              <select class="wthComp" name="comp">
+                                 {% for mol in molecules %}
+                                 <option  value="{{mol.resname}}">{{mol.molecule_name}}</option>
+                                 {% endfor %}
+                                 <option   value="user_sel">Selection</option>
+                              </select>
+                              <span class="user_sel_input_p">
+                                {% if not molecules %}
+                                <input class="form-control input-sm user_sel_input nglCallChangeWth" type="text" style="width:95px;padding-left:7px">
+                                {% endif %}
+                              </span>
+                              <button class="btn btn-link rm_btn rm_row_btn"  ><span class="glyphicon glyphicon-remove-sign"></span></button>
+                              <button class="btn btn-link add_btn add_row_btn" ><span class="glyphicon glyphicon-plus-sign"></span></button>
+                          </span>
+                          <div class="alert_sel_wth"><div class="alert_sel_wth_gnum"></div><div class="alert_sel_wth_ngl"></div></div>
+                        </div>
+
+                        </div>
+                        </div>-->
+                      </div> 
+                  </div> <!-- END quicksel_all-->
+
+
+      <!-- ============= Domain buttonss =========== -->
+                  {% if domains %}
+                  <div id="domainsel_all" >
+                      <div class="row" >
+                          <div class="section_pan subsectiontitle collapsable_sec" data-toggle="collapse" data-target="#domainsel"><span>Relevant domains </span><span  class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+                      </div>
+                      <div id="domainsel" class="collapse" >
+                          <div class="row" class="subsectionbody">
+                            <div class="row" id="all_domain_buttons" style="margin-left:15px">
+                                {% for domainname, domainli in domains.items %}
+                                  <p style="font-weight:bold">{{domainname}}</p>
+                                  {% for domaindata in domainli %}
+                                    <button class="btn btn-default  nglCallBtn changefocus clickUnclick rep_molecule  rep_domain whiterep_if_act" data-nglname="{{domaindata.domainid}}_{{forloop.counter0}}" data-selection="{{domaindata.selection}}" data-datatype="domain"  >
+                                      {{ domaindata.note }}
+                                    </button>
+                                    <span class="glyphicon glyphicon-info-sign showdomtooltip" data-toggle="tooltip" data-title="<div style='overflow:auto;text-align:left'>
+                                    <p>
+                                      <strong>Seq. position:</strong> {{domaindata.seq_positions.0}}-{{domaindata.seq_positions.1}}
+                                      </p>
+                                      <p>
+                                        <strong>Seq. (WT):</strong> {{domaindata.domain_seq}}
+                                      </p>
+                                      <p>
+                                        <strong>Selection:</strong> {{domaindata.selection}}
+                                      </p>
+                                      {% if domaindata.pm_evidence%}
+                                        <p>
+                                          <strong>Ref: </strong>
+                                            {% for refid in domaindata.pm_evidence %}
+                                              <a href='https://pubmed.ncbi.nlm.nih.gov/{{refid}}/'>{{refid}}</a>
+                                            {% endfor %}
+                                        </p>
+                                      {% endif %}
+                                      <p><strong>Source: </strong> <a href='https://covid-19.uniprot.org/uniprotkb/{{domaindata.uniprotkbac}}'>UniProt</a></p>
+                                    </div>
+                                      " 
+                                      ></span>
+                                  {% endfor %}
+                                {% endfor %}
+                              <p>
+                                <button  class="btn btn-link nglCallBtn btn_clear_section" id="btn_clear_domains" data-selector=".rep_domain.active" style="color:#DC143C;">Clear</button>
+                              </p>
+                            </div>
+                          </div>   
+                      </div> 
+                  </div> <!-- END domainsel_all-->
+                  {% endif %}
+
+
+      <!-- ============= Input selection =========== -->
+                  <div id="selection_all" >
+                      <div class="row" >
+                          <div class="section_pan subsectiontitle collapsable_sec" data-toggle="collapse" data-target="#selection"><span>Custom selection </span><span  class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+                      </div>
+                      <div id="selection" class="collapse" >
+
+                        <div class="subsection_infotext" >
+                        Input your selection using the <a href="http://nglviewer.org/ngl/api/manual/usage/selection-language.html" target="_blank">NGL selection language</a>.
+                        </div>
+
+                         <div class="gpcr_pdb" style="padding-left:15px"  >
+                           <div id="text_input_all" >
+                                <div  class="text_input" id="ti_row0" style="margin-bottom:5px">
+                                   <div  class="row">
+                                      <div class="ti_left" style="width:80%;display:inline-block;"> 
+                                      <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
+                                      <div class="pull-right" style="padding:0;margin:0;font-size:12px">
+                                           <div style="float:left;" >
+                                                <select class="high_type nglCallChangeTI" name="high_type0" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
+                                                   <option value="licorice">Licorice</option>
+                                                   <option value="ball+stick">Ball+stick</option>
+                                                   <option value="hyperball">Hyperball</option>
+                                                   <option value="line">Line</option>
+                                                   <option value="spacefill">Spacefill</option>
+                                                   <option value="cartoon">Cartoon</option>
+                                                   <option value="ribbon">Ribbon</option>
+                                                   <option value="rope">Rope</option>
+                                                   <option value="tube">Tube</option>
+                                                   <!--<option value="axes">Axes</option>-->
+                                                </select>
+                                                <select class="high_scheme nglCallChangeTI" name="high_scheme0" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">
+                                                   <option value="element">Element</option>
+                                                   <option value="uniform">Uniform</option>
+                                                   <option value="chainid">Chain</option>
+                                                   <option value="moleculetype">Molecule type</option>
+                                                   <option value="sstruc">Structure</option>
+                                                   <option value="resname">Residue name</option>
+                                                   <option value="residueindex">Residue index</option>
+                                                   <option value="hydrophobicity">Hydrophobicity</option>
+                                                </select>
+                                              </div>
+                                              <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
+                                                <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215"></button> 
+                                                <div class="dropdown-content" style="margin-left:3px">
+                                                      <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>
+                                                      <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
+                                                      <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
+                                                      <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
+                                                      <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                                </div>
+                                              </div>
+                                              <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
+             -->
+                                     </div>
+                                      </div>
+                                      <div class="radio" style="width:15%;display:inline-block;">
+                                            <button class="btn btn-link ti_rm_btn rm_row_btn" ><span class="glyphicon glyphicon-remove-sign"></span></button>
+                                            <button class="btn btn-link ti_add_btn add_row_btn" ><span class="glyphicon glyphicon-plus-sign"></span></button>
+                                      </div>
+                                  </div>
+                                  <div class="ti_alert"><div class="ti_alert_gnum"></div><div class="ti_alert_ngl"></div></div>      
+                              </div>
+                          </div>
+
+                         </div>
+
+                      </div><!-- END seqselection-->
+
+                    </div><!-- END selection_all-->
+                </div>
+              </div><!-- END alloptionsdiv-->
+            </div>
+          </div> <!-- END leftPanel-->
+        </div> <!-- END left halfpage-->
+        <div id="" class="col-lg-6 halfpage"> 
+          <div id="rightPanel" class="col-md-12 panel panel-primary" > 
+            <div class="panel-body halfpanelbody">
+              <div class="alloptionsdiv">
+                <div class="row sectiontitle" id="VisualizationDiv" >
+                    <h4>Toolkit
+                    </h4>
+                </div>
+                <div id="all_analysis" class="alltools">
+                <div id="analysis_general">
+                  <div class="row">
+                      <div class="section_pan super_sectiontitle collapsable_sec"  data-toggle="collapse" data-target="#analysis_general_opt"><span>General </span><span  class="glyphicon glyphicon-chevron-up arrow"></span></div> 
+                  </div>
+                  <div id="analysis_general_opt" class="collapse in" style="padding-left:15px;">
+
+  <!-- ============= Flare Plot =========== --> 
+                  {% if show_fp %}
+                     <div class="row">
+                          <div class="section_pan subsectiontitle collapsable_sec" data-toggle="collapse" data-target="#analysis_fplot" ><span>Interaction network </span><span class="glyphicon glyphicon-chevron-up arrow"></span></div>
+                     </div>
+                     <div id="analysis_fplot" class="collapse in">
+
+                       <div class="row" class="subsectionbody">
+
+
+                        <div id="loading_fp" style="">
+                          <center >
+                            <img style="height:50px" src="{% static 'view/images/loading-gear.gif' %}" />
+                          </center>
+                        </div>
+
+
+                        <div id="fpdiv" data-show_fp="{{show_fp}}" style="margin-top:15px;overflow:auto;margin-bottom:10px">
+                        <div style="z-index:1; position: absolute;color:gray" id="fp_int_type_info">
+                            <p class="fp_int_type_info_p">{{files.traj.0.fplot.0.1}}</p>
+                        </div>
+                       <center>
+                         <div id="flare-container">
+                          {% if not files.traj.0.fplot.0.2 %}
+                             <div class="alert alert-info" style="margin:95px 0;">
+                                There is no flare plot available for this trajectory and interaction type yet.
+                             </div>
+                           {% endif %}
+                         </div>
+
+                          <span id="allFPoptions" class="showIfTrajFP">
+
+                              <div class="dropup dropupbtn" >
+                                <button class="btn btn-default dropdown-toggle changefocus" type="button" data-toggle="dropdown"  title="Define the interaction type to be displayed in the plot.">Interaction type
+                                <span class="caret"></span></button>
+                                <ul id="ul_fp_int_type" class="dropdown-menu">
+
+                                  <!--<li class="dropdown-submenu">
+                                    <a style="padding:5px 15px 5px 15px;background-color:#f2f2f2" class="submenu_btn">Hydrogen bonds</a>
+                                    <ul class="dropdown-menu" >-->
+                                      <li  data-tag="{{files.traj.0.fplot.0.0}}" data-path="{{files.traj.0.fplot.0.2}}" style="padding:5px 15px 5px 15px;background-color:#bfbfbf" 
+                                        {% if files.traj.0.fplot.0.2 %}
+                                          class="is_active fp_options fp_int_type"
+                                        {% else %}
+                                          class="fp_options fp_int_type disabled"
+                                        {% endif %}
+                                      >{{files.traj.0.fplot.0.1}}</li>
+
+                                  {% for int_info in files.traj.0.fplot|slice:"2:" %}
+                                        <li  data-tag="{{int_info.0}}" data-path="{{int_info.2}}"  style="padding:5px 15px 5px 15px;"
+                                          {% if int_info.2 %}
+                                            class="fp_options fp_int_type"
+                                          {% else %}
+                                            class="fp_options fp_int_type disabled"
+                                          {% endif %}
+                                        >{{int_info.1}}</li>
+                                  {% endfor %}
+                                </ul>
+                              </div>
+
+                              <div class="dropup dropupbtn" >
+                                <button 
+                                    {% if files.traj.0.fplot.0.2 %}
+                                       class="btn btn-default dropdown-toggle changefocus disableIfNoIntFP"
+                                    {% else %}
+                                        class="btn btn-default dropdown-toggle changefocus disableIfNoIntFP disabled"
+                                    {% endif %}
+                                 type="button" data-toggle="dropdown" title="Define what to display in the flare plot.">Display
+                                <span class="caret"></span></button>
+                                <ul class="dropdown-menu" >
+                                  <li style="padding:5px 15px 5px 15px;font-weight:bold" class="dropdown-header">Interacting pairs</li>
+                                  <li id="fp_display_inter" class="fp_display_element fp_options fp_display_element_type is_active" data-tag="Inter" style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf" title="Filter out interactions 5 or less residues apart.">Hide neighbours</li>
+                                  <li id="fp_display_all" class="fp_display_element fp_options fp_display_element_type" data-tag="all" style="padding:5px 15px 5px 15px;cursor:pointer;" title="Display all interactions.">All</li>
+                                  <li style="margin-left:5px;margin-right:5px;" class="divider"></li>
+                                  <li style="padding:5px 15px 5px 15px;font-weight:bold" class="dropdown-header">Simulation</li>
+                                  <li id="fp_display_frame" class="fp_display_element fp_options is_active" style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf" title="Display a summary of the itneractions formed during the simulation.">Current frame</li>
+                                  <li id="fp_display_summary" class="fp_display_element fp_options" style="padding:5px 15px 5px 15px;cursor:pointer;" title="Display interactions formed at each simulation frame.">Summary</li>
+                                </ul>
+                              </div>
+
+
+                              <button id="FPdisplay" 
+                                  {% if files.traj.0.fplot.0.2 %}
+                                      class="btn btn-default active changefocus disableIfNoIntFP"
+                                  {% else %}
+                                      class="btn btn-default active changefocus disableIfNoIntFP disabled"
+                                  {% endif %}
+                                title="Show/Hide structural representations of the residues selected at the plot." type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
+                                Show in structure
+                              </button>
+
+
+            <!-- Substitute ids and classes:
+                 .fpShowResSet
+            -->
+                           
+                              <!--<button class="summarizeFP btn btn-default" type="button" style="margin-top:15px;width:115px;font-size:12px;">
+                                Summarize
+                              </button>-->
+                             <!--<div class="btn-group" id="fpShowResSetBtns">
+                              <button type="button" id="intraHel" class="btn btn-default fpShowResSet" title="Click to display intra-helix interactions">Intra-helix</button>
+                              <button type="button" id="interHel" class="btn btn-default active fpShowResSet" title="Click to hide inter-helix interactions">Inter-helix</button>
+                             </div> -->
+                             
+                             
+                              <button id="FPclearSel"
+                                  {% if files.traj.0.fplot.0.2 %}
+                                      class="btn btn-danger disableIfNoIntFP"
+                                  {% else %}
+                                      class="btn btn-danger disableIfNoIntFP disabled"
+                                  {% endif %}
+                                type="button" style="margin-top:15px;width:115px;font-size:12px;" title="Unselect all interactions from the plot.">
+                                Clear plot
+                              </button>
+                              {% if files.traj.0.fplot.0.2 %}
+                              <a role="button" id="downl_json_hb" class="btn btn-link settingsB disablewhenajax" href="{{files.traj.0.fplot.0.2}}" style="color:#585858;margin-top:15px;padding:0" target="_blank">
+                              {% else %}
+                              <a role="button" id="downl_json_hb" class="btn btn-link settingsB disablewhenajax disabled"  style="color:#585858;margin-top:15px;padding:0">
+                              {% endif %}
+                                <span title="Download data" class="glyphicon glyphicon-download-alt"></span>
+                              
+                              </a>
+                          </span>
+                       </center>
+                       <!--<div class="showIfTrajFPBlock" style="margin-bottom:10px;margin-top:10px;color:#808080;">
+                            <a href="https://github.com/GPCRviz/flareplot" target="_blank" >Flare Plots</a> powered by R. Fonseca and A. J. Venkatakrishnan.
+                        </div>-->
+                       </div><!-- End fpdiv -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        </div>
+                     </div> <!-- END analysis_fplot-->
+                   {% endif %}
+  <!-- ============= RMSD Analysis =========== ... --> 
+                     <div class="row">
+                          <div class="section_pan subsectiontitle collapsable_sec" data-toggle="collapse" data-target="#analysis_rmsd" ><span>RMSD </span><span class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                     </div>
+                     <div id="analysis_rmsd" class="collapse">
+
+                       <div class="row" class="subsectionbody">
+
+                              <div style="margin-left:18px;margin-bottom:10px;">
+                               Trajectory: 
+                                      <select id="rmsd_traj_sel" class="analysis_traj_sel" data-analysisstride="#rmsd_stride" name="rmsd_traj">
+                                         {% for traj in files.traj %}
+                                         <option   value="{{traj.path}}" data-trajid={{traj.id}}>
+                                            Traj. ID {{traj.id}}
+                                         </option>
+                                         {% endfor %}
+                                      </select>
+
+                              </div>
+                              <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                                 <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
+                                 </div>
+                                 <div id="rmsd_sel_frames_id" class="col-md-10" >
+                                    <div class="row">
+                                       <input type="radio" name="rmsd_sel_frames" value="all_frames" checked> 
+                                            All
+                                    </div>
+                                    <div class="row" style="margin-bottom:5px">
+                                       <input type="radio" name="rmsd_sel_frames" value="rmsd_frames_mine"> 
+                                           From 
+                                           <span class="rmsd_from_parent">
+                                             <input class="form-control input-sm maxinp8 changeVal" id="rmsd_frame_1" type="text" style="width:50px;padding-left:7px;">
+                                           </span>
+                                           to 
+                                           <span class="rmsd_to_parent">
+                                             <input class="form-control input-sm maxinp8 changeVal" id="rmsd_frame_2" type="text" style="width:50px;padding-left:7px;">
+                                           </span>
+                                    </div>
+                                    <div style="margin-bottom:5px" id="rmsd_stride_parent" class="row">
+                                      Stride: <input class="form-control input-sm inp_stride" id="rmsd_stride" type="number" data-default={{files.traj.0.strideval}} placeholder={{files.traj.0.strideval}} style="width:50px;padding-left:7px;">
+                                    </div>
+
+                                    <div id="rmsd_sel_frames_error" class="row" >
+                                    </div>
+                                  </div>
+                              </div>
+                              <div class="col-md-12" style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                                  Reference: frame 
+                                      <input placeholder=0 class="form-control input-sm maxinp8 changeVal" id="rmsd_ref_frame" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
+                                      from trajectory 
+                                      <select id="rmsd_ref_traj_id" name="">
+                                         {% for traj in files.traj %}
+                                         <option   value="{{traj.path}}">
+                                            Traj. ID {{traj.id}}
+
+                                         </option>
+                                         {% endfor %}
+                                      </select>
+                                    <div class="col-md-12" id="rmsd_ref_frames_error" class="row" style="padding:0" >
+                                    </div>
+                              </div>
+                              <div id="rmsd_sel_id" style="margin-left:18px;margin-bottom:20px"> 
+                                 <div style="margin-bottom:10px;padding:0"  class="col-md-12">
+                                     <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Selection:
+                                     </div>
+                                     <div class="col-md-10" >
+                                        <div  class="row">
+                                           <input type="radio" name="rmsd_sel" value="bck" checked> Protein alpha carbons
+                                        </div>
+                                        <div  class="row">
+                                           <input type="radio" name="rmsd_sel" value="min"> Protein CA, CB, C, N, O
+                                        </div>
+                                        <div class="row">
+                                           <input type="radio" name="rmsd_sel" value="noh"> Non-hydrogen protein atoms
+                                        </div>
+                                        <div class="row">
+                                           <input type="radio" name="rmsd_sel" value="all_prot"> All protein atoms
+                                        </div>
+                                     </div>
+                                  </div>
+                             </div>
+                              <div class=row>
+                                <button id="gotoRMSDPg" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                              </div>
+                              <div class="row" style="margin-left:14px;margin-top:5px;padding-right:15px;clear:left;" id="rmsd_alert"> </div>
+                            <div  id="rmsd_chart" ></div>
+                          </div>
+
+
+                     </div> <!-- END analysis_rmsd-->
+  <!-- ============= RMSF Analysis =========== --> 
+                   <div class="row">
+                        <div class="section_pan subsectiontitle collapsable_sec" data-toggle="collapse" data-target="#analysis_rmsf" ><span>RMSF </span><span class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                   </div>
+                   <div id="analysis_rmsf" class="collapse">
+
+                     <div class="row" class="subsectionbody">
+
+                            <div style="margin-left:18px;margin-bottom:10px;">
+                             Trajectory: 
+                                    <select id="rmsf_traj_sel" class="analysis_traj_sel" data-analysisstride="#rmsf_stride" name="rmsf_traj">
+                                       {% for traj in files.traj %}
+                                       <option   value="{{traj.path}}" data-trajid={{traj.id}}>
+                                          Traj. ID {{traj.id}}
+                                       </option>
+                                       {% endfor %}
+                                    </select>
+
+                            </div>
+                            <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                               <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
+                               </div>
+                               <div id="rmsf_sel_frames_id" class="col-md-10" >
+                                  <div class="row">
+                                     <input type="radio" name="rmsf_sel_frames" value="all_frames" checked> 
+                                          All
+                                  </div>
+                                  <div class="row" style="margin-bottom:5px">
+                                     <input type="radio" name="rmsf_sel_frames" value="rmsf_frames_mine"> 
+                                         From 
+                                         <span class="rmsf_from_parent">
+                                           <input class="form-control input-sm maxinp8 changeVal" id="rmsf_frame_1" type="text" style="width:50px;padding-left:7px;">
+                                         </span>
+                                         to 
+                                         <span class="rmsf_to_parent">
+                                           <input class="form-control input-sm maxinp8 changeVal" id="rmsf_frame_2" type="text" style="width:50px;padding-left:7px;">
+                                         </span>
+                                  </div>
+                                  <div style="margin-bottom:5px" id="rmsf_stride_parent" class="row">
+                                    Stride: <input class="form-control input-sm inp_stride" id="rmsf_stride" type="number" data-default={{files.traj.0.strideval}} placeholder={{files.traj.0.strideval}} style="width:50px;padding-left:7px;">
+                                  </div>
+
+                                  <div id="rmsf_sel_frames_error" class="row" >
+                                  </div>
+                                </div>
+                            </div>
+                            <div id="rmsf_sel_id" style="margin-left:18px;margin-bottom:20px"> 
+                               <div style="margin-bottom:10px;padding:0"  class="col-md-12">
+                                   <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Selection:
+                                   </div>
+                                   <div class="col-md-10" >
+                                      <div  class="row">
+                                         <input type="radio" name="rmsf_sel" value="bck" checked> Protein alpha carbons
+                                      </div>
+                                      <div  class="row">
+                                         <input type="radio" name="rmsf_sel" value="min" disabled> Protein CA, CB, C, N, O
+                                      </div>
+                                      <div class="row">
+                                         <input type="radio" name="rmsf_sel" value="noh" disabled> Non-hydrogen protein atoms
+                                      </div>
+                                      <div class="row">
+                                         <input type="radio" name="rmsf_sel" value="all_prot" disabled> All protein atoms
+                                      </div>
+                                   </div>
+                                </div>
+                           </div>
+                            <div class=row>
+                              <button id="gotoRMSFPg" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                            </div>
+                            <div class="row" style="margin-left:14px;margin-top:5px;padding-right:15px;clear:left;" id="rmsf_alert"> </div>
+                          <div  id="rmsf_chart" ></div>
+                          <button id="rmsf_clear_rep" style="color:#DC143C;display:none" class="btn btn-link">Clear</button>
+                      </div>
+                   </div> <!-- END analysis_rmsf-->
+              </div> <!-- END analysis_general_opt-->
+              </div><!-- END analysis_general-->
+
+
+
+              </div> <!-- END all_analysis -->
+            </div><!-- END alloptionsdiv-->
+          </div> <!-- END rightPanel-->
+        </div>  <!-- END right halfpage-->
+
+      </div> <!-- END viewer_and_analysis -->
+    </div>
+  </div> <!-- END inner_remaining -->
+</div>
+
+
+{% endblock content %}
+{% block addon_js %} 
+
+<!-- From base.html -->
+    <script src="{% static 'home/js/jquery.js' %}"></script>
+    <!-- jQueryUI -->
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.min.css' %}" type="text/css" media="all" />
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.theme.min.css' %}" type="text/css" media="all" />
+    <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+    <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+<!-- END From base.html -->
+<!-- My imports-->
+    <script  src="{% static 'sc2md/js/dynanalysis.js' %}"></script>
+<!-- Flare plots -->
+      <link rel="stylesheet" type="text/css" href="{% static 'view/fplot2/docs/css/flareplot-main.css' %}" />
+      <script src="{% static 'view/fplot2/d3.v3.min.js' %}"></script>
+      <script src="{% static 'view/fplot2/docs/js/flareplot-main.js' %}"></script><!-- D:< -->
+
+<!-- End Flare plots -->
+{% endblock %}
+</body>

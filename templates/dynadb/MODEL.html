@@ -1,0 +1,461 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block addon_css %}
+<style>
+{% if model_id %}
+a {
+color: #555;
+}
+label{
+cursor:pointer;
+font-weight:normal
+}
+{%else%}
+label{
+cursor:pointer;
+font-weight:normal
+}
+{%endif%}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<form method="post" id="myform" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+
+ <!-- description column -->
+ <div id="MODEL_f" >
+ <div class="col-md-4">
+ <div id="left" class="col-md-12 affix"  style="padding: 0px 0px 0px 0px; width:350px" data-spy="affix" >
+     
+{% if model_id %}
+{% include "dynadb/MODELreuse_description.html" %} 
+{% else %}
+{% include "dynadb/MODEL_description.html" %} 
+{% endif %}
+</div>
+
+ <!--   .............................................................................................-->
+
+<!-- middle column -->
+<div class="col-md-7 col-md-offset-4"> 
+    <!-- filters -->
+
+    <div class="col-md-12 panel" style="margin-bottom:0px">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+		<div class=row id='PRUEBA'>
+<!-- 			<div style="text-align:center">
+            			<h4><br>Select Complex</h4><br>    
+             			<h4><br>Complex Information</h4><br>
+            		</div>   -->
+
+ 			<div class="col-md-12 panel panel-primary" style="text-align:center;color:black;height:50px;{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} background-color:AliceBlue;background-color:AliceBlue;text-align:center;height:50px;{%endif%}">
+<!--       			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Reuse Complex Temporarily unavailable</a></h4><br> -->
+             			<h4 style="margin-top: 10px;margin-left:-5px;margin-right:-5px;font-size:20px;color:DarkBlue"><b>Validation of crystalized components in the simulated system</b></h4>
+<!--             			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Complex Information</a></h4><br> -->
+            		</div>
+     <div class="col-md-12 panel panel-primary" style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}">
+	        <div class="row"><br>
+                <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>General information</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+                </div><br>
+
+ <!-- 			<div style="text-align:center">
+      			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Reuse Complex Temporarily unavailable</a></h4><br> 
+             			<h4><br>General information</h4><br>
+             			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Complex Information</a></h4><br> 
+            		</div>-->
+<!--	        <div class="row">
+		  	<div class="col-md-1"></div><div class="col-md-3" style="text-align:left"><label for="Model">Complex:</label></div>
+		  	<div class="col-md-4" style="text-align:left"> Reuse Complex <input  type="radio" name="Model" value="Reuse Model"></div>
+	 		<div class="col-md-4" style="text-align:center"><input  type="radio" name="Model" value="New Model" checked> New Complex</div></div>
+	        <div class="row">
+			<div class="col-md-8 col-md-offset-4" style="text-align:left">
+				<div class="row">
+				<div class="col-md-4" style="text-align:left"><label for="Choose_reused_model"><a title="Choose a previous complex from the GPCRmd database">Complex ID:</a> </label></div>
+			<div class="col-md-8"><input style="width:130px" id="Choose_reused_model" name="type" rows="1" placeholder="Previous Complex" ></input></div>
+		</div>
+				
+		<br>
+		</div></div> -->
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_name"><a title="Choose a name for your complex" >Name:</a></label></div>
+			<div class="col-md-6"><input cols="40" id="id_name" type="text" name="name" rows="2" placeholder=""  {% if model_id or saved  %} value="{{p.values.0.name}}" {%endif%} {% if model_id %} readonly {%endif%}  style="width:300px"></input></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_type"><a title="Complex Type: Type of structure that is modeled." >Type:</a></label></div>
+				<div class="col-md-6" style="height:30px"><select {% if model_id %} readonly {%endif%} id="id_type" name="type" placeholder="   "  style="width:300px;height:26px" >
+                                   {% if model_id or saved %}
+                                        <option value="{{p.values.0.type}}" >{{Type}}</option>
+                                   {% else %}
+                                         {%if Complex %}
+                                            <option value="{{ fdbMF.Meta.model.MODEL_TYPE.1.0}}"> {{ fdbMF.Meta.model.MODEL_TYPE.1.1 }}</option>
+                                         {%else%}
+                                            <option value="{{ fdbMF.Meta.model.MODEL_TYPE.0.0}}"> {{ fdbMF.Meta.model.MODEL_TYPE.0.1 }}</option>
+                                        <option value="{{i.0}}"> {{i.1}}</option>
+                                      {% endif %}
+                                   {% endif %}
+		<!--			<option value="0">Protein Apoform </option>
+					<option value="1"> Protein-Protein or Protein-Ligand Complex</option> -->
+				</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_pdbid"><a title="PDB ID: PDB ID from Protein Data Bank database. It should contain chain code when necessary (e.g. 4IAR.A). " >PDB ID:</a></label></div>
+			<div class="col-md-6"><input id="id_pdbid" maxlength="6" name="pdbid" type="text"  {% if model_id or saved %} value="{{p.values.0.pdbid}}"{%endif%} {% if model_id %} readonly {%endif%}   placeholder=""  style="width:300px"/></div>
+		<br></div>
+
+	        <div class="row">
+		<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_description"><a title="Description: Description of the complex containing information that is not provided in other field such as procedure followed for the construction of the model. " >Description:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" id="id_description" name="description" rows="2" placeholder=""  {% if model_id %}  readonly {%endif%} style="width:300px">{% if model_id or saved  %}{{p.values.0.description}}{%endif%}</textarea></div>
+		<br></div>
+
+	        <div class="row" {%if model_id %} style="margin-bottom:30px" {%endif%}>
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_source_type"><a title="Source Type: Source of the coordinates of the “complex”. Loop repairs and other replaced missing protein residues on X-ray or NMR structures are not taken into account for setting the value of this field. In order to set the value to X-ray or NMR all the coordinates (including relative positions between different components) of protein complexes and their components should come from an X-ray or an NMR experiment." >Source Type:</a></label></div>
+				<div class="col-md-6"  style="height:30px"><select {% if model_id %} readonly {%endif%} id="id_source_type" name="source_type" placeholder=""  style="width:300px;height:26px" >
+                                {% if model_id or saved  %}  
+					<option readonly value="{{p.values.0.source_type}}" >{{SType}}</option>
+                                 {% else %}
+                                      {% for i in fdbMF.Meta.model.SOURCE_TYPE %}
+                                       {% if forloop.counter > 2 %}
+                                            {%else%}
+                                        <option value="{{i.0}}"> {{i.1}}</option>
+                                        {%endif%}
+                                      {% endfor %}
+                               	{%endif%}	
+				</select></div>
+		<br></div>
+
+                       {% if model_id %}
+                       {% else %}
+                        <div class="row">
+                          	<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="file_source"><a title="Upload PDB file: Provide the PDB file which contains the 3D structure of the crystalized components in the simulation (Max. size of the file is 50 MB)" >Upload PDB file:</a></label></div>
+         			<div class="col-md-3"><input type="file"  name="file_source"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder="" id="file_source" /></div>
+	        	</div>
+                      
+			<div style="text-align:right;margin-right:5%;height:50px">
+                            <a id="id_download_pdb"  name="download_pdb" noreferrer noopener href="" hidden target="_blank">Download uploaded PDB file.</a>
+                            <a id="id_download_pdb"  name="download_pdb" noreferrer noopener href="{{urlpdb}}" hidden target="_blank">Download uploaded PDB file.</a>
+                            <button type="button" name="upload_pdb" id="id_upload_pdb" >Upload</button>
+			</div>
+                        {%endif%}
+
+
+</div>			
+  <br></div>
+		<div class=row id='PRUEBA1'>
+
+     <div class="col-md-12 panel panel-primary" style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} margin-bottom:0px{%endif%}" >
+                <div class=row style="height:20px"></div>
+
+	        <div class="row">
+                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Curated protein information</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+                </div><br>
+              {% if model_id %}
+                {%else%}
+          
+                <div class="panel panel-primary col-md-10 col-md-offset-1" style="background-color:GhostWhite; border:0px">
+                <div class="col-md-1"></div> <div class="col-md-8 col-md-offset-1" style="text-align:center"><h4 style=";height:30px;padding-top:15px;margin-bottom:25px"><a title="Summary of the list of proteins entered by the user in the &quot;Step 1: Protein Information&quot; form. The list is ordered by Prot #. This value is important for linking information of that form with the one provided herein.  Please, use the Prot# value in this table for filling every row in the &quot;Curated protein Information&quot; table describing the segments of the corresponding protein.">Submitted proteins summary</h4></a></div>
+                        <table style="text-align:center;width:90%;margin-left:5%;margin-right:5%;"> 
+                                <thead><tr><th style="width:60px;text-align:center"><label style="writing-mode: horizontal-rl;font-size:14px;text-align:center;height:30px"for="id_prot" size='10'><a title="Identifier number of the protein in the &quot;Step 1: Protein Information&quot; form. This identifier corresponds to the N value in the &quot;Protein #N General Information&quot; title at the top of every protein entry in the aforemetioned form.">Prot #</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="prtnam" size='10'><a title="Protein name corresponding to the protein provided in the &quot;Protein #N&quot; item in &quot;Step 1: Protein Information&quot;.">Protein name</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="uniprot" size='10'><a title="UniProtKB AC: UniProtKB Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers pointing to cannonical sequences. Mutations are handled in a different field.">UniProtKB AC</a></label></th>
+                                </thead>
+                                <tbody style="height:60px"><tr  {% if forloop.counter == lformps|length %} style="height:50px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%}>
+                                 {%for prot in protlist%}      
+                                <td style="width:10%;margin-right:5%;text-align:center;padding:5px 5px 5px 0px"><input readonly id="prtnum" name="prtnum" value="{{prot.0|add:"1"}}" type="number" style="text-align:center;width:100%" placeholder="" /></td>
+				<td style="width:50%;margin-left:5%;padding:5px 5px 5px 5px;text-align:center;"><input readonly id="prtnam" value="{{prot.2}}"  maxlength="1" name="prtnam" type="text" style="width:100%;text-align:center" placeholder=""/></td>
+				<td style="width:20%;margin-left:5%;margin-right:5%;padding:5px 5px 5px 2px;text-align:center;"><input readonly id="uniprot" value="{{prot.1}}"  maxlength="1" name="uniprot" type="text" style="width:100%;text-align:center" placeholder=""/></td>
+                               </tbody>
+                                 {%endfor%}</table> 
+                <div class="row" style="height:30px"></div>
+                </div>
+ <p style="font-size:14px;margin-left:9%;margin-right:9%;text-align: justify;padding-bottom:15px">Use the proper "<b>Prot #</b>" identifier for every protein segment in the "<b>Curated protein data</b>" table. A correspondence between the "<b>Prot #</b>", the protein name and the UniprotKB AC is shown in the <b>"Submitted proteins summary"</b> table.</p>
+                <div class="col-md-6 col-md-offset-3" style="text-align:center;"><h4 style="margin-bottom:25px"><a title="This table should be filled with information about the sources from which the protein coordinates have been obtained. It is possible that coordinates of different segments of the protein come from different sources (e.g. transmembrane fragment coordinates usually come from X-ray crystals whereas loop coordinates may come from homology modeling or any alternative sources). Therefore, information about a specific continuous protein segment whose coordinates come from the same source must be entered in a table row. The user can add to the form as many rows as needed.">Curated protein data</a></h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+                <br>
+             {%endif%}
+
+                        <table style="text-align=center;width:96%;margin-left:0%;margin-right:2%;"> 
+                                <thead><tr><th style="width:60px;text-align:center"><label style="writing-mode: horizontal-rl;font-size:14px;text-align:right;height:30px"for="id_prot" size='10'><a title="Ordinal number corresponding to the records containing sequence information that was provided in the protein form ">Prot #</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="id_chain" size='10'><a title="Chain: Chain identifier for the model in PDB format. ">Chain</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="id_segid" ><a title="Segid: segment identifier for the model in charmm PDB format. ">Segid</a></label></th>
+					<th style="width:60px;text-align:center;font-size:9"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="id_resid_from" size='8'><a title="From resid: Starting PDB file resid of the protein fragment. ">From res</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:right" for="id_resid_to"><a title="To resid: ending PDB file resid of the protein fragment.">To res</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="id_seq_resid_from"><a title="From seq resid: Starting resid of the protein fragment in the protein sequence numbering.">From seq res</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode: horizontal-rl;font-size:14px;height:30px;text-align:center;margin-right:-10px;margin-left:-10px" for="id_seq_resid_to"><a title=" To seq resid: ending resid of the protein fragment in the protein sequence numbering."> To seq res</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode: horizontal-rl;font-size:14px;height:30px;text-align:right" for="id_id_bonded_to_previous"><a title="Bond?: check this box if the fragment is covalently bonded to the C-terminal of the prevous one.">Bond</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode: horizontal-rl;font-size:14px;height:30px;text-align:right" for="id_pdbidps"><a title="PDB ID: PDB ID from Protein Data Bank database. It should contain chain code when necessary (e.g. 4IAR.A). Must be empty when the source of the modeled residues is not X-ray or NMR. ">PDB ID</a></label></th>
+					<th style="width:65px;text-align:center"><label style="writing-mode: horizontal-rl;font-size:14px;height:30px;text-align:right" for="id_source_typeps"><a title="Source type: Source of the coordinates of the protein fragment.">Source</a></label></th>
+
+                                </thead>
+                                <tbody id="pElement1">
+                                {% if model_id or saved and not rowsMR.values|length == 0  %}  
+{% for o in rowsMR.values %} 		{%for intps0 in lformps%}{% if forloop.counter == forloop.parentloop.counter %}	
+				<tr id="Element1_{{intps0}}" {% if forloop.counter == lformps|length %} style="height:30px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%}><td style="width:60px;padding:5px 0px 5px 0px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-prot" name="formps-{{intps0}}-prot" value="{{o.int_id|add:"1"}}" type="number" style="width:58px{%if model_id%}{% if forloop.counter == lformps|length %};margin-bottom:15px{%endif%}{%endif%}" placeholder="" /></td>
+				<!--<td style="width:60px;padding:5px 5px 5px 5px"><input readonly id="id_form-{{intps0}}-id_protein" name="id_protein" type="number" style="width:60px" placeholder=" 1"/></td>-->
+				<td style="width:60px;padding:5px 2px 5px 2px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-chain" value="{{o.chain}}"  maxlength="1" name="formps-{{intps0}}-chain" type="text" style="width:58px" placeholder=""/></td>
+				<td style="width:60px;padding:5px 2px 5px 2px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-segid" value="{{o.segid}}"  maxlength="4" name="formps-{{intps0}}-segid" type="text" style="width:58px" /></td>
+				<td style="width:60px;padding:5px 2px 5px 2px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-resid_from" value="{{o.resid_from}}"   name="formps-{{intps0}}-resid_from" type="text"  style="width:58px" placeholder=" "/></td>
+				<td style="width:60px;padding:5px 2px 5px 2px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-resid_to" value="{{o.resid_to}}"  name="formps-{{intps0}}-resid_to" type="text" style="width:58px" placeholder=""/></td>
+                              <td style="width:60px;padding:5px 2px 5px 2px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-seq_resid_from" value="{{o.seq_resid_from}}"   name="formps-{{intps0}}-seq_resid_from" type="text"  style="width:58px" placeholder=" "/></td>
+                              <td style="width:60px;padding:5px 2px 5px 2px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-seq_resid_to" value="{{o.seq_resid_to}}" name="formps-{{intps0}}-seq_resid_to" type="text"  style="width:58px" placeholder=" "/></td>
+                              <td style="width:30px;padding:5px 0px 5px 0px;text-align:center"><input {% if model_id %} readonly {%endif%} {%if not o.bonded_to_id_modeled_residues_id == None %} checked {%endif%}   id="id_formps-{{intps0}}-bonded_to_id_modeled_residues" name="formps-{{intps0}}-bonded_to_id_modeled_residues" style="aligned:center" type="checkbox"  placeholder=" "/></td>
+				<td style="width:60px;padding:5px 2px 5px 2px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-pdbidps" maxlength="6" name="formps-{{intps0}}-pdbidps" type="text"  value="{{o.pdbid}}"  style="width:58px" placeholder="   "/></td>
+				<td style="width:65px;padding:5px 2px 5px 2px;height:30px"><select  id="id_formps-{{intps0}}-source_typeps" name="formps-{{intps0}}-source_typeps" style="width:63px;height:26px" >	
+                                       {% for ll in lmrstype %}
+                                           {% if forloop.counter == forloop.parentloop.counter %}
+					   <option value="{{ll.0}}">{{ll.1}}</option>
+                                           {%endif%}
+                                      {% endfor %}
+                                            {% if saved %}
+                                       {% for ll in lmrstype %}
+                                           {% if forloop.counter == forloop.parentloop.counter %}
+                                               {% for i in fdbPS.Meta.model.SOURCE_TYPE %}
+                                                  {% if not ll.0 == i.0 %}
+                                                     <option value="{{i.0}}"> {{i.1}}</option>
+                                                  {%endif%}
+                                               {% endfor %}
+                                           {%endif%}
+                                       {% endfor %}
+                                           {%endif%}
+				</select></td>
+				</tr>
+                                 {% endif %}{% endfor %}{% endfor %}
+                                
+                               {%else%}
+				<tr id="Element1"><td style="width:60px;padding:5px 0px 5px 0px"><input id="id_prot" name="prot" type="number" style="width:58px" placeholder="" /></td>
+				<!--<td style="width:60px;padding:5px 5px 5px 5px"><input id="id_id_protein" name="id_protein" type="number" style="width:60px" placeholder=" 1"/></td>-->
+				<td style="width:60px;padding:5px 2px 5px 2px"><input id="id_chain" maxlength="1" name="chain" type="text" style="width:58px" placeholder=""/></td>
+				<td style="width:60px;padding:5px 2px 5px 2px"><input id="id_segid" maxlength="4" name="segid" type="text" style="width:58px" placeholder=""/></td>
+				<td style="width:60px;padding:5px 2px 5px 2px"><input id="id_resid_from" name="resid_from" type="text"  style="width:58px" placeholder=""/></td>
+				<td style="width:60px;padding:5px 2px 5px 2px"><input id="id_resid_to" name="resid_to" type="text" style="width:58px" placeholder=""/></td>
+                              <td style="width:60px;padding:5px 2px 5px 2px"><input id="id_seq_resid_from" name="seq_resid_from" type="text"  style="width:58px" placeholder=" "/></td>
+                              <td style="width:60px;padding:5px 2px 5px 2px"><input id="id_seq_resid_to" name="seq_resid_to" type="text"  style="width:58px" placeholder=" "/></td>
+                              <td style="width:30px;padding:5px 0px 5px 0px;text-align:center"><input id="id_bonded_to_id_modeled_residues" name="bonded_to_id_modeled_residues" style="aligned:center" type="checkbox"  placeholder=" "/></td>
+				<td style="width:60px;padding:5px 2px 5px 2px"><input id="id_pdbidps" maxlength="6" name="pdbidps" type="text"  style="width:58px" placeholder=""/></td>
+				<td style="width:65px;padding:5px 2px 5px 2px;height:30px"><select id="id_source_typeps" name="source_typeps" style="width:63px;height:23px" >	
+                                      {% for i in fdbPS.Meta.model.SOURCE_TYPE %}
+                                        <option value="{{i.0}}"> {{i.1}}</option>
+                                      {% endfor %}
+				</select></td>
+				</tr>
+                                {% endif %}
+                               </tbody></table> 
+			<br>
+                       {% if model_id %}	
+</div>
+                       {% else %}
+ 			<div style="text-align:center">
+			     <input type="button" value="+ Add protein segment"  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement1();"><br>
+			     <input type="button" value="- Remove protein segment"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement1();">
+		        </div>	
+ 			<div style="text-align:right;margin-right:5%;height:70px">
+                                        <input type="button" value="Autocomplete resid" style="height:30px;margin: 15px 0px 0px 0px;width:150px" id="pdbchecker1" >                                        
+                                        <input type="button" value="Validate"  style="height:30px;margin: 15px 5px 0px 0px;width:100px" id="pdbchecker2" > <!--This one sends data to pdbcheck view through AJAX. Newer.-->
+		        </div>
+			<div id='showerroralig'> <div id='aligcontent'></div> <button type="button" id='hidealig'>Hide</button></div>	
+<!--  --------------------------------SUBMITTED PROTEINS INFO TABLE  -->
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx      -->
+		        </div><br>
+                       {% endif %}
+
+</div>
+		<div class=row id='PRUEBA2'>
+     <div class="col-md-12 panel panel-primary" style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} margin-top:20px{%endif%}">
+                <div class=row style="height:20px"></div>
+
+	        <div class="row">
+                <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Information of crystalized small molecules</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+                </div><br>
+
+
+
+ 			<div style="text-align=center">
+                        <table style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
+				<thead><tr><th style="width:90px;text-align:center"><label for="id_formmc-0-resname"><a title="Resname: Resname present on simulation topology file. Atom names and residue names from Protein Data Bank are prefered but not mandatory.">Resname</a></label></th>	
+					<th style="width:90px;text-align:center"><label for="id_formmc-0-numberofmol"><a title="Number of molecules: Number of molecules belonging to an specific residue type present on simulation topology. ">Num of mol</a></label></th>
+					<th style="width:90px;text-align:center"><label for="id_formmc-0-molecule"><a title="Ordinal number corresponding to the records containing sequence information that was provided in the small molecule form. ">Molecule</a></label></th>
+					<th style="width:90px;text-align:center" hidden><label for="id_formmc-0-id_molecule"><a title="Mol ID: ID of the chemical model (“molecule”) present in “model”. ">Mol ID</a></label></th>
+					<th style="width:90px;text-align:center"><label for="id_formmc-0-namemc"><a title="Mol name: Name of the component">Mol name</a></label></th>
+					<th style="width:90px;text-align:center"><label for="id_formmc-0-typemc"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
+				</thead>
+                                <tbody id="pElement2">
+{%if model_id %}
+{% for o in rowsMC.values %}  {% for intmc0 in lformmc %}  {% if forloop.counter == forloop.parentloop.counter %}
+                                	<tr id="Element2-{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px{%if model_id%}{% if forloop.counter == rowsMC.values|length %};margin-bottom:30px{%endif%}{%endif%}" id="id_formmc-{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
+ 
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{intmc0}}-numberofmol"  name="formmc-{{intmc0}}-numberofmol" value="{{o.numberofmol}}" type="number" style="width:70px" readonly  /></td>
+                                        {% for d in l_ord_mol %}{% if forloop.counter == forloop.parentloop.counter %}
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{intmc0}}-molecule"  maxlength="4" name="formmc-{{intmc0}}-molecule" type="text"  readonly value="{{o.int_id|add:"1"}}"/></td>
+                                      <td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{intmc0}}-id_molecule" name="formmc-{{intmc0}}-id_molecule" type="text" readonly  value="{{ o.id_molecule_id}}" ></td>
+
+                                        {%endif%}{%endfor%}
+
+                                        {% for name in lcompname %}  {% if forloop.counter == forloop.parentloop.counter %}
+ 
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{intmc0}}-namemc" maxlength="60" name="formmc-{{intmc0}}-namemc" type="text" style="width:70px" value="{{name}}" readonly /></td>                        {%endif%}{%endfor%}
+
+                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_formmc-{{intmc0}}-typemc" readonly name="formmc-{{intmc0}}-typemc"   type="text" style="width:70px;height:23px" />
+                                {% for ll in lmtype %}
+                                   {% if forloop.counter == forloop.parentloop.counter %}
+                                                    <option selected value="{{ll.0}}"> {{ll.1}}</option> </td>
+                                   {% endif %}
+                                {% endfor %}
+
+{% endif%}{% endfor%}{% endfor%}
+                        </tbody>
+			</table> </div>
+
+{%elif saved%}
+
+{% for o in rowsMC %}  
+                                	<tr id="Element2-{{o.int_id}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{o.int_id}}-resname" maxlength="4" name="formmc-{{o.int_id}}-resname" type="text"  {%if o.resname|length > 0 %} value="{{o.resname}}" readonly {%endif%}/></td>
+ 
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{o.int_id}}-numberofmol"  name="formmc-{{o.int_id}}-numberofmol" type="number" style="width:70px" {%if o.resname|length > 0 %} value="{{o.numberofmol}}" readonly {%endif%}  /></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{o.int_id}}-molecule"  maxlength="4" name="formmc-{{o.int_id}}-molecule" type="text"  readonly value="{{o.int_id|add:"1"}}"/></td>
+                                      <td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{o.int_id}}-id_molecule" name="formmc-{{o.int_id}}-id_molecule" type="text" readonly  value="{{ o.molecule_id_id}}" ></td>
+
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{o.int_id}}-namemc" maxlength="60" name="formmc-{{o.int_id}}-namemc" type="text" style="width:70px" {%if o.name|length > 0 %} value="{{o.name}}" readonly {%endif%} /></td>                        
+
+                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_formmc-{{o.int_id}}-typemc" readonly name="formmc-{{o.int_id}}-typemc"   type="text" style="width:70px;height:23px" />
+                                                    <option selected value="{{o.typemc.0}}"> {{o.typemc.1}}</option> </td>
+
+{% endfor%}
+                        </tbody>
+			</table> </div>
+
+
+{%else%}
+                              {% for mc in mcdata %}
+				<tr id="Element2-{{forloop.counter0}}">
+                                      
+                                      <td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-resname" maxlength="4" name="formmc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ" value="{{mc.resname}}"/></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-numberofmol" min="0" name="formmc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{{mc.numberofmol}}"/></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-molecule" maxlength="4" name="formmc-{{forloop.counter0}}-molecule" type="number" readonly placeholder=" 1 " value="{{mc.int_id}}"/></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{forloop.counter0}}-id_molecule" name="formmc-{{forloop.counter0}}-id_molecule" type="hidden" readonly placeholder="   " value="{{mc.id_molecule}}"></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-namemc" maxlength="60" name="formmc-{{forloop.counter0}}-namemc" type="text" style="width:140px" readonly placeholder=" Clozapine" value="{{mc.namemc}}"/></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_formmc-{{forloop.counter0}}-typemc" name="formmc-{{forloop.counter0}}-typemc" readonly style="width:60px;height:23px">
+                                {% for ll in lmol_MOD_type_tup %}
+                                   {% if forloop.counter == forloop.parentloop.counter %}
+                                                    <option selected value="{{ll.0}}"> {{ll.1}}</option>
+                                                {% else %}
+                                   {% endif %}
+                                {% endfor %}
+						</select></td></tr>
+                              {% endfor %}
+                        </tbody>
+			</table>
+
+{%endif%}
+
+      		{%if mcdata or saved %}
+ 	        	<div class="row"style="text-align:left;height:30px;padding-top:10px">
+                              <div class="col-md-1 col-md-offset-2" style="width:30px;padding:0px 0px 0px 0px"><input id="add_mol_new" name="add_mol_new" style="aligned:center;margin-right:-0px" type="checkbox"  /></div>   
+                              <div class="col-md-9"  ><a style="font-size:13px;color:black" title="Sometimes more than one &quot;residue name&quot; may be used for one molecule type just to highlight individual molecules of this type playing a specific role in the simulation. If so, an extra row can be added by using the &quot;+ Add molecule&quot; button. The corresponding fields in the row must be manually filled" > Check the box if a crystalized molecule has several resnames </a></div>
+		        </div> 	
+                    
+ 			<div id="addmoleculebutton"  style="text-align:center;height:90px;margin: 0px 0px 25px 0px" hidden>
+                             <br>
+			     <button id="id_add_element2" type="button" value=""  style="height:30px;margin: 0px 0px 0px 0px;width:220px" >+ Add Molecule</button>
+			     <button id="id_del_element2" type="button" value=""  style="height:30px;margin: 0px 0px 0px 0px;width:220px" >- Remove Molecule</button>
+                             <p style="margin: 10px 14% 35px 14%;text-align:justify"> Update the "<b>Molecule</b>" field in the added row to the value corresponding to the molecule with more than one "<b>Resname</b>".</p>
+		        </div> 	
+		        
+
+ 			<div style="text-align:right;margin-right:5%;height:70px">
+                                      <a id="id_logfile"  name="logfile" href="" noreferrer noopener hidden target="_blank">Download log file.</a>
+					<button id ="id_check_pdb_mol" type="button" style="height:30px;margin: 15px 0px 0px 0px;width:100px"> Validate </button>
+					<br>
+					<a id="id_pdbchecker_tar_gz" style="margin: 0px 104px 0px 0px;" name="pdbchecker_tar_gz" hidden href="" noreferrer noopener target="_blank">Download pdbchecker results.</a>
+		        </div>
+		        </div> 	
+		        {% else %}{%if not model_id %}
+		        <p style="text-align:center;">No molecules found. Please, go back to step 2.</p>
+		        {% endif %}{% endif %}
+		        </div> 		
+
+
+</form>
+
+</div>
+{% if model_id %}
+</div>
+</div>
+        <div class="col-md-7 col-md-offset-4"> 
+              <div class="col-md-12 panel panel-primary">
+          	  <div class="panel-body" id="selection-">
+                	<a id='selection-button' href="/dynadb/proteinreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Protein Information (Step 1)</a>
+              	  </div>
+          	  <div class="panel-body" id="selection-">
+                	<a id='selection-button' href="/dynadb/moleculereuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Small Molecule Information (Step 2)</a>
+              	  </div>
+          	  <div class="panel-body" id="selection-">
+                	<a id='id_submit' {%if not enabled%} disabled {%endif%} href="/dynadb/dynamics/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
+              	  </div>
+              </div>
+        </div>
+{% else %}
+
+{%if not saved%}
+        </div>
+{%endif%}
+  <div id="selection-buttons">
+      <div class="col-md-12 panel panel-primary" >
+          <div class="panel-body" id="selection-">
+                  <!--Submit prueba -->
+<!--		      <button type="button" value="submit" id="id_submit"  class="btn btn-success btn-lg btn-block has-spinner" name="submit"   > Submit Crystalized Components </button>-->
+                <input id="id_submit" name="submit" type="submit" value="Submit " class="btn btn-success btn-lg btn-block has-spinner"  />
+           </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' {%if not saved %} disabled {%endif%} href="/dynadb/dynamics/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/molecule/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 2: Small Molecule Information </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/protein/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 1: Protein Information </a>
+      	  </div>
+      </div>
+  </div>
+
+{%endif%}
+
+
+</div>
+</div>
+
+{% endblock content %}
+
+{% block addon_js %}
+    <script src="{% static 'dynadb/descriptionSquare.js' %}"></script>
+    <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+    <script src="{% static 'dynadb/MODELpost.js' %}"></script> 
+    <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+    <script src="{% static 'dynadb/uploadModelPDB.js' %}"></script>
+<!--    <script src="{% static 'dynadb/addFields.js' %}"></script> -->
+    <script src="{% static 'dynadb/pdbchecker.js' %}"></script>
+    <script src="{% static 'dynadb/searchtop.js' %}"></script>
+    <script src="{% static 'dynadb/addModeledelement1.js' %}"></script>
+    <script src="{% static 'dynadb/delModeledelement1.js' %}"></script>
+    <script src="{% static 'dynadb/addModeledelement2.js' %}"></script>
+    <script src="{% static 'dynadb/pdbCheckMol.js' %}"></script>
+<!-- <script src="{% static 'dynadb/Modelsourcetypeps.js' %}"></script> -->
+
+{% endblock %}

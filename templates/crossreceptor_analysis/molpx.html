@@ -1,0 +1,90 @@
+<head>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script>document.domain=document.domain;</script>
+{% extends "home/base.html" %} 
+{% load static %} 
+{% block addon_css %}
+<style>
+#content{
+    width:100%;
+}
+/*
+html, body, #outer {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+}
+ 
+#outer {
+    display: table;
+}
+ 
+#inner_fixed {
+    height: 69px;
+    display: table-row;
+}
+ 
+#inner_remaining {
+    display: table-row;    
+    height:100%
+}
+
+*/
+
+
+#inner_remaining{
+position: fixed; 
+top: 150px; /*Set top value to HeightOfTopFrameDiv*/
+margin:auto;
+bottom: 0px; /*Set bottom value to HeightOfBottomFrameDiv*/
+width: 100%;
+padding-right:25px
+}
+
+
+</style>
+{% endblock %}
+</head>
+<body>
+
+{% block content %} 
+{% csrf_token %}
+
+ <!-- description  -->
+<div id="outer">
+<div class="col-xs-12 panel panel-primary" id="inner_fixed" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white">  
+   <div class="panel-body">
+    	<h3>MolPX</h3>
+   </div> 
+</div>
+
+<div id="inner_remaining" >
+<div class="col-xs-12" style="padding-bottom:10px;height:100%">
+    <div class="row">
+        <div class="col-xs-12" id="plot_col" style="padding-left:0;padding-right:5px">
+            <div class="panel panel-primary" style="margin-bottom:0;height:100%;position: relative; overflow-y: auto; overflow-x: auto;">
+             <div class="panel-body">
+                <div class="row" style="">
+                    Hello :)
+                    
+                    
+                </div>
+             </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+</div>
+</div>
+{% endblock content %} 
+
+
+{% block addon_js %} 
+
+
+
+{% endblock %}
+
+</body>

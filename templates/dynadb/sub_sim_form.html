@@ -1,0 +1,413 @@
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+
+ {% block content %}
+
+<div id="form-main">
+  <div id="form-div">
+   <form class="form" id="form1" action="uploadform_details" method="post" enctype="multipart/form-data">{% csrf_token %}
+<!--------------------------dyndb_protein-----------------------------------------------------------------!-->
+
+    <fieldset>
+      <legend> Protein Information </legend>	
+      <p class="header">Enter the UNIPROT accession number of the protein</p>
+        <p class="UNIPROTac">
+                <input name="UNIPROTac" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="UNIPROT accession number" id="UNIPROTac" />
+        </p>
+
+      <p class="header">Enter the isoform number</p>
+        <p class="iso">
+                <input name="iso" type="number" max=2 min=1 placeholder="1" id="iso" />
+        </p>
+
+      <p class="header">Is this there any mutation in this receptor? </p>
+        <p class="MUT">
+        <select>
+                <option value="True">Yes</option>
+                <option value="False">No</option>
+        </select>
+	</p>
+
+      <p class="header">Enter the recommended name from UNIPROTK</p>
+        <p class="Nam">
+                <input name="Nam" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="UNIPROTK Name" id="Nam" />
+        </p>
+
+      <p class="Nam">Enter your User ID </p>
+        <p class="protUID">
+                <input name="protUID" type="number" placeholder="User ID" id="protUID" />
+        </p>
+
+      <p class="header">Enter the receptor ID for the GPCR stored in GPCRDB</p>
+        <p class="RIDgpcr">
+                <input name="RIDgpcr" type="number" placeholder="GPCR ID" id="RIDgpcr" />
+        </p>
+
+      <p class="header">Enter the ID from GPCRDB for the specie corresponding to this protein sequence</p>
+        <p class="is_esp">
+                <input name="is_esp" type="number" placeholder="ID from GPCRDB" id="is_esp" />
+        </p>
+
+
+
+<!--                       Protein other names  CAMPOS rellenados internamente                                                  -->
+
+      <p class="header"> Please, find below other names of the protein </p>
+        <p class="Onames">
+        <textarea rows="4" cols="60">
+        </textarea>
+        </p>
+
+
+<!--                       Protein sequence  CAMPOS rellenados internamente                                                  -->
+
+      <p class="header"> Please, find below the sequence of the protein in IUPAC one letter code </p>
+        <p class="seqIUPAC">
+        <textarea rows="4" cols="60">
+        </textarea>
+        </p>
+
+    </fieldset>
+<!--                    dyndb compound        contiene campos rellenados internamente                                  -->
+
+    <fieldset>
+      <legend> Molecule/Ligand Information </legend>	
+
+      <p class="header"> Enter the PubChem chemical identifier </p>
+        <p class="PUBCHEMid">
+                <input name="PUBCHEMid" type="number" placeholder="PubChem chemical identifier" id="PUBCHEMid" />
+        </p>
+
+      <p class="header"> Enter the CHEMBL identifier </p>
+        <p class="CHEMBLid">
+                <input name="CHEMBLid" type="number" placeholder="ChEMBL chemical identifier" id="CHEMBLid" />
+        </p>
+
+      <p class="header"> Please, find below the first name in pubchem or the 'compound name' in ChEMBL if there is no entry in PubChem </p>
+        <p class="nameComp">
+        <textarea rows="4" cols="60">
+        </textarea>
+        </p>
+
+      <p class="header"> Please, find below the IUPAC name downloaded from pubchem</p>
+        <p class="IUPACn ">
+        <textarea rows="4" cols="60">
+        </textarea>
+        </p>
+
+
+      <p class="header"> Please, find below other names of the compound </p>
+        <p class="COnames">
+        <textarea rows="4" cols="60">
+        </textarea>
+        </p>
+
+
+
+
+
+<!--                 dyndb_molecule                                                                  -->
+
+      <p class="header">Enter a brief description of the molecule</p>
+        <p class="DescMOL">
+		<textarea name="DescMOL" rows=4 cols=60 type="text" 
+                class="validate[required,custom[onlyLetter],length[0,100]] feedback-input"  id="DescMOL" />
+                Molecule description </textarea>
+        </p>
+
+      <p class="header"> Enter the net charge of the molecule </p>
+        <p class="net">
+                <input name="net" type="number" placeholder="Net charge" id="net" />
+        </p>
+
+      <p class="header">Enter the IUPAC International Chemical Identifier (InChI) of the molecule </p>
+        <p class="INCHI">
+                <input name="INCHI" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="InChI" id="INCHI" />
+        </p>
+
+      <p class="header">Enter the InChI Key???? </p>
+        <p class="inchik">
+                <input name="inchik" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="InChI key" id="inchik" />
+        </p>
+
+
+      <p class="header">Enter the SMILES representation of the molecule </p>
+        <p class="SMI">
+                <input name="SMI" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="SMILES" id="SMI" />
+        </p>
+
+
+
+
+    </fieldset>
+
+
+<!--                 dyndb_files                                                                  -->
+
+      <p class="header">Enter a brief description of the content of the files</p>
+        <p class="filedesc">
+		<textarea name="DescMOL" rows=4 cols=60 type="text" 
+                class="validate[required,custom[onlyLetter],length[0,100]] feedback-input"  id="filedesc" />
+                Description of the files</textarea>
+
+        </p>
+
+
+<!--                 dyndb_files_molecule                                                                  -->
+
+      <p class="header"> Type of file that describes the molecule </p>
+        <p class="tfm">
+        <select>
+                <option value="Image"> Image </option>
+                <option value="Molecule"> Molecule </option>
+        </select>
+	</p>
+
+<!--                 dyndb_modeled_residues                                                                  -->
+
+<!--  ESTA PARTE SE TIENE QUE COMPLETAR CON LA AYUDA DE ISMA          -->
+
+
+<!--                 dyndb_files_model                                                                  -->
+
+
+<!--  No se si hay que meter algo a nivel de formulario          -->
+
+
+
+
+
+
+
+
+      <p class="header">Enter the RESNAME of the molecule</p>
+        <p class="resnamMOL">
+                <input name="resnamMOL" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="Resname" id="resnameMOL" />
+        </p> 
+
+      <p class="header">Enter the number of molecules in the system </p>
+        <p class="resnamMOL">
+                <input name="resnamMOL" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="Resname" id="resnameMOL" />
+        </p> 
+
+
+    </fieldset>
+<!-----------------------COMPLEX EXP TABLE -----------------------------------------------------------------!-->
+
+    <fieldset>
+      <legend> Complex_EXP  Table !!!!!!!!!!!!!MODIFICAR PARA QUE QUEPAN VARIOS </legend>	
+      <p class="header">Enter MAIN_PROTEIN</p>
+        <p class="MAINprot">
+		<textarea name="MAINprot" rows=4 cols=60 type="text" 
+                class="validate[required,custom[onlyLetter],length[0,100]] feedback-input"  id="MAINprot" />
+                MAIN_PROTEIN </textarea>
+        </p>
+
+      <p class="header">Enter MAIN_LIGAND</p>
+        <p class="MAINlig">
+		<textarea name="MAINlig" rows=4 cols=60 type="text" 
+                class="validate[required,custom[onlyLetter],length[0,100]] feedback-input"  id="MAINlig" />
+                MAIN_LIGAND </textarea>
+        </p>
+
+    </fieldset>
+<!----------------------- IONIC COMPONENT TABLE -----------------------------------------------------------------!-->
+
+    <fieldset>
+      <legend> Ionic components table </legend>	
+      <p class="header">Enter Resname of the Ion</p>
+        <p class="IONresn">
+                <input name="IONresn" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="IONresn" id="IONresn" />
+        </p>
+
+      <p class="header">Enter the number of each ion</p>
+        <p class="IONnum">
+                <input name="IONnum" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="IONnum" id="IONnum" />
+        </p>
+
+    </fieldset>
+<!----------------------- MODEL COMPONENT TABLE -----------------------------------------------------------------!-->
+
+    <fieldset>
+      <legend> Protein Complex MODEL table </legend>	
+      <p class="header">Enter the type of MODEL </p>
+        <p class="COMtyp">
+                <input name="COMtyp" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="type of model" id="COMtyp" />
+        </p>
+
+      <p class="header"> id Protein</p>
+        <p class="idproT">
+                <input name="idproT" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="idproT" id="idproT" />
+        </p>
+      
+
+      <p class="header"> id Complex molecule</p>
+        <p class="idcoM">
+                <input name="idcoM" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+                placeholder="Complex id" id="idcoM" />
+        </p>
+
+      <p class="header">Enter the Model Source </p>
+        <p class="Msour">
+        <select>
+                <option value="X-Ray">X-Ray structure</option>
+                <option value="NMR">NMR</option>
+                <option value="Homology Model">Homology Model</option>
+        </select>
+	</p>
+
+      <p class="header">Enter the PDB code of the simulated crystal </p>
+	<p class="PDB">
+        	<input name="PDB" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+		placeholder="PDB code" id="PDB" />
+	</p>
+
+      <p class="header"> Description of the Model </p>
+	<p class="desc">
+        	<textarea name="desc" rows=4 cols=60 type="text" 
+		class="validate[required,custom[onlyLetter],length[0,100]] feedback-input"  id="desc" /> 
+		Describe the methodology applied in the generation of the model </textarea>
+	</p>
+
+      <p class="header">Enter the Templates used in the generation of the model </p>
+	<p class="mTEMP">
+        	<input name="mTEMP" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+		placeholder="Templates" id="mTEMP" />
+	</p>
+
+    </fieldset>
+<!--                        dyndb_dynamics                                                                          -->
+    <fieldset>
+      <legend> Molecular Dynamics simulation information </legend>	
+
+      <p class="header"> Software used for running the simulation</p>
+	<p class="SOFT">
+        	<input name="SOFT" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+		placeholder="Software" id="SOFT" />
+	</p>
+
+      <p class="header"> Version of the software used for running the simulation</p>
+	<p class="SOFTver">
+        	<input name="SOFTver" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+		placeholder="Version" id="SOFTver" />
+	</p>
+
+      <p class="header">Enter the Force Field </p>
+	<p class="ffield">
+        	<input name="ffield" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+		placeholder="Force Field" id="ffield" />
+	</p>
+
+      <p class="header">Enter the Force Field Version</p>
+	<p class="verffield">
+ 	       <input name="verffield" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+		placeholder="Force Field Version" id="ffield" />
+	</p>
+
+      <p class="header">Enter the simulation method </p>
+        <p class="METH">
+        <select>
+                <option value="Molecular Mechanics">Molecular Mechanics (MM) MD</option>
+                <option value="QM/MM">QM/MM MD</option>
+                <option value="NMR">NMR</option>
+                <option value="Monte Carlo simulation">Monte Carlo simulation </option>
+                <option value="MM MSM/HMM adaptive">MM MSM/HMM adaptive</option>
+                <option value="MM metadynamics">MM metadynamics</option>
+                <option value="MM umbrella sampling">MM umbrella sampling</option>
+                <option value="MM biased others">MM biased others</option>
+                <option value="MM scaled potentials"> MM scaled potentials</option>
+        </select>
+	</p>
+
+
+      <p class="header"> Description of the Simulation </p>
+	<p class="desc">
+        	<textarea name="desc" rows=4 cols=60 type="text" 
+		class="validate[required,custom[onlyLetter],length[0,100]] feedback-input"  id="desc" /> 
+		Describe the methodology applied in the simulation </textarea>
+	</p>
+
+      <p class="header">Enter the membrane composition </p> 
+        <p class="membrane">
+		<select>
+			<option value="POPC">POPC</option>
+	        	<option value="DOPC">DOPC</option>
+        		<option value="POPE">POPE</option>
+		</select>
+
+        	<input name="MEMB" type="text" class="validate[required,custom[MEMB]] feedback-input" id="MEMB" placeholder="MEMB" />
+        </p>
+
+      <p class="header"> Solvent Type </p> 
+        <p class="Solv">
+		<select>
+			<option value="TIPS">TIPS</option>
+			<option value="TIP3">TIP3</option>
+			<option value="TIP5P">TIP5P</option>
+        		<option value="SPC/E">SPC/E</option>
+		</select>
+        </p>
+
+      <p class="header">Enter the type of file that describes the simulation???? </p>
+
+        <p class="InpTyp">
+        <select>
+                <option value="Input coordinates"> Input Coordinates</option>
+                <option value="Input topology"> Input topology </option>
+                <option value="Trajectory">Trajectory</option>
+                <option value="Other">Other</option>
+        </select>
+        </p>  
+      <p class="header">Enter the input coordinates of the simulated system (PDB format) </p>
+	<p class="PDBcoor">
+        	<input type="file"  name="PDBcoor"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+		placeholder="Coordinates (PDB)" id="PDBcoor" />
+	</p>
+
+      <p class="header">Enter the input structure of the simulated system (PSF format) </p>
+	<p class="PSF">
+        	<input name="PSF" type="file" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+		placeholder="Structure (PSF)" id="PSF" />
+	</p>
+
+      <p class="header">Enter the topology of the simulated system (PSF/RTF file) </p>
+	<p class="topPSF">
+        	<input name="topPSF" type="file" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+		placeholder="Topology (PSF/RTF)" id="topPSF" />
+	</p>
+
+      <p class="header">Enter the parameter files (PRM file) </p>
+	<p class="par">
+        	<input name="par" type="file" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+		placeholder="Parameter Files" id="par" multiple />
+	</p>
+
+      <p class="header">Enter the trajectory file (DCD file) </p>
+	<p class="DCD">
+  		<input name="DCD" type="file" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" 
+		placeholder="Trajectory file (DCD)" id="par" multiple />
+	</p>
+
+      
+    </fieldset> 
+      <div class="submit">
+        <input type="submit" value="SEND" id="button-blue"/>
+        <div class="ease"></div>
+      </div>
+   </form>
+  </div>
+
+ {% endblock content %}

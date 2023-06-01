@@ -1,0 +1,313 @@
+<head>
+<script>document.domain=document.domain;</script>
+{% extends "home/base.html" %} 
+{% load static %} 
+{% block addon_css %}
+<style>
+
+
+body{
+    padding: 0;
+    display:none;
+}
+
+#content {
+    width:100%;
+    height: 100%;
+    position:relative;
+}
+
+.navbar{
+  position:sticky;
+}
+
+
+
+.h_center_img{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.vert_center {
+  overflow: hidden;
+  margin: auto;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+/*  border: 1px solid black;*/
+}
+
+ #plot_section{
+  padding:0 20px;
+ }
+
+.plot_section_col{
+    /*height: 866px;*/ /* !! */
+    padding:20px 30px;
+    /*height: 100%;*/
+    margin-bottom: 20px;
+}
+
+#plot_col{
+    overflow:auto;
+}
+
+#tabs_col{
+    padding-bottom: 0;
+    padding-top: 25px;
+}
+
+#tabs_col li a{
+  padding:10px 8px;
+}
+
+#tabs_col li:not(.active) a{
+    background-color:#337AB7;
+    color:white;
+}
+
+
+.nav-tabs {
+    margin: 0;
+}
+
+.tab-content {
+    /*height:785px;/* !! */
+    border-left: 1px solid #ccc ; 
+    border-right: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    padding:30px;
+    height:  calc(100% - 40px);;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+/*
+.text_col{
+    background-color: #f2f2f2;
+    height:400px;
+    margin:15px;
+}*/
+
+#carouselFeatures .carousel-caption{
+    position: relative;
+    right:auto;
+    left:auto;
+    margin:30px 100px 10px 100px;
+    padding:10px 0 20px 0;
+}
+
+#carouselFeatures img {
+  /* height:270px;*/ /* !! */
+  margin:auto;
+}
+
+#carouselFeatures .carousel-control.left, .carousel-control.right {
+   background-image:none !important;
+   filter:none !important;
+}
+
+
+.extrainfo_col{
+    padding:20px 50px;
+    margin-bottom: 20px;
+}
+
+#extrainfo_section{
+    background-color:#f2f2f2;
+    margin-top: 20px;
+}
+
+#extrainfo_section .panel{
+    /*height: 500px;*//* !! */
+    background-color:#f2f2f2;
+}
+
+
+g rect {
+    fill: rgb(38, 38, 38);
+    /*stroke: gray;*/
+    opacity:0.75;  
+}
+
+g circle , g text {
+  cursor: pointer;
+}
+
+#closePopup{
+  cursor:pointer;
+}
+#closePopup:hover{
+  fill:white;
+}
+
+
+
+.tooltip text {
+    fill: black;
+    font-size: 12px;
+    font-family: sans-serif;
+}
+.tooltip rect {
+    fill: yellow;
+    stroke: blue;
+}
+
+
+</style>
+{% endblock %}
+</head>
+<body>
+
+
+
+{% block content %} 
+<!-- max-width: 1550px"-->
+
+<div id="header"  style="height:150px;position:relative;background-image: url({% static 'home/images/background3_sc.png' %});background-size:3000px;background-position: center; " >
+        <div class="vert_center" style="height:125px;margin:auto;width:400px;  border: 1px solid gray;">
+            <img id="biglogo" class="h_center_img " src="{% static logo_path %}" style="height:80px">
+            <div style="text-align:center;margin:5px 0;  font-size:25px;font-variant: small-caps;font-family:Calibri;color:white;font-weight:bold">
+                <p>The MD database for GPCRs</p>
+            </div>
+        </div>    
+</div>
+
+
+<div id="plot_section" class="row">
+    <div class="col-lg-4 plot_section_col" id="tabs_col" >
+        <div class="tabs" style="height:100%">
+              <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#home">Welcome</a></li>
+                <li><a data-toggle="tab" href="#submit" class="tab_unsel"    id="submit_tab">Submit</a></li>
+                <li><a data-toggle="tab" href="#analyze" class="tab_unsel"   id="analyze_tab" >Analyze</a></li>
+                <li><a data-toggle="tab" href="#visualize" class="tab_unsel" id="visualize_tab">Visualize</a></li>
+              </ul>
+
+
+
+              <div class="tab-content" style="">
+                <div id="home" class="tab-pane fade in active">
+                  <h3>A new database for GPCRs</h3>
+                  <p>GPCRmd is a database of GPCR MD with the purpose to provide storage, dissemination and analysis of this data.</p>
+                  <p>It includes at least one member of each solved GPCR class, both in the apo form and bound to different ligands (natural ligands, agonists or antagonists).</p>
+                  <p>GPCRmd also provides several online <a data-target="#analyze_tab" class="tab_trigger">analysis tools</a>, <a data-target="#visualize_tab" class="tab_trigger">visualizaiton tools</a> and annotatons from other databases to characterize the simulations.</p>
+                  <p>Use our <a href="/dynadb/search/">browser</a> to find the GPCR that you want to study.</p>
+                  <p>Users can also <a data-target="#submit_tab" class="tab_trigger">sumbit</a> their simulaitons to increase the impact and citability of their work by making it available and to the community</p>
+
+
+
+              <div id="carouselFeatures" class="carousel slide" data-ride="carousel">
+                <!-- Indicators -->
+                <ol class="carousel-indicators">
+                  <li data-target="#carouselFeatures" data-slide-to="0" class="active"></li>
+                  <li data-target="#carouselFeatures" data-slide-to="1"></li>
+                  <li data-target="#carouselFeatures" data-slide-to="2"></li>
+                </ol>
+                <!-- Wrapper for slides -->
+                <div class="carousel-inner">
+
+                  <div class="item active">
+                    <img src="{% static 'home/images/submit.png' %}" alt="Submit" >
+                    <div class="carousel-caption">
+                      <h4>Submit</h4>
+                    </div>
+                  </div>
+
+                  <div class="item">
+                    <img src="{% static 'home/images/visualize.png' %}" alt="Visualize" >
+                    <div class="carousel-caption">
+                      <h4>Visualize</h4>
+                    </div>
+                  </div>
+                
+                  <div class="item">
+                    <img src="{% static 'home/images/analize.png' %}" alt="Analyze" >
+                    <div class="carousel-caption">
+                      <h4>Analyze</h4>
+                    </div>
+                  </div>
+              
+                </div>
+
+                <!-- Left and right controls -->
+                <a class="left carousel-control" href="#carouselFeatures" data-slide="prev">
+                  <span class="glyphicon glyphicon-chevron-left"></span>
+                  <span class="sr-only">Previous</span>
+                </a>
+                <a class="right carousel-control" href="#carouselFeatures" data-slide="next">
+                  <span class="glyphicon glyphicon-chevron-right"></span>
+                  <span class="sr-only">Next</span>
+                </a>
+              </div>
+
+
+
+
+                </div>
+                <div id="submit" class="tab-pane fade">
+                  <h3>Menu 1</h3>
+                  <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                </div>
+                <div id="analyze" class="tab-pane fade">
+                  <h3>Menu 2</h3>
+                  <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.</p>
+                </div>
+                <div id="visualize" class="tab-pane fade">
+                  <h3>Menu 3</h3>
+                  <p>Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="col-lg-8 plot_section_col" id="plot_col" >
+        <div id="chart" style="margin:auto;"><!-- width: 826px; height: 826px;-->
+            
+        </div>
+    </div>
+</div>
+
+<div class="row "  id="extrainfo_section" >
+    <div class="col-md-4 extrainfo_col">
+        <div class="panel panel-primary text_col">
+          <div class="panel-heading">Latest entries</div>
+          <div class="panel-body" >
+            Panel Content
+
+<!--                <div style="max-width:550px ;overflow-y: hidden;overflow-x:auto; margin: 15px auto; max-height: 405px;border:1px solid #e6e6e6;">
+                <iframe class="str_file traj_file" style="border: 0px none;width: 545px;margin-top:-35px;" id="embed_mdsrv" src="{{mdsrv_url}}/html/embed_show.html" scrolling="no" height="400px" width="590px" data-struc_file="{{model_path}}" data-traj_file="" data-is_home="true"></iframe>
+            </div>-->
+
+
+          </div>
+        </div>
+    </div>
+    <div class="col-md-4 extrainfo_col">
+        <div class="panel panel-primary text_col">
+          <div class="panel-heading">News</div>
+          <div class="panel-body">Panel Content</div>
+        </div>
+    </div>
+    <div class="col-md-4 extrainfo_col">
+        <div class="panel panel-primary text_col">
+          <div class="panel-heading">Statistics</div>
+          <div class="panel-body">Panel Content</div>
+        </div>
+    </div>
+</div>
+
+
+
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<!--<script type="module" src="{% static 'home/js/gpcrmd_homepage.js' %}"></script>-->
+<script  src="{% static 'home/js/gpcrmd_homepage.js' %}"></script>
+{% endblock %}
+
+
+</body>

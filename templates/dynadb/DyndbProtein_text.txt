@@ -1,0 +1,2 @@
+{{ object.uniprotkbac|safe }}
+{{ object.name|safe }}

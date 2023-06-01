@@ -1,0 +1,303 @@
+<head>
+
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script>document.domain=document.domain;</script>
+
+<!--Jquery things-->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+{% extends "home/base.html" %} 
+{% load static %} 
+{{staticfiles}}
+
+{% block addon_css %}
+<!--Contmaps styles-->
+<link rel="stylesheet" type="text/css" href="{% static 'contact_maps/contmaps_main.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static '../mdsrv/webapp/css/main.css' %}" />
+{% endblock %}
+
+</head>
+<body>
+
+{% block content %} 
+{% csrf_token %}
+
+ <!-- description  -->
+  <div class="panel panel-primary" id="inner_fixed">  
+     <div class="panel-body">
+        <h2 class="panel-heading">Customized meta-analysis</h2>
+        <h4 class="panel-heading">Residue interaction frequency: <span style="color:white;font-weight: bold; vertical-align:unset">{{itype_name}}</span></h4>
+     </div> 
+  </div>
+
+<div id="inner_remaining" class ="row" >
+  <!--Here be dendrogram and heatmaps-->
+  <div class="col-xs-12" id="retracting_parts">
+    <div class="panel panel-primary" id="main_plot_body">
+      <div class="panel-body" >
+        <div id="menus" class="container-fluid">
+          {% include 'contact_maps/menus.html' %}
+        </div>
+        <!--Heatmap pager -->
+        {% include 'contact_maps/pager_colorbar.html' %}        
+        <div id="dendrogram-heatmap" class="fixedwidth">
+          <div id="loading_div">
+            <img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/>
+            <p id="loading_text">Loading {{number_heatmaps_list|length}} heatmaps</p>
+          </div>
+          {% for number,div in numbered_divs %}
+          {% if number == "1" %}
+          <div id="heatmap{{number}}" data-number={{number}} class="heatmap" style="display: inline-block;">
+            {{ div | safe }}
+          </div>
+          {% else %}
+          <div id="heatmap{{number}}" data-number={{number}} class="heatmap">
+            {{ div | safe }}
+          </div>
+          {% endif %}
+          {% endfor %}
+          {% for script in script_list %}
+            {{script | safe}}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--Here be side-window (the thing that opens up upon clicking on heatmap)-->
+  {% include 'contact_maps/side_window.html' %}
+
+  <div class="col-xs-12" id="not_retracting_parts">
+    <!--Here be flareplots and NGLs -->
+    <div class="panel panel-primary" id="flare_title">
+      <div class="panel-body" id="click_title" data-toggle="collapse" data-target="#flare_col" aria-expanded="false" onclick="turn_arrow('flare_arrow','click_title')">
+        <div class="title_div">
+          <h4 class="title">Top5 interactions in the selected simulations
+            <span id="flare_arrow" class="glyphicon arrow glyphicon-chevron-down"></span>
+          </h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-primary collapse" id="flare_col" data-fpdir="{{fpdir}}" data-dyn_list="{{dyn_list}}">
+      <div class="panel-body">
+
+        <center>
+          <h4>Please, choose two of the selected simulations to compare its top
+            <select id="flarerange">
+              {% for number in flarerange %}
+              {% if number == 5 %}
+              <option value={{number}} selected>{{number}}</option>
+              {% else %}
+              <option value={{number}}>{{number}}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          interactions
+          </h4>
+        </center>
+
+        <div id="fpdiv0" class="col-xs-6 fpdiv bottomElement">
+          <center>
+            
+            <!--Flareplot toolbar-->
+            <div id="allFPoptions" class="showIfTrajFP">
+              <button id="FPdisplay0" class="btn btn-default active changefocus FP-button" title="Show/Hide structural representations of the residues selected at the plot." type="button">
+              Show in structure
+              </button>
+              
+              <div class="clusters_dropup-div">
+                <button id="clusterbutton0" class="btn btn-default dropdown-toggle changefocus FP-button" type="button" data-toggle="dropdown"> 
+                  {{sim_list.0.1}} <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu clusters_dropup-ul">
+                  {% for dyn_name in sim_list %}
+                  {% if dyn_name.0 == sim_list.0.0 %}
+                  <li id="fp0_{{dyn_name.0}}" class="fp_display_element is_active" data-tag={{dyn_name.0}} title="Display 5 main interactions of {{dyn_name.1}}"> {{dyn_name.1}}</li>
+                  {% else %}
+                  <li id="fp0_{{dyn_name.0}}" class="fp_display_element" data-tag={{dyn_name.0}} title="Display 5 main interactions of {{dyn_name.1}}">{{dyn_name.1}}</li>
+                  {% endif %}
+                  {% endfor %}
+                </ul>
+              </div>
+
+              <div class="numbering_dropup-div">
+                <button id="numberbutton0" class="btn btn-default dropdown-toggle changefocus FP-button" type="button" data-toggle="dropdown">
+                  Class A numbering <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu numbering_dropup-ul">
+                  <li id="fp0_nomenA" class="fp_display_element is_active" data-tag="A" title="Ballesteros-Weinstein numbering system">Class A numbering</li> 
+                  <li id="fp0_nomenB" class="fp_display_element" data-tag="B" title="Wootten numbering system">Class B numbering</li> 
+                  <li id="fp0_nomenC" class="fp_display_element" data-tag="C" title="Pin numbering system">Class C numbering</li> 
+                  <li id="fp0_nomenF" class="fp_display_element" data-tag="F" title="Wang numbering system">Class F numbering</li> 
+                </ul>
+              </div>
+
+              <button id="FPclearSel0" class="btn btn-danger FP-button" type="button" title="Unselect all interactions from the plot.">
+                Clear plot
+              </button>
+            </div>
+
+            <span>
+              <center id="loading_flare0" class="loading_flare">
+                <img src="/static/view/images/loading-gear.gif">
+              </center>
+            </span>
+            <div id="flare-container0" class="flare-container"></div>
+
+          </center>
+        </div>
+     
+        <div id="fpdiv1" class="col-xs-6 fpdiv bottomElement">
+          <center>
+            
+            <!--Flareplot toolbar-->
+            <div id="allFPoptions" class="showIfTrajFP">
+              <button id="FPdisplay1" class="btn btn-default active changefocus FP-button" title="Show/Hide structural representations of the residues selected at the plot." type="button">
+              Show in structure
+              </button>
+
+              <div class="clusters_dropup-div">
+                <button id="clusterbutton1" class="btn btn-default dropdown-toggle changefocus FP-button" type="button" data-toggle="dropdown"> 
+                  {{sim_list.1.1}} <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu clusters_dropup-ul">
+                  {% for dyn_name in sim_list %}
+                  {% if dyn_name.0 == sim_list.1.0 %}
+                  <li id="fp1_{{dyn_name.0}}" class="fp_display_element is_active" data-tag={{dyn_name.0}} title="Display 5 main interactions of {{dyn_name.1}}"> {{dyn_name.1}}</li>
+                  {% else %}
+                  <li id="fp1_{{dyn_name.0}}" class="fp_display_element" data-tag={{dyn_name.0}} title="Display 5 main interactions of {{dyn_name.1}}">{{dyn_name.1}}</li>
+                  {% endif %}
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="numbering_dropup-div">
+                <button id="numberbutton1" class="btn btn-default dropdown-toggle changefocus FP-button" type="button" data-toggle="dropdown">
+                  Class A numbering <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu numbering_dropup-ul">
+                  <li id="fp1_nomenA" class="fp_display_element is_active" data-tag="A" title="Ballesteros-Weinstein numbering system">Class A numbering</li> 
+                  <li id="fp1_nomenB" class="fp_display_element" data-tag="B" title="Wootten numbering system">Class B numbering</li> 
+                  <li id="fp1_nomenC" class="fp_display_element" data-tag="C" title="Pin numbering system">Class C numbering</li> 
+                  <li id="fp1_nomenF" class="fp_display_element" data-tag="F" title="Wang numbering system">Class F numbering</li> 
+                </ul>
+              </div>
+
+              <button id="FPclearSel1" class="btn btn-danger FP-button" type="button" title="Unselect all interactions from the plot.">
+                Clear plot
+              </button>
+            </div>
+
+            <span>
+              <center id="loading_flare1" class="loading_flare">
+                <img src="/static/view/images/loading-gear.gif">
+              </center>
+            </span>
+
+            <div id="flare-container1" class="flare-container"></div>
+
+          </center>
+        </div>
+       
+        <div id="ngldiv0" class="col-xs-6 ngldiv bottomElement">
+
+          <div class="container-fluid NGLtoolbar" >
+            <div class="row NGLtoolbar_row">
+              <div class="dropdown blueDropdownDiv" id="simulation_select" style="display: none;">
+                <button id="simButton0" class="btn btn-default btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown" data-dynid="{{clustdict.cluster1.0}}" aria-expanded="false"><span class="caret"></span></button>
+                <ul class="dropdown-menu blueList simList">
+                  <span id="add_sim_bottom0"></span>
+                </ul>
+              </div>
+              <div id="trajsDropdown0" class="dropdown blueDropdownDiv traj_select">
+                <button id="trajButton0" class="btn btn-default btn-xs dropdown-toggle-aux blueButton" type="button" data-toggle="dropdown">
+                <span class="caret"></span></button>
+                <ul class="dropdown-menu blueList trajList">
+                  <span id="add_traj_bottom0"></span>
+                </ul>
+              </div>               
+            </div>  
+            <div class="row NGLtoolbar_row">
+              <a id="viewer_link_bottom0" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>open with GPCRmd workbench</b></a>
+            </div>  
+          </div>
+
+          <span id="loading_ngl0"><img src="{% static 'view/images/loading-gear.gif' %}" class="loading_NGL_bottom"/></span>
+          <iframe id="ngl_iframe0" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed_contmaps_bottom.html" data-number="0" data-itype={{itype_code}} data-ligandonly={{ligandonly}} data-cluster={{cluster}} scrolling="no" height="500px" width="100%"></iframe>
+          <div id="posNotinRec0" class="alert alert-warning posNotinRec">
+            <span id="posNotinRec_text0"></span>
+          </div>
+          <button  class="btn btn-danger btn-xs NGLclear">Clear All</button>
+          <div class="pull-right">                          
+            <button id="restartPos0" type="button" class="btn btn-link settingsB" title="Reset position" ><span class="glyphicon glyphicon-repeat"></span></button>       
+            <button id="center0" type="button" class="btn btn-link settingsB" title="Center"><span class="glyphicon glyphicon-record"></span></button>
+          </div>
+        </div>
+
+        <div id="ngldiv1" class="col-xs-6 ngldiv bottomElement">
+
+          <div class="container-fluid NGLtoolbar" >
+            <div class="row NGLtoolbar_row">
+              <div class="dropdown blueDropdownDiv" id="simulation_select" style="display: none;">
+                <button id="simButton1" class="btn btn-default btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown" data-dynid="{{clustdict.cluster2.0}}" aria-expanded="false"><span class="caret"></span></button>
+                <ul class="dropdown-menu blueList simList">
+                  <span id="add_sim_bottom0"></span>
+                </ul>
+              </div>
+              <div id="trajsDropdown1" class="dropdown blueDropdownDiv traj_select">
+                <button id="trajButton1" class="btn btn-default btn-xs dropdown-toggle-aux blueButton" type="button" data-toggle="dropdown">
+                <span class="caret"></span></button>
+                <ul class="dropdown-menu blueList trajList">
+                  <span id="add_traj_bottom1"></span>
+                </ul>
+              </div>               
+            </div>
+            <div class="row NGLtoolbar_row">
+              <a id="viewer_link_bottom1" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>open with GPCRmd workbench</b></a>
+            </div>  
+          </div>
+
+          <span id="loading_ngl1"><img src="{% static 'view/images/loading-gear.gif' %}" class="loading_NGL_bottom"/></span>
+          <iframe id="ngl_iframe1" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed_contmaps_bottom.html" data-number="1" data-itype={{itype_code}} data-ligandonly={{ligandonly}} data-cluster={{cluster}} data-stnd={{stnd}} scrolling="no" height="500px" width="100%"></iframe>
+          <div id="posNotinRec1" class="alert alert-warning posNotinRec">
+            <span id="posNotinRec_text1"></span>
+          </div>
+          <button  class="btn btn-danger btn-xs NGLclear">Clear All</button>
+          <div class="pull-right">                          
+            <button id="restartPos1" type="button" class="btn btn-link settingsB" title="Reset position" ><span class="glyphicon glyphicon-repeat"></span></button>       
+            <button id="center1" type="button" class="btn btn-link settingsB" title="Center"><span class="glyphicon glyphicon-record"></span></button>
+          </div>
+        </div>  
+
+      </div>
+    </div>
+
+    <!--Load documentation div-->
+    {% include 'contact_maps/docs.html' %}
+  </div>
+
+</div>
+
+
+{% endblock content %} 
+
+
+{% block addon_js %} 
+<!--Contmaps javascripts -->
+<script src="{% static 'contact_maps/contmaps_main.js' %}"></script>
+<script src="{% static 'contact_maps/emb_crossgpcr.js' %}"></script>
+
+<!--Flareplots -->
+<link rel="stylesheet" type="text/css" href="{% static 'contact_maps/flareplot-custom.css' %}" />
+<script src="{% static 'view/fplot2/d3.v3.min.js' %}"></script>
+<script src="{% static 'view/fplot2/docs/js/flareplot-main.js' %}"></script><!-- D:< -->
+<script src="{% static 'flareplot_custom.js' %}"></script>
+
+<!-- Bokeh -->
+<link href="https://cdn.pydata.org/bokeh/release/bokeh-1.4.0.min.css" rel="stylesheet" type="text/css">
+<link href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.4.0.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-1.4.0.min.js"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.4.0.min.js"></script>
+{% endblock %}
+
+</body>

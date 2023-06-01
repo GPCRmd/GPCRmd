@@ -1,0 +1,127 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SCoV2-MD</title>
+    <link rel="icon" href="{% static 'covid19/images/scov2-md_sq.png' %}">
+
+    <!-- Bootstrap -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles -->
+    <link href="{% static 'home/css/style.css' %}" rel="stylesheet">
+
+
+    <!-- Additional CSS -->
+    {% block addon_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'covid19/css/upload.css' %}" />
+    {% endblock %}
+
+    {% if google_analytics %}
+      {% include "home/ga.html" %}
+    {% endif %}
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+<body style="padding:0;margin-left:20px">
+
+        {% block content %}
+
+
+ <form id="visibleiniframe" enctype="multipart/form-data" method="post" action="{% url 'covid19:upload_descriptors' dyn_id %}">{% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="row cont_non_field_errors" > 
+      <div class="alert alert-danger alert-dismissible fade in" >
+        <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+                 <div>
+                   {% for err in form.non_field_errors %}
+                      <p  class=text-danger>{{ err }}</p>
+                  {% endfor %}
+                 </div>
+      </div>
+
+    </div>
+  {% endif %}
+            <div class="formfieldinfo">
+              <div class="row">
+                <div class="">
+                  <span class="long">
+                    {{ form.csv_file }} 
+                  </span>
+                </div>
+              </div>
+
+             <div class="row" >
+                <div class="" > 
+                    <div id="form_error" style="display: none">
+                        <p  class="text-danger error_msg" style="margin:0"></p>
+                    </div>
+                  <!--{% if form.csv_file.errors %}
+                    <div>
+                      {% for err in form.csv_file.errors %}
+                         <p class=text-danger>{{ err }}</p>
+                      {% endfor %}
+                    </div>
+                 {% endif %}-->
+                 <span class="manual_field_errors">
+                 </span>
+               </div>
+             </div>
+           </div>
+
+
+
+   <div class="row" >
+     <div id="submit_btn" class="">
+        <button id="submit_upload" class="btn btn-default" type="submit" style="width:75px;height:25px;padding:0">Upload</button>
+        <img id="loading_custom" style="height:20px;display:none" src="{% static 'view/images/loading-gear.gif' %}" />
+
+     </div>
+   </div>
+ </form>
+ 
+
+        {% endblock %}
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="{% static 'home/js/jquery.js' %}"></script>
+    <!-- jQueryUI -->
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.min.css' %}" type="text/css" media="all" />
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.theme.min.css' %}" type="text/css" media="all" />
+    <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+    <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+          <script>
+                function activate_option(id){
+                  document.getElementById(id).classList += " active";
+                }
+                //Make active the selected button in navbar
+                var path_list = location.pathname.split("/");
+                var page_url_name=path_list[2];
+                if (! page_url_name){
+                  activate_option("home");
+                } else {
+                  activate_option(page_url_name);
+                }
+          </script>
+    <!-- Include custom ajax functions -->
+    {% block addon_js %}
+    <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+    <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+<script  src="{% static 'covid19/js/upload_descriptors.js' %}"></script>
+
+    {% endblock %}
+  </body>
+</html>

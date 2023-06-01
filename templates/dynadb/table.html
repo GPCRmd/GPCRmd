@@ -1,0 +1,195 @@
+<head>
+<script>
+    document.domain=document.domain;
+</script>
+{% load static %} 
+
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="{% static 'home/logo/gpcrmd/main_circle.png' %}">
+    <!-- Bootstrap -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles -->
+    <link href="{% static 'home/css/style.css' %}" rel="stylesheet">
+
+{% load dynadb %}
+{% block addon_css %}
+<style>
+.container{
+    width: 90%;
+}
+.dataTables_wrapper .myfilter .dataTables_filter{
+    float:left;
+    font-size:16px;
+    margin:10px 0;
+}
+.dataTables_wrapper .mylength .dataTables_length{
+    float:right;
+    font-size:16px;
+    margin:10px 0;
+}
+</style>
+{% endblock %}
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<base href="your_domain/" target="_PARENT">
+</head>
+
+<body style="padding:0">
+{% block content %}
+<div class="colSelection col-md-12">
+    <p>Show columns: </p>
+    <a class="searchCols textlink toggle-vis" data-column="1">Receptor</a> - 
+    <a class="searchCols textlink toggle-vis" data-column="2">Uniprot entry name</a> - 
+    <a class="searchCols textlink toggle-vis" data-column="3">Uniprot id</a> - 
+    <a class="searchCols textlink toggle-vis" data-column="4">Family</a> - 
+    <a class="searchCols textlink toggle-vis" data-column="5">Class</a> - 
+    <a class="searchCols textlink toggle-vis" data-column="6">PDB id</a> -
+    <a class="searchCols textlink toggle-vis" data-column="7">State</a> - 
+    <a class="searchCols textlink toggle-vis" data-column="8">Species</a> -
+    <a class="searchCols textlink toggle-vis" data-column="9">Model type</a> -
+    <a class="searchCols textlink toggle-vis" data-column="10">Ligand(s)</a> -
+    <a class="searchCols textlink toggle-vis" data-column="11">Model name</a> -
+    <a class="searchCols textlink toggle-vis" data-column="12">Num. of atoms</a> -
+    <a class="searchCols textlink toggle-vis" data-column="13">Membrane composition</a> -
+    <a class="searchCols textlink toggle-vis" data-column="14">Simulation time</a> -
+    <a class="searchCols textlink toggle-vis" data-column="15">Software</a> -
+    <a class="searchCols textlink toggle-vis" data-column="16">Force field</a> -
+    <a class="searchCols textlink toggle-vis" data-column="17">Submitted by</a>
+    
+</div>
+<table id="table_id" class="display" >
+    <thead>
+        <tr>
+            <th> </th>
+            <!--<th>Dyn ID</th>-->
+            <th>Receptor</th>
+            <th>Uniprot entry name</th>
+            <th>Uniprot ID</th>
+            <th>Family</th>
+            <th>Class</th>
+            <th>PDB ID</th>
+            <th>State</th>
+            <th>Species</th>
+            <th>Model type</th>
+            <th>Ligand(s)</th>
+            <th>Model name</th>
+            <th>Num. of atoms</th>
+            <th>Membrane composition</th>
+            <th><span data-toggle="tooltip" title="Accumulated simulation time (µs)">Accum. sim. time (µs)</th>
+            <th>Software</th>
+            <th>Force field</th>
+            <th>Submitted by</th>
+            <th> </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for data in tabledata %}
+        <tr class="searchTable">
+            <td class="links">
+                {% if data.not_GPCR %}
+                     <a style="width:105px;text-align:left" href="/view/nongpcr/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
+                {% else %}
+                     <a href="/view/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">View</a>
+                 {% endif %}
+            </td>
+            <!--<td>
+                {{data.dyn_id}}
+            </td>-->
+            <td class="receptor">
+                {% if data.not_GPCR %}
+                    {{data.prot_name}}
+                {% else %}
+                    <a  class='searchLink' title="Check receptor info" href="/dynadb/protein/id/{{data.prot_id}}/">{{data.prot_name}}</a>
+                {% endif %}
+            </td>
+            <td class="uniprotentryname">
+                {% for up in data.uprot_entry %}
+                    {{up}}
+                {% endfor %}
+            </td>
+            <td class="uniprotid">
+                {% for up in data.uniprot %}
+                    <a class='searchLink' title="Go to Uniprot page"  target="_blank" href="https://www.uniprot.org/uniprot/{{up}}" alt="Go to Uniprot page">{{up}}</a>
+                {% endfor %}
+            </td>
+            <td  class="family">{{data.fam_name}}</td>
+            <td  class="gpcrclass">{{data.class_name}}</td>
+            {% if is_hm %}
+                <td  class="pdbid">{{data.pdb_namechain}}</td>
+            {% else %}
+                <td class="pdbid"><a  class='searchLink' title="Go to PDB page"  target="_blank" href="https://www.rcsb.org/structure/{{data.pdbid}}" alt="Go to PDB page">{{data.pdb_namechain}}</a></td>
+            {% endif %}
+            <td class="state">{{data.state}}</td>
+            <td  class="species"><i>{{data.species}}</i></td>
+            <td class="modeltype">{{data.modeltype}}</td>
+            <td class="ligands">
+                {% if data.not_GPCR %}
+                    {% for lig in data.lig_li %}
+                        {% autoescape off %}{{lig | limitlength:60}}{% endautoescape %}
+                    {% endfor %}
+                {% else %}
+                    {% for lig in data.lig_li %}
+                        {% if lig.2 %} <!-- Protein ligand -->
+                            <a  class='searchLink' title="Check ligand info" href="/dynadb/protein/id/{{lig.1}}/">{% autoescape off %}{{lig.0 | limitlength:60}}{% endautoescape %}</a>
+                        {% else %}
+                            <a  class='searchLink' title="Check ligand info" href="/dynadb/molecule/id/{{lig.1}}/">{% autoescape off %}{{lig.0 | limitlength:60}}{% endautoescape %}</a>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </td>
+            <td class="modelname">{% autoescape off %}{{data.modelname | limitlength:60}}{% endautoescape %}</td>
+            <td class="numofatoms">{{data.atom_num}}</td>
+            <td class="membranecomposition">
+                {% if data.not_GPCR %}
+                    {{data.memb_comp}}
+                {% else %}
+                    {% for lip in data.memb_comp %}
+                        <a  class='searchLink' href="/dynadb/molecule/id/{{lip.1}}/">{{lip.0}}</a>
+                    {% endfor %}
+                {% endif %}
+            </td>
+            <td class="simtime">{{data.simtime}}</td>
+            <td class="software">{{data.software}}</td>
+            <td class="forcefield">{{data.forcefield}}</td>
+            <td class="author">{{data.author}}</td>
+            <td class="links1">
+                {% if data.not_GPCR %}
+                     <a  href="/view/nongpcr/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
+                {% else %}
+                     <a href="/dynadb/dynamics/id/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Report</a>
+                 {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock content %}
+{% block addon_js %} 
+
+<!-- From base.html -->
+    <script src="{% static 'home/js/jquery.js' %}"></script>
+    <!-- jQueryUI -->
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.min.css' %}" type="text/css" media="all" />
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.theme.min.css' %}" type="text/css" media="all" />
+    <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+    <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+<!-- END From base.html -->
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+<script type="text/javascript" src="{% static 'dynadb/searchtable.js' %}"></script>
+{% endblock %}
+</body>

@@ -1,0 +1,78 @@
+<head>
+
+{% extends "home/base.html" %} 
+{% load static %} 
+{% block addon_css %}
+<style>
+#content{
+    width:100%;
+}
+</style>
+{% endblock %}
+</head>
+<body>
+
+{% block content %} 
+{% csrf_token %}
+
+ <!-- description  -->
+
+<div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white">  
+   <div class="panel-body">
+    	<h3>Cross-receptor analysis</h3>
+   </div> 
+</div>
+
+<div class="col-md-12" style="margin-bottom:10px;">
+    <div class="row">
+        <div class="panel panel-primary" style="margin-bottom:10px">
+         <div class="panel-body">
+            <div class="row">
+              <div class="dropdown" style="margin-left:15px">
+                <button class="btn btn-primary dropdown-toggle btn-sm" type="button" data-toggle="dropdown">Threshold: <b>{{sel_thresh}}</b>
+                <span class="caret"></span></button>
+                <ul class="dropdown-menu" style="font-size:12px">
+                  <li class="dropdown-header">Select a threshold</li> 
+                  {% for thresh in other_thresh %}
+                  <li><a href="../{{thresh}}">{{thresh}}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+            <div class="row" style="position: relative; overflow-y: auto; overflow-x: auto;">
+                <div style="margin:auto;max-width:{{plotdiv_w}}px">
+                    {{ div | safe }}
+                </div>
+            </div>
+         </div>
+        </div>
+    </div>
+
+    <div class="row" id="info" style="display:none">
+        <div class="panel panel-info" style="width:500px;margin:auto">
+        <div class="panel-heading">Interaction details</div>
+        <div class="panel-body">
+            <p><b>Frequency:</b> <span id="freq_val"></span>%</p>
+            <p><b>Position:</b> <span id="pos_val"></span> 
+            <p><b>Receptor:</b> <span id="recept_val"></span> <a id="recept_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
+            <p><b>Ligand:</b> <span id="lig_val"></span> <a id="lig_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
+            <center>
+            <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>Visualize this dynamics</b></a>
+            </center>
+        </div>
+    </div>
+</div>
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+<!-- Bokeh -->
+<link href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.css" rel="stylesheet" type="text/css">
+<link href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.js"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.js"></script>
+{{ script | safe }}
+{% endblock %}
+
+</body>

@@ -1,0 +1,12 @@
+{% block content %}
+<form action="/dynadb/prueba_varios" method="POST">{% csrf_token %}
+    {{ alert_form.as_p }}
+    <input type="submit" value="Submit" />
+</form>
+
+<form action="/dynadb/prueba_varios" method="POST">{% csrf_token %}
+    {{ notifier_form.as_p }}
+    <input type="submit" value="Submit" />
+</form>
+
+{% endblock content %}

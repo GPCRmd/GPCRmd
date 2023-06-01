@@ -1,0 +1,63 @@
+<head>
+
+{% extends "sc2md/base_sc2md.html" %} 
+
+{% load static %} 
+
+{% block addon_css %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'sc2md/css/upload.css' %}" />
+{% endblock %}
+
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+  <base href="your_domain/" target="_PARENT">
+
+</head>
+
+<body style="padding:20px 0">
+{% block content %} 
+
+
+ <!-- description column -->
+
+<div class="col-md-12 "> 
+
+   <div id="header_panel" class="row panel panel-primary" style="border:none;border-radius:0;background-color:#1ABC9C;">  
+       <div class="panel-body" >
+          <div >
+          <h2 >Simulation Upload</h2>
+          </div>
+       </div> 
+   </div>
+        <div style="margin:40px">
+            You can contact us at <a href="mailto:info@gpcrmd.org">sarscov2md@gmail.com</a>.
+        </div>
+ </div>
+</div>
+
+
+{% endblock content %}
+{% block addon_js %} 
+
+<!-- From base.html -->
+    <script src="{% static 'home/js/jquery.js' %}"></script>
+    <!-- jQueryUI -->
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.min.css' %}" type="text/css" media="all" />
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.theme.min.css' %}" type="text/css" media="all" />
+    <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+    <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+<!-- END From base.html -->
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+<script  src="{% static 'sc2md/js/upload.js' %}"></script>
+{% endblock %}
+</body>

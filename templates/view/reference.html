@@ -1,0 +1,46 @@
+<head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script>document.domain=document.domain;</script>
+{% extends "home/base.html" %} 
+{% load static %} 
+{% block addon_css %}
+<style>
+</style>
+{% endblock %}
+</head>
+<body>
+
+{% block content %} 
+{% csrf_token %}
+
+<div style="margin:0;padding:0;width:100%" id="info">
+    <p>
+        {{authors}}
+    </p>
+    <p>
+        <a href="{{url}}" target="_blank">{{title}}</a>
+    </p>
+    <p>
+        <span style="font-style:italic">
+            {{journal}} {{pub_year}};
+            {% if vol or issue %}
+                {{vol}}{% if issue %}({{issue}}){% endif %}.
+            {% endif %}
+            {{doi}}
+        </span>
+    </p>
+</div>
+<div id="IframeCont" style="overflow-y:hidden;overflow-x:auto;height:365px;max-width:592px;margin-bottom:5px;position:relative">
+    <iframe style="border:none;position:relative;top:-5px;"  id="embed_struct" src="{{mdsrv_url}}/html/embed_ARchol.html" scrolling="no" height="1000px" width="590px"></iframe>
+</div>
+
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+   <script src="{% static 'view/emb_reference.js' %}"></script>
+{% endblock %}
+
+
+</body>

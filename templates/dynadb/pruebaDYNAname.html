@@ -1,0 +1,73 @@
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+ {% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">
+{% csrf_token %}
+    <input type="hidden" name="extra" value="{{extra}}">
+
+<a title="This is a mouseover title">Mouseover me</a>
+
+<!-- <button onmouseover="alert('You Clicked');"> -->
+     Click ME
+</button>
+
+
+    <fieldset>
+        {{ fdb_Dynamics.management_form }}
+
+        {% include "dynadb/dynadb_Dynamics.html" %}
+
+
+
+
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Dynamics_tags </legend>	
+        {% include "dynadb/dynadb_Dynamics.html" %}
+  <!--     <iframe src="dynadb_Dynamics.html" seamless></iframe> -->
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Dynamics_Tags_List </legend>	
+        {{ fdb_Dynamics_Tags_List.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+
+{% for hidden in fdb_Dynamics.hidden_fields %}
+{{ hidden }}
+{% endfor %}
+{# Include the visible fields #}
+{% for field in fdb_Dynamics.visible_fields %}
+    <div class="fieldWrapper">
+        {{ field.errors }}
+        {{ field.label_tag }} {{ field }}
+    </div>
+{% endfor %}
+
+
+<!--    <fieldset>
+        <legend> fdb_Dynamics_Tags_List </legend>	
+
+	</fieldset>
+-->
+
+<!--       <div style="text-align: right">
+        {% if not edit%}
+            <input type="submit" name="action" value="Create">
+        {% else %}
+            <input type="submit" name="action" value="Edit">
+        {% endif %}
+        </div>
+    </form> -->
+
+
+
+
+{% endblock content %}

@@ -1,0 +1,93 @@
+<head>
+  <style>
+    .long input {
+      width: 100%;
+    }
+  </style>
+</head>
+{% extends "home/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<div class="row regForm">
+
+  <form method="post">{% csrf_token %}
+
+    <!-- description column -->
+    <div class="col-md-4 col-md-offset-1">
+      <div class="col-md-12 regPanel panel panel-primary">
+        <div class="panel-body">
+          <h2 class="panel-heading">Email Address</h2>
+        </div>
+      </div>
+
+      <!-- main description -->
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <p style="text-align: justify;">Introduce the new email with which you want to associate 
+            your GPCRmd account.</p>
+          <p style="text-align: justify;">You need access to the new address to complete the 
+            process.</p>
+        </div>
+      </div>
+
+      <!-- link to docs -->
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <p>For more information on this form, see the <a class="textlink" alt="Work in progress.">docs</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!--   <body> -->
+    <div id="pprotform" class="col-md-6">
+      <div id="protform" class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <div style="text-align:center">
+            <h3 class="orangeTit"><br>Change your Email Address</h3>
+          </div><br>
+          <div style="margin:10px">
+            <div style="margin-bottom:8px">
+              <div class="row">
+                <div class="col-md-3">
+                  <p><label for="id_email">{% trans 'New Adress:' %}</label></p>
+                </div>
+                <div class="col-md-7" style="margin-bottom:8px">
+                  <span class="long"> {{form.email_new}}</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-1 col-md-offset-3" style="margin-top: 2%;">
+                  <!--Submit button:-->
+                  <input class="submitBtn" type="submit" value="Send"/>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <div class="row">
+    <div class="col-md-9" style="margin-bottom:8px">
+      {% if form.non_field_errors %}
+      <div>
+        {% for err in form.non_field_errors %}
+        <p style="margin-bottom:px" class=text-danger>{{ err }}</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+
+{% endblock content %}
+
+{% block addon_js %}
+
+{% endblock %}

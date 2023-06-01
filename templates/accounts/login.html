@@ -1,0 +1,141 @@
+<head>
+  <style>
+    .long input {
+      width: 100%;
+    }
+  </style>
+</head>
+{% extends "home/base.html" %}
+{% load static %}
+
+
+{% block content %}
+<div class="logIncontent row">
+  <div class="col-sm-12">
+
+
+    <form action="{% url 'accounts:login' %}" method="post">
+      {% csrf_token %}
+      {% if next_url %} <input type="hidden" name="next" value="{{next_url}}"> {% endif %}
+
+      <!-- description column -->
+      <div class="col-md-4">
+
+        <div class="panel panel-primary">
+          <h2 class="panel-heading">Simulation Submission</h2>
+          <!-- main description -->
+          <div class="panel-body">
+            <h4 class="orangeSub"> FILL IN THE LOGIN FORM</h4>
+            <p>Please sign in with your account to access the Simulation <br>
+              Submission tool.</p>
+            <p>Once you are logged-in, you will be able to access the <br>
+              GPCRmd Simulation submission tool and the<br>Authorship and references form.</p>
+
+          </div>
+        </div>
+
+        <!-- link to docs TODO-->
+        <!-- <div class="col-md-12 panel panel-primary">
+          <div class="panel-body">
+            <p>For more information on this form, see the <a href="" alt="Work on progress.">docs</a>.</p>
+          </div>
+        </div> -->
+      </div>
+
+
+      <!-- Log In panel -->
+      <div class="col-md-7 ">
+        <div class="panel panel-primary">
+
+
+          <div class="panel-body">
+            <div style="text-align:center;">
+              <h3 class="orangeTit" style="margin-bottom:3%"><br>Log in<br></h3>
+            </div>
+            <div class="row" id="info_box">
+              <div class="col-md-10 col-md-offset-1 logInAlert alert alert-info alert-dismissible">
+                {% comment %} <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a> {% endcomment %}
+
+                <p><strong>Current submission policy:</strong></p>
+
+                <p>In order to ensure data quality, we currently restrict data submission to MD data which will be
+                  published (peer-reviewed process).</p>
+                <p>You can upload your data prior to publication for the peer-review process (restricted access only
+                  for
+                  user and reviewer). Upon paper acceptance, your MD data will be published on the GPCRmd online
+                  resource.
+                </p><br>
+
+                <p><strong>Do you want to submit a simulation? </strong></p>
+                <p>Please contact us at <a class="textlink" href="mailto:info@gpcrmd.org">info@gpcrmd.org</a> and we
+                  will provide you a
+                  registration link. </p>
+
+              </div>
+            </div>
+            <div class=row>
+              <div class="col-md-10 col-md-offset-1">
+                {% if form.non_field_errors %}
+                <div class="non-field-errors alert alert-danger" style="padding:7px">
+                  {% for err in form.non_field_errors %}
+                  <p>{{ err }}</p>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            {% for field in form %}
+            <div style="margin-bottom:8px">
+              <div class="row">
+                <div class="col-md-3 col-md-offset-1" style="width:150px;">
+                  {{ field.label_tag }}
+                </div>
+                <div class="col-md-7">
+                  <span class="long"> {{field}}</span>
+                </div>
+                <div class="col-md-1">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-11 col-md-offset-1" style="padding-left:20px;margin-bottom:8px">
+                  {% if field.errors %}
+                  <div>
+                    {% for err in field.errors %}
+                    <p style="margin-bottom:px" class=text-danger>{{ err }}</p>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+
+            <!-- hasta aqui -->
+
+            <div class="row">
+              <div class="col-md-3 col-md-offset-1 vcenter">
+                <input class="submitBtn btn" type="submit" value="Log in" />
+              </div>
+
+              <div class="col-md-4 vcenter">
+                <a class="textlink" href='/accounts/password_reset'>Forgot your password?</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </div>
+  </form>
+</div>
+
+
+{% endblock content %}
+
+
+{% block addon_js %}
+
+
+{% endblock %}

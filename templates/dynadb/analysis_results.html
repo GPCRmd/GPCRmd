@@ -1,0 +1,83 @@
+<head>
+    <script>document.domain=document.domain;</script>
+</head>
+
+{% extends "home/base.html" %} 
+{% load static %}
+{% load static %} 
+{% block addon_css %}
+  <style>
+  .panel-body {
+        word-break:break-all
+}
+
+   .scrolldowndiv{
+        overflow-y:auto;
+        max-height:300px;
+        overflow:auto;
+}
+  
+  </style>
+{% endblock %}
+{% block content %}
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Results</b> </div>
+    <div class="panel-body">
+    <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
+	<h4>SASA (Solvent Accesible Surface Area)</h4>
+	<label for="from_frame">From frame:</label>
+        <input id=from_frame> </input>
+	<label for="to_frame">To frame:</label>
+        <input id=to_frame> </input>
+	<label for="atom_name">Atom name:</label>
+        <input id=atom_name> </input>
+	<br><br>
+	<h4>Salt Bridges</h4>
+	<label for="cutoff">Percentage cutoff:</label>
+        <input id=cutoff> </input>
+	<input id='percentage' type="radio" name="saltymethod" value="percentage"> Percentage of frames under cutoff 
+	<input id='mean' type="radio" name="saltymethod" value="mean"> Mean distance across simulation<br><br>
+
+
+        <button id='doanalysis' type='button'>Analyse</button> 
+    </form> 
+    <div id="charges_chart_div"></div>
+    <br><br>
+    <div id="chart_div"></div>
+    <br><br>
+    <div class="col-sm-12">
+        <div class="col-sm-6">
+            <h4>Intramolecular HBonds</h4><br>
+            <div class='scrolldowndiv' id="hbonds"> </div>
+            <br><br>
+            <h4>Intermolecular HBonds</h4><br>
+            <div class='scrolldowndiv' id="hbondsnp"> </div>
+            <br><br>
+        </div>
+
+        <div class="col-sm-6">
+            <h4>NGL</h4>
+            struc:{{answer.structure_file}}
+            traj:{{answer.traj_file}}
+             <div style=" overflow: hidden; margin: 15px auto; max-width: 545px; max-height: 400px;">
+                    <iframe class="str_file" style="border: 0px none;width: 800px;margin-top:-35px;" id="embed_mdsrv" src="{{answer.mdsrv_url}}/html/embed_show.html" scrolling="no" height="400px" width="590px" data-struc_file={{answer.structure_file}} data-traj_file={{answer.traj_file}}></iframe>
+             </div>
+
+        </div>
+
+    </div> <!--12-->
+
+    <h4>Salt bridges</h4>
+    <div id="saltbridges" class='scrolldowndiv'></div>
+    <br><br><br>
+    </div>
+    </div>
+    </div>
+
+{%endblock content %}
+
+{% block addon_js %}
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="{% static 'dynadb/do_analysis.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,145 @@
+<head>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script>document.domain=document.domain;</script>
+{% extends "home/base.html" %} 
+{% load static %} 
+{% block addon_css %}
+<style>
+#content{
+    width:100%;
+}
+/*
+
+html, body, #outer {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+}
+ 
+#outer {
+    display: table;
+}
+ 
+#inner_fixed {
+    height: 69px;
+    display: table-row;
+}
+ 
+#inner_remaining {
+    display: table-row;    
+    height:100%
+}
+
+*/
+
+
+#inner_remaining{
+position: fixed; 
+top: 150px; /*Set top value to HeightOfTopFrameDiv*/
+margin:auto;
+bottom: 0px; /*Set bottom value to HeightOfBottomFrameDiv*/
+width: 100%;
+padding-right:25px
+}
+
+
+</style>
+{% endblock %}
+</head>
+<body>
+
+{% block content %} 
+{% csrf_token %}
+
+ <!-- description  -->
+<div id="outer">
+<div class="col-xs-12 panel panel-primary" id="inner_fixed" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white">  
+   <div class="panel-body">
+    	<h3>Ligand receptor interaction</h3>
+   </div> 
+</div>
+
+<div id="inner_remaining" >
+<div class="col-xs-12" style="padding-bottom:10px;height:100%">
+    <div class="row">
+        <div class="col-xs-12" id="plot_col" style="padding-left:0;padding-right:5px">
+            <div class="panel panel-primary" style="margin-bottom:0;height:100%;position: relative; overflow-y: auto; overflow-x: auto;">
+             <div class="panel-body">
+                <div class="row">
+                  <div class="dropdown" style="margin-left:15px">
+                    <button class="btn btn-primary dropdown-toggle btn-sm" type="button" data-toggle="dropdown">Threshold: <b>{{sel_thresh}}</b>
+                    <span class="caret"></span></button>
+                    <ul class="dropdown-menu" style="font-size:12px">
+                      <li class="dropdown-header">Select a threshold</li> 
+                      {% for thresh in other_thresh %}
+                      <li><a href="../{{thresh}}">{{thresh}}</a></li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </div>
+                <div class="row" style="">
+<!--                   <div style="margin:auto;max-width:{{plotdiv_w}}px">-->
+                    <div style="max-width:{{plotdiv_w}}px">
+                    {{ div | safe }}
+                </div>
+                </div>
+             </div>
+            </div>
+        </div>
+
+        <div class="col-xs-3" id="info" style="visibility:hidden;position:absolute;z-index:-1;padding-left:5px;padding-right:5px;">
+            <div class="panel panel-info" style="margin-bottom:0;height:100%;position: relative; overflow-y: auto; overflow-x: auto;">
+<!--
+            <div class="panel-heading" style="">Interaction details</div> -->
+            <div class="panel-body" style="">
+                <div style="min-width:350px">
+                    <!-- Info on clicked dyn -->
+                    <p><b>Frequency:</b> <span id="freq_val"></span>%</p>
+                    <p><b>Position:</b> <span id="pos_val"></span> 
+                    <p><b>Receptor:</b> <span id="recept_val"></span> <a id="recept_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
+                    <p><b>Ligand:</b> <span id="lig_val"></span> <a id="lig_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
+                    <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>Open with GPCRmd viewer</b></a>
+                    <!-- Traj dropdown -->
+                    
+                      <div id="trajsDropdown" class="dropdown" style="position:absolute;z-index:10;visibility:hidden">
+                        <button id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px" >-
+                        <span class="caret"></span></button>
+                        <ul id="trajsDropdown_options" class="dropdown-menu" style="height: auto;max-height:350px;overflow-x: hidden;padding:0;cursor:pointer">
+                          <span id="add_traj_options"></span>
+
+                        </ul>
+                      </div>
+                    
+                    <!-- Loading div-->
+                    <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" style="width:50px;height:50px;margin-top:150px;position:absolute;z-index:10;margin-left:-25px"/></center></span>
+                    <!-- iframe to ngl -->
+                   <div id="ngl_div"  style="width:350px;height:350px;margin:auto;">
+                        <iframe style="border:none;position:relative;"  id="ngl_iframe" src="{{mdsrv_url}}/html/embed_crossgpcr.html" scrolling="no" height="348px" width="348px"></iframe> 
+                    </div>
+                      <div id="posNotinRec" class="alert alert-warning" style="padding:5px 30px 5px 5px;margin:0;font-size:12px;display:none">
+                        <span id="posNotinRec_text"></span>
+                      </div>
+                <div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+</div>
+{% endblock content %} 
+
+
+{% block addon_js %} 
+
+<script src="{% static 'gpcrome/emb_crossgpcr.js' %}"></script>
+
+<!-- Bokeh -->
+<link href="https://cdn.pydata.org/bokeh/release/bokeh-0.13.0.min.css" rel="stylesheet" type="text/css">
+<link href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.13.0.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-0.13.0.min.js"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.13.0.min.js"></script>
+{{ script | safe }}
+{% endblock %}
+
+</body>

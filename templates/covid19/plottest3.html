@@ -1,0 +1,974 @@
+<head>
+  <!-- for google plots-->
+  <!-- <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"],"language":"en"});
+    </script>-->
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <script>
+    google.charts.load("45", { packages: ["corechart"] });
+    //  google.charts.setOnLoadCallback(drawChart);
+  </script>
+
+  <!-- for NGL iframe-->
+  <script>
+    document.domain = document.domain;
+  </script>
+
+  {% load static %}
+  <!-- BASE -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="{% static 'home/logo/gpcrmd/main_circle.png' %}" />
+  <!-- Bootstrap -->
+  <link
+    href="{% static 'bootstrap/css/bootstrap.min.css' %}"
+    rel="stylesheet"
+  />
+  <!-- Custom styles -->
+  <link href="{% static 'home/css/style.css' %}" rel="stylesheet" />
+
+  {% load covid_custom %} {% block addon_css %}
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="{% static 'covid19/css/dynanalysis.css' %}"
+  />
+
+  {% endblock %}
+</head>
+
+<body style="padding: 20px">
+  {% block content %}
+
+  <div
+    id="chart_popup_box"
+    style="
+      display: none;
+      position: absolute;
+      background-color: white;
+      opacity: 0.9;
+      z-index: 2;
+      padding: 5px 10px 0 10px;
+      border-radius: 4px;
+    "
+  ></div>
+  <div
+    id="extra_legend"
+    style="position: absolute; z-index: 1; top: 70px; left: 520px"
+  ></div>
+  <!--position:absolute;z-index: 1;top:70px;left:520px-->
+  <div id="chart_div"></div>
+
+  {% endblock content %} {% block addon_js %}
+
+  <!-- From base.html -->
+  <script src="{% static 'home/js/jquery.js' %}"></script>
+  <!-- jQueryUI -->
+  <link
+    rel="stylesheet"
+    href="{% static 'home/css/jquery-ui.min.css' %}"
+    type="text/css"
+    media="all"
+  />
+  <link
+    rel="stylesheet"
+    href="{% static 'home/css/jquery-ui.theme.min.css' %}"
+    type="text/css"
+    media="all"
+  />
+  <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+  <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+  <script>
+    $.widget.bridge("uitooltip", $.ui.tooltip);
+    $.widget.bridge("uibutton", $.ui.button);
+  </script>
+  <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+  <!-- END From base.html -->
+  <!-- My imports-->
+  <script type="text/javascript">
+    $(document).ready(function () {
+      $("#chart_div").on("mouseenter", ".all_scores_dist_hover", function () {
+        var displaysentence = $(this).data("text");
+        displaypopup(true, displaysentence);
+      });
+      $("#chart_div").on("mouseleave", ".all_scores_dist_hover", function () {
+        displaypopup(false, false);
+      });
+
+      function add_svg_legend(
+        leg_container,
+        score_line_style,
+        linestyle,
+        stroke_color,
+        stroke_width,
+        fill_color
+      ) {
+        var svg_leg = d3
+          .select(leg_container)
+          .append("svg")
+          .attr("height", "100px")
+          .attr("width", "120px")
+          .attr("id", "svg_extra_legend")
+          .append("g");
+        //  .attr("transform", "translate(100,0)");  // bit of margin on the left = 40
+
+        var leg_square_h = 20;
+        var x_dist = 2;
+        var y_dist = 0;
+
+        svg_leg
+          .append("line")
+          .attr("style", score_line_style)
+          .attr("x1", x_dist)
+          .attr("y1", y_dist)
+          .attr("x2", x_dist)
+          .attr("y2", y_dist + leg_square_h);
+
+        svg_leg
+          .append("text")
+          .attr("x", 5)
+          .attr("y", y_dist + 15)
+          .attr("font-size", "12px")
+          //  .attr("dy", ".35em")
+          .attr("text-anchor", "left")
+          .style("alignment-baseline", "middle")
+          .text("Obtained score");
+
+        y_dist = 30;
+
+        svg_leg
+          .append("line")
+          .attr("style", linestyle)
+          .attr("x1", x_dist)
+          .attr("y1", y_dist)
+          .attr("x2", x_dist)
+          .attr("y2", y_dist + leg_square_h);
+
+        svg_leg
+          .append("rect")
+          .attr("x", x_dist)
+          .attr("y", y_dist + leg_square_h / 2)
+          .attr("width", 10)
+          .attr("height", 1)
+          .attr("fill", "none")
+          .attr("stroke", stroke_color)
+          .attr("stroke-width", stroke_width)
+          .attr("opacity", "0.5");
+        x_dist += 10;
+
+        svg_leg
+          .append("rect")
+          .attr("class", "all_scores_dist_hover")
+          .attr(
+            "data-text",
+            "Impact score values of the selected variant over trajectory frames"
+          )
+          .attr("x", x_dist)
+          .attr("y", y_dist)
+          .attr("width", 15)
+          .attr("height", leg_square_h)
+          .attr("fill", fill_color)
+          .attr("stroke", stroke_color)
+          .attr("stroke-width", stroke_width)
+          .attr("opacity", "0.5");
+        x_dist += 15;
+        svg_leg
+          .append("rect")
+          .attr("class", "all_scores_dist_hover")
+          .attr(
+            "data-text",
+            "Impact score values of the selected variant over trajectory frames"
+          )
+          .attr("y", y_dist)
+          .attr("x", x_dist)
+          .attr("width", 15)
+          .attr("height", leg_square_h)
+          .attr("fill", fill_color)
+          .attr("stroke", stroke_color)
+          .attr("stroke-width", stroke_width)
+          .attr("opacity", "0.5");
+        x_dist += 15;
+
+        svg_leg
+          .append("rect")
+          .attr("x", x_dist)
+          .attr("y", y_dist + leg_square_h / 2)
+          .attr("width", 10)
+          .attr("height", 1)
+          .attr("fill", "none")
+          .attr("stroke", stroke_color)
+          .attr("stroke-width", stroke_width)
+          .attr("opacity", "0.5");
+        x_dist += 10;
+
+        svg_leg
+          .append("line")
+          .attr("style", linestyle)
+          .attr("x1", x_dist)
+          .attr("y1", y_dist)
+          .attr("x2", x_dist)
+          .attr("y2", y_dist + leg_square_h);
+
+        svg_leg
+          .append("text")
+          .attr("x", 0)
+          .attr("y", y_dist + leg_square_h + 15)
+          .attr("font-size", "12px")
+          //  .attr("dy", ".35em")
+          .attr("text-anchor", "left")
+          .style("alignment-baseline", "middle")
+          .append("tspan")
+          .attr("x", 0)
+          .text("Impact score values")
+          .append("tspan")
+          .attr("x", 0)
+          .attr("dy", "1em")
+          .text("of the selected variant")
+          .append("tspan")
+          .attr("x", 0)
+          .attr("dy", "1em")
+          .text("over trajectory frames");
+      }
+
+      function add_svg_box(
+        chart,
+        box_location,
+        box_min,
+        box_max,
+        stroke_color,
+        stroke_width,
+        fill_color
+      ) {
+        box_location
+          .append("rect")
+          .attr("class", "all_scores_dist_hover")
+          .attr(
+            "data-text",
+            "Impact score values of the selected variant over trajectory frames"
+          )
+          .attr("x", chart.getChartLayoutInterface().getXLocation(box_min))
+          .attr(
+            "y",
+            chart.getChartLayoutInterface().getChartAreaBoundingBox().top
+          )
+          .attr(
+            "width",
+            chart.getChartLayoutInterface().getXLocation(box_max) -
+              chart.getChartLayoutInterface().getXLocation(box_min)
+          )
+          .attr(
+            "height",
+            chart.getChartLayoutInterface().getChartAreaBoundingBox().height
+          )
+          .attr("fill", fill_color)
+          .attr("stroke", stroke_color)
+          .attr("stroke-width", stroke_width)
+          .attr("opacity", "0.5");
+      }
+
+      function add_svg_horizontal_line(
+        chart,
+        line_location,
+        line_min,
+        line_max,
+        stroke_color,
+        stroke_width
+      ) {
+        y_line_pos =
+          chart.getChartLayoutInterface().getChartAreaBoundingBox().top +
+          chart.getChartLayoutInterface().getChartAreaBoundingBox().height / 2;
+        line_location
+          .append("rect")
+          .attr("x", chart.getChartLayoutInterface().getXLocation(line_min))
+          .attr("y", y_line_pos)
+          .attr(
+            "width",
+            chart.getChartLayoutInterface().getXLocation(line_max) -
+              chart.getChartLayoutInterface().getXLocation(line_min)
+          )
+          .attr("height", 1)
+          .attr("fill", "none")
+          .attr("stroke", stroke_color)
+          .attr("stroke-width", stroke_width)
+          .attr("opacity", "0.5");
+      }
+
+      function add_svg_vertical_line(
+        chart,
+        line_location,
+        line_value,
+        linestyle,
+        displaysentence
+      ) {
+        line_location
+          .append("line")
+          .attr("data-text", displaysentence)
+          .attr("class", "all_scores_dist_hover")
+          .attr("style", linestyle)
+          .attr("x1", chart.getChartLayoutInterface().getXLocation(line_value))
+          .attr(
+            "y1",
+            chart.getChartLayoutInterface().getChartAreaBoundingBox().top
+          )
+          .attr("x2", chart.getChartLayoutInterface().getXLocation(line_value))
+          .attr(
+            "y2",
+            chart.getChartLayoutInterface().getChartAreaBoundingBox().height +
+              chart.getChartLayoutInterface().getChartAreaBoundingBox().top
+          );
+      }
+
+      function displaypopup(appear, displaysentence) {
+        if (appear) {
+          $("#chart_popup_box").html("<p>" + displaysentence + "</p>");
+          $("#chart_popup_box").css({
+            top: mouseY - 30,
+            left: mouseX - 30,
+            display: "inline",
+          });
+        } else {
+          $("#chart_popup_box").css("display", "none");
+        }
+      }
+
+      //#############
+      $(document).mousemove(function (e) {
+        // mouse coordinates
+        mouseX = e.pageX;
+        mouseY = e.pageY;
+      });
+      google.charts.load("current", { packages: ["corechart"] });
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        selector_id = "chart_div";
+        score_valies = [
+          ["Score"],
+          [-1.0680951311813445],
+          [7.786573459603146],
+          [-1.479910629877411],
+          [-3.648553960677411],
+          [-0.1796024818774113],
+          [1.2239306741225877],
+          [73.60510525407835],
+          [34.540273580866085],
+          [3.7579357924661005],
+          [-5.2190279419339],
+          [-3.799411450468174],
+          [-2.6897166672681747],
+          [9.990100112981558],
+          [-4.734288722086012],
+          [1.1303666138258373],
+          [-2.922670348174162],
+          [96.73814164422585],
+          [-3.9117240308870085],
+          [1.3810401060419428],
+          [12.895973780041945],
+          [0.12883022404194405],
+          [-1.3466952059580564],
+          [41.74098234881456],
+          [-2.9369708711854425],
+          [-1.4470039191854425],
+          [-4.183388934511764],
+          [-0.2152634305117641],
+          [7.180930110680038],
+          [22.533656541080035],
+          [-3.7903007381123524],
+          [17.49699983304451],
+          [6.327624341844508],
+          [8.68753596744451],
+          [-4.00378486695549],
+          [10.470352075910373],
+          [12.933518430644368],
+          [-4.084676533986499],
+          [52.51634931694338],
+          [-5.088978461876992],
+          [-4.414804458270621],
+          [5.276157270081953],
+          [-0.40050061113304275],
+          [-4.236789133133043],
+          [-5.1908229221209075],
+          [-5.199757122120907],
+          [-5.779374763118142],
+          [-5.228716024339499],
+          [-5.345303248339499],
+          [-5.255849706339498],
+          [-3.960354320339498],
+          [-3.2899621033748594],
+          [-6.367468362099777],
+          [4.979284157926846],
+          [1.338032755926845],
+          [-2.488204187237154],
+          [2.4825673337424],
+          [-2.6122081542575994],
+          [-3.6394594422575994],
+          [3.844461923342401],
+          [3.8337732290828597],
+          [0.19039086708285946],
+          [-2.499253094710849],
+          [-2.587169134965973],
+          [20.324235947191124],
+          [3.6882272022034734],
+          [2.464898674097714],
+          [-3.845010678902286],
+          [-3.5933599898745037],
+          [-5.823122321446803],
+          [-5.393829321446803],
+          [-3.4687681125267704],
+          [122.44503024347321],
+          [36.21981058057811],
+          [107.59702618457811],
+          [-5.776583547421899],
+          [43.151978835582504],
+          [-5.356096840417504],
+          [-2.6071841124175026],
+          [-5.033348557315714],
+          [-3.7900353673157148],
+          [-2.7238056184524253],
+          [-4.877712361672604],
+          [-4.842216009672604],
+          [-3.8170181436175348],
+          [7.4556879869324275],
+          [-5.277861789867571],
+          [0.07501456711338536],
+          [-2.694939963286615],
+          [0.21720450495231053],
+          [-5.24477120064769],
+          [-3.6668124602462795],
+          [30.32850340514183],
+          [-5.409271297658164],
+          [-4.784987272058164],
+          [-4.5017998149863665],
+          [-4.397256560986366],
+          [8.585879220213632],
+          [-2.3597322170493356],
+          [-5.098781245049334],
+          [1.4399807509319245],
+          [-4.958864341068075],
+          [-4.035717757506038],
+          [-2.705165637882325],
+          [30.55070678811767],
+          [-5.307292007882326],
+          [2.5547233681176738],
+          [-5.556139401377778],
+          [-3.901359591377778],
+          [9.80516523859582],
+          [-3.9878046575927093],
+          [29.05467232000729],
+          [-3.777785997592709],
+          [-5.100552810750981],
+          [-3.740395748750981],
+          [-4.885388110750981],
+          [-4.845772494357645],
+          [-4.8345865801576435],
+          [10.502725641242357],
+          [-4.847164333738945],
+          [-4.563900040938945],
+          [-2.2163936269389444],
+          [56.655025770964976],
+          [-6.046927149035021],
+          [-4.24715564303502],
+          [-4.494745664397964],
+          [6.162047034496191],
+          [-3.7746669976922123],
+          [-1.4124798301614918],
+          [16.40912066183851],
+          [6.385086273438507],
+          [-3.9322335675350777],
+          [-3.5368837025532622],
+          [1.4757713714467369],
+          [-2.6159862768587088],
+          [-5.293618594240985],
+          [-1.6596909109730147],
+          [-5.144474048203285],
+          [5718.247423492219],
+          [-6.043193489781605],
+          [6.236635353298537],
+          [-4.104253541501464],
+          [30.639424850498532],
+          [-4.080066991501464],
+          [-2.750189733501464],
+          [-4.046128881501463],
+          [-1.3420974408299897],
+          [-5.027638968429992],
+          [-4.69442951082999],
+          [-2.657545727647128],
+          [109.43148250143877],
+          [-1.068851923561248],
+          [-5.106376705342075],
+          [-6.184608299826012],
+          [-4.8920051733963135],
+          [-5.087156598318024],
+          [1.121577981681975],
+          [2.402709419681976],
+          [-1.9599427331383064],
+          [-5.380540585138307],
+          [632.3256547968616],
+          [6.7646750988616935],
+          [29.498661091554762],
+          [54.829088580104546],
+          [-3.9222666066806307],
+          [-5.288081494680631],
+          [-5.26986959468063],
+          [-0.16926226039965747],
+          [-3.962186433199657],
+          [-5.178107081193833],
+          [1.1418757482380448],
+          [-5.287664745237284],
+          [5.147552134762716],
+          [-6.133834695517815],
+          [-2.5046032964482294],
+          [-2.4728389157670736],
+          [-3.6886898577670735],
+          [-5.648710641009851],
+          [-5.920238741009851],
+          [-5.749163341009851],
+          [-2.3196265687062363],
+          [6.232468467293764],
+          [-5.131851106706237],
+          [1.3944445572937623],
+          [-4.3422477956017875],
+          [-5.333001755201788],
+          [-5.273161666401787],
+          [1.1049183308519193],
+          [8.81968108005192],
+          [-0.20266931874807992],
+          [-5.453907558780606],
+          [-4.288168177180605],
+          [2.2153293556193936],
+          [8.630515237219393],
+          [-6.0219181192723985],
+          [5.884758548727602],
+          [-4.485639061654603],
+          [-5.064810693540213],
+          [-5.122675910882784],
+          [42.890154627117205],
+          [26.837517182082916],
+          [-4.93036317991708],
+          [210.6408361965051],
+          [-3.6619166184949012],
+          [-2.430842397094901],
+          [19394.765973540296],
+          [52.7497379535051],
+          [-3.7936180627143843],
+          [13.781864614885615],
+          [169.6738234576856],
+          [-4.863672618165777],
+          [-4.719336418165778],
+          [11.327403018386164],
+          [12.647682365586162],
+          [6.0462628567524686],
+          [-4.286554869247531],
+          [67.612276336933],
+          [1.0440158593329938],
+          [-4.896406413067005],
+          [58.791942561332995],
+          [1.2174779749329934],
+          [-5.70852463320052],
+          [-7.1264331772005205],
+          [-7.550989041200521],
+          [-3.1937590072005198],
+          [57.00578799679948],
+          [161.83201471079943],
+          [-2.526732107922458],
+          [52.25224864007753],
+          [-4.189317967922459],
+          [-5.198182843813047],
+          [-5.215417971813047],
+          [-4.036409167813048],
+          [-4.677891026204338],
+          [-3.1105195382043367],
+          [-3.1048434704207284],
+          [-3.9240390680393724],
+          [31.18210580596063],
+          [1.5061470039606273],
+          [-3.677403066039373],
+          [-5.048262584879723],
+          [-5.84445022313149],
+          [-3.7302580151314926],
+          [-2.9665064971314927],
+          [1.830829299668507],
+          [-5.698456255131491],
+          [-3.980552030069158],
+          [11.67723758193084],
+          [-7.234741718069158],
+          [364.0040129559309],
+          [0.34797953189674957],
+          [-5.816026854103249],
+          [-5.61841088010325],
+          [-5.440110516317728],
+          [-4.402007008317728],
+          [-3.1487307683177286],
+          [-3.153872452317728],
+          [-5.914651847908433],
+          [-3.617908201108434],
+          [164.86227375201284],
+          [-6.549591321987224],
+          [19731.92052423801],
+          [-3.266033129987223],
+          [4.075042448012778],
+          [5.367427008870877],
+          [-2.6186455747291233],
+          [-5.016405972729124],
+          [-5.36949560811378],
+          [3.122163318246847],
+          [-5.846406309753155],
+          [-5.489159031468819],
+          [-5.568354201468818],
+          [-5.266394845828447],
+          [31.900903213371556],
+          [-3.8330727603378025],
+          [-5.292476748337803],
+          [-3.5049980367334523],
+          [-3.777198896733452],
+          [-4.836962260645796],
+          [-5.328916225741091],
+          [4.105248600639617],
+          [8.653173231230177],
+          [-5.127872220769824],
+          [-5.195099604769823],
+          [3.9851374588189534],
+          [-2.4419552031810463],
+          [-2.44758808696052],
+          [13.043260015039479],
+          [-4.770691325542135],
+          [-0.21961327554213342],
+          [-5.320902123767406],
+          [1.272115296232593],
+          [0.05365409223259415],
+          [-5.123178592167405],
+          [-4.786072285767405],
+          [-5.400601661650544],
+          [399.34225170434945],
+          [0.7511712847494549],
+          [-2.6918855748463297],
+          [-4.95852456284633],
+          [-5.25715476844633],
+          [2.5887804535536705],
+          [7.515599660353668],
+          [-2.3342603137940574],
+          [-2.921700095794058],
+          [-5.026072481794058],
+          [-3.436384628919309],
+          [-5.43504162240199],
+        ];
+
+        selected_var_score = -1.0680951311813445;
+        sel_score_min = 0.5;
+        sel_score_25 = 1;
+        sel_score_50 = 2;
+        sel_score_75 = 4;
+        sel_score_max = 5;
+
+        //####################
+
+        var datatoplot = google.visualization.arrayToDataTable(
+          score_valies,
+          false
+        );
+        var id_elements = selector_id.split("_");
+        var score_data_type = id_elements[id_elements.length - 1];
+        var plot_title = "Histogram of impact score over all protein residues";
+        plotcolor = "#3366CC";
+        if (score_data_type == "sd") {
+          plot_title =
+            "Histogram of variability-based impact score over all protein residues";
+          plotcolor = "#166956";
+        } else if (score_data_type == "average") {
+          plot_title =
+            "Histogram of average-based impact score over all protein residues";
+          plotcolor = "#247ca8";
+        }
+
+        var options = {
+          title: "Histogram of impact score over all protein residues",
+          height: 350,
+          width: 620,
+          legend: { position: "none" },
+          chartArea: { right: "130", left: "70", top: "50", bottom: "60" },
+          hAxis: { title: "Score", slantedText: true, slantedTextAngle: 45 },
+          colors: ["#3366CC"],
+          histogram: { lastBucketPercentile: 5 },
+          // vAxis: {title: "Occurrences",scaleType: 'mirrorLog' },
+        };
+
+        var chart = new google.visualization.Histogram(
+          document.getElementById(selector_id)
+        );
+
+        chart.draw(datatoplot, options);
+
+        var selector_tag = "#" + selector_id;
+
+        var line_selscore_location = d3.select(selector_tag + " svg");
+        var score_line_style = "stroke:rgb(0,0,0); stroke-width:3;";
+        add_svg_vertical_line(
+          chart,
+          line_selscore_location,
+          selected_var_score,
+          score_line_style
+        );
+
+        if (typeof sel_score_min == "number") {
+          var stroke_color = "#999999";
+          var stroke_width = 2;
+          var fill_color = "#cccccc";
+          var box_location = d3.select(selector_tag + " svg g g g");
+          //Q1 to med
+          add_svg_box(
+            chart,
+            box_location,
+            sel_score_25,
+            sel_score_50,
+            stroke_color,
+            stroke_width,
+            fill_color
+          );
+          //Med to Q3
+          add_svg_box(
+            chart,
+            box_location,
+            sel_score_50,
+            sel_score_75,
+            stroke_color,
+            stroke_width,
+            fill_color
+          );
+          //Min and max line
+          linestyle =
+            "stroke:" + stroke_color + "; stroke-width:" + stroke_width + ";";
+          add_svg_vertical_line(
+            chart,
+            box_location,
+            sel_score_min,
+            linestyle,
+            "Minimum score of the selected variant in this trajectoriy"
+          );
+          add_svg_vertical_line(
+            chart,
+            box_location,
+            sel_score_max,
+            linestyle,
+            "Maximum score of the selected variant in this trajectoriy"
+          );
+          //Horizontal lines from min to Q1 and Q3 to max
+          add_svg_horizontal_line(
+            chart,
+            box_location,
+            sel_score_min,
+            sel_score_25,
+            stroke_color,
+            stroke_width
+          );
+          add_svg_horizontal_line(
+            chart,
+            box_location,
+            sel_score_75,
+            sel_score_max,
+            stroke_color,
+            stroke_width
+          );
+
+          add_svg_legend(
+            "#extra_legend",
+            score_line_style,
+            linestyle,
+            stroke_color,
+            stroke_width,
+            fill_color
+          );
+        }
+      }
+
+      /*
+      $('#chart_div').tooltip({
+          selector: '.protscoretooltip',
+          trigger:"click",
+      }); 
+
+      var thisscore=2.5;
+      var min=0.5
+      var max=3
+
+      google.charts.load("current", {packages:["corechart"]});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+//        score_valies.unshift("Score")
+//        for (var i=0; i < score_valies.length; i++){
+//            score_valies[i]=[score_valies[i]]
+//        }
+      selector_id="chart_div"
+      score_valies=[4, 2.75, 1.3500000000000003, 1, 5.2, 2.5, 0.40000000000000036, 2.75, 2.75, 1.55, 0.8500000000000001, 1.6, 2.766666666666667, 2.8666666666666667, 2.1750000000000003, 2.3000000000000003, 1.3250000000000002, 3.8, 3.5999999999999996, 3.325, 2.6500000000000004, 3.5000000000000004, 0.5666666666666665, 0.6499999999999999, 0.2999999999999998, 1.65, 3.1, 5.2, 2.8, 0, 2.6, 5.3, 5.2, 0.2999999999999998, 3.1, 1.6, 2.7, 2.6999999999999997, 1.9000000000000001, 2.8000000000000003, 1.65, 4, 2.25, 3.15, 4.6000000000000005, 0.7000000000000002, 1.2000000000000002, 2.8, 1.7, 0.8333333333333334, 3.5, 5.075, 2.2750000000000004, 2.45, 2.3, 2.1999999999999997, 1.9000000000000001, 1.9000000000000001, 3.85, 3.5, 2.65, 2.62, 1.9, 4.1, 3.6, 2.5, 2.5, 4.6, 4.15, 3.85, 0.5, 0.3999999999999999, 4.1, 3.2000000000000006, 0.2999999999999998, 1.366666666666667, 1.35, 2.1333333333333333, 5.2, 3.3, 0.2999999999999998, 0.6000000000000001, 2.45, 2.65, 1.35, 2.7, 3.8, 2.85, 0.7000000000000002, 2.6, 3.85, 2.4000000000000004, 1, 3.85, 0.8500000000000001, 1.2, 0, 0.40000000000000036, 0.5, 1.8333333333333333, 3.1, 2.1750000000000003, 2.5, 2.6, 3.8, 3.9, 2.6, 3.85, 1.65, 0, 2.5, 3.85, 1.35, 0.6499999999999999, 0.7000000000000002, 3.6, 0.40000000000000036, 2.8333333333333335, 4.1, 1.35, 0.4666666666666666, 3.85, 0.3500000000000001, 1.8333333333333333, 2.2, 0.4, 2.4000000000000004, 1.55, 5.2, 2.6, 3.06, 2.6333333333333333, 4.7, 1, 4.15, 1.9000000000000001, 2.4000000000000004, 1.0333333333333334, 0, 2.1999999999999997, 2.05, 0.6000000000000001, 1.35, 1.45, 3.2249999999999996, 2.4250000000000007, 1.3500000000000003, 7, 3.5, 4.35, 7.3, 2.866666666666667, 2.25, 4.2, 3.85, 4.65, 1.4000000000000001, 2.1333333333333333, 0.2999999999999998, 1.1666666666666667, 2.55, 0.2999999999999998, 2.5, 1.9000000000000001, 2.6, 4.6000000000000005, 2.6, 3.0500000000000003, 2.6, 5.3, 0.6499999999999999, 1.35, 0.5, 3.1333333333333333, 2.9, 0.8500000000000001, 1.5, 2.7000000000000006, 2.1750000000000003, 3.1, 1.4000000000000001, 0.34999999999999987, 2.4000000000000004, 5.2, 1.1, 0.7000000000000002, 2.7, 1, 2.8, 2.6, 2.3666666666666667, 1, 0.8500000000000001, 2.45, 2.5, 2.2500000000000004, 0.8, 3.1999999999999997, 1.9, 3.8, 2.8499999999999996, 0.4666666666666666, 4.45, 3.8500000000000005, 5.050000000000001, 4.866666666666666, 2.4000000000000004, 2.7, 4.025, 1.9000000000000001, 5.2, 3.5666666666666664, 1, 3.8, 0.29999999999999993, 0.6000000000000001, 1.9000000000000001, 0.2999999999999998, 3.0500000000000003, 3.5999999999999996, 0.5, 0.4666666666666666, 4, 1, 2.85, 4, 0.2999999999999998, 0, 2.9, 2.45, 2.5, 3.5250000000000004, 2.75, 1.0999999999999999, 1.15, 2.025, 3.6999999999999997, 2, 1.15, 1.75, 3.1, 0.2999999999999998, 2.5, 1.35, 1, 1.9000000000000001, 0.3999999999999999, 3.1, 1.8333333333333333, 1.4000000000000001, 3.85, 2.8499999999999996, 0.7000000000000002];
+
+      array=[score_valies];
+      //var array = [         [ 100, 90, 110, 85, 96, 104, 120],       ];
+      selected_var_score=2;
+
+
+
+      var data = new google.visualization.DataTable();
+      
+      for (var j=0;j<array[0].length;j++){
+
+        data.addColumn('number', 'x'+j);
+      }
+
+      data.addColumn({id:'max', type:'number', role:'interval'});
+      data.addColumn({id:'min', type:'number', role:'interval'});
+      data.addColumn({id:'firstQuartile', type:'number', role:'interval'});
+      data.addColumn({id:'median', type:'number', role:'interval'});
+      data.addColumn({id:'thirdQuartile', type:'number', role:'interval'});
+      data.addColumn({id:'this_score', type:'number', role:'interval'});
+
+      data.addRows(getBoxPlotValues(array,selected_var_score));
+
+
+      function getBoxPlotValues(array,selected_var_score) {
+
+        var c = array[0].length;
+        console.log("aa")
+        for (var i = 0; i < array.length; i++) {
+          console.log("bb")
+          var arr = array[i].slice(1).sort(function (a, b) {
+            return a - b;
+          });
+
+          var max = arr[arr.length - 1];
+          var min = arr[0];
+
+          array[i][c] = max;
+          array[i][c+1] = min
+          array[i][c+2] = Quartile(arr, 0.25);//firstQuartile;
+          array[i][c+3] = Quartile(arr, 0.5);//median;
+          array[i][c+4] = Quartile(arr, 0.75);//thirdQuartile;
+          array[i][c+5] = selected_var_score
+        }
+        return array;
+      }
+
+          function Quartile(data, q) {
+  data=Array_Sort_Numbers(data);
+  var pos = ((data.length) - 1) * q;
+  var base = Math.floor(pos);
+  var rest = pos - base;
+  if( (data[base+1]!==undefined) ) {
+    return data[base] + rest * (data[base+1] - data[base]);
+  } else {
+    return data[base];
+  }
+}
+
+function Array_Sort_Numbers(inputarray){
+  return inputarray.sort(function(a, b) {
+    return a - b;
+  });
+}
+
+
+
+      var options = {
+          title:'Box Plot',
+          height: 500,
+          legend: {position: 'none'},
+          hAxis: {
+            gridlines: {color: '#fff'}
+          },
+          lineWidth: 0,
+          series: [{'color': '#D3362D'}],
+          intervals: {
+            barWidth: 1,
+            boxWidth: 1,
+            lineWidth: 2,
+            style: 'boxes'
+          },
+          interval: {
+            max: {
+              style: 'bars',
+              fillOpacity: 1,
+              color: '#777'
+            },
+            min: {
+              style: 'bars',
+              fillOpacity: 1,
+              color: '#777'
+            },
+            this_score: { 'style':'points', 'color':'#8B0000', 'pointSize': 10,
+            'lineWidth': 0, 'fillOpacity': 1 }
+          }
+      };
+
+      var chart = new google.visualization.LineChart(document.getElementById(selector_id));
+
+      chart.draw(data, options);
+    }
+
+*/
+
+      /*
+
+
+
+
+        score_valies=[["Score"],[4],[2.75],[1.3500000000000003],[1],[5.2],[2.5],[0.40000000000000036],[2.75],[2.75],[1.55],[0.8500000000000001],[1.6],[2.766666666666667],[2.8666666666666667],[2.1750000000000003],[2.3000000000000003],[1.3250000000000002],[3.8],[3.5999999999999996],[3.325],[2.6500000000000004],[3.5000000000000004],[0.5666666666666665],[0.6499999999999999],[0.2999999999999998],[1.65],[3.1],[5.2],[2.8],[0],[2.6],[5.3],[5.2],[0.2999999999999998],[3.1],[1.6],[2.7],[2.6999999999999997],[1.9000000000000001],[2.8000000000000003],[1.65],[4],[2.25],[3.15],[4.6000000000000005],[0.7000000000000002],[1.2000000000000002],[2.8],[1.7],[0.8333333333333334],[3.5],[5.075],[2.2750000000000004],[2.45],[2.3],[2.1999999999999997],[1.9000000000000001],[1.9000000000000001],[3.85],[3.5],[2.65],[2.62],[1.9],[4.1],[3.6],[2.5],[2.5],[4.6],[4.15],[3.85],[0.5],[0.3999999999999999],[4.1],[3.2000000000000006],[0.2999999999999998],[1.366666666666667],[1.35],[2.1333333333333333],[5.2],[3.3],[0.2999999999999998],[0.6000000000000001],[2.45],[2.65],[1.35],[2.7],[3.8],[2.85],[0.7000000000000002],[2.6],[3.85],[2.4000000000000004],[1],[3.85],[0.8500000000000001],[1.2],[0],[0.40000000000000036],[0.5],[1.8333333333333333],[3.1],[2.1750000000000003],[2.5],[2.6],[3.8],[3.9],[2.6],[3.85],[1.65],[0],[2.5],[3.85],[1.35],[0.6499999999999999],[0.7000000000000002],[3.6],[0.40000000000000036],[2.8333333333333335],[4.1],[1.35],[0.4666666666666666],[3.85],[0.3500000000000001],[1.8333333333333333],[2.2],[0.4],[2.4000000000000004],[1.55],[5.2],[2.6],[3.06],[2.6333333333333333],[4.7],[1],[4.15],[1.9000000000000001],[2.4000000000000004],[1.0333333333333334],[0],[2.1999999999999997],[2.05],[0.6000000000000001],[1.35],[1.45],[3.2249999999999996],[2.4250000000000007],[1.3500000000000003],[7],[3.5],[4.35],[7.3],[2.866666666666667],[2.25],[4.2],[3.85],[4.65],[1.4000000000000001],[2.1333333333333333],[0.2999999999999998],[1.1666666666666667],[2.55],[0.2999999999999998],[2.5],[1.9000000000000001],[2.6],[4.6000000000000005],[2.6],[3.0500000000000003],[2.6],[5.3],[0.6499999999999999],[1.35],[0.5],[3.1333333333333333],[2.9],[0.8500000000000001],[1.5],[2.7000000000000006],[2.1750000000000003],[3.1],[1.4000000000000001],[0.34999999999999987],[2.4000000000000004],[5.2],[1.1],[0.7000000000000002],[2.7],[1],[2.8],[2.6],[2.3666666666666667],[1],[0.8500000000000001],[2.45],[2.5],[2.2500000000000004],[0.8],[3.1999999999999997],[1.9],[3.8],[2.8499999999999996],[0.4666666666666666],[4.45],[3.8500000000000005],[5.050000000000001],[4.866666666666666],[2.4000000000000004],[2.7],[4.025],[1.9000000000000001],[5.2],[3.5666666666666664],[1],[3.8],[0.29999999999999993],[0.6000000000000001],[1.9000000000000001],[0.2999999999999998],[3.0500000000000003],[3.5999999999999996],[0.5],[0.4666666666666666],[4],[1],[2.85],[4],[0.2999999999999998],[0],[2.9],[2.45],[2.5],[3.5250000000000004],[2.75],[1.0999999999999999],[1.15],[2.025],[3.6999999999999997],[2],[1.15],[1.75],[3.1],[0.2999999999999998],[2.5],[1.35],[1],[1.9000000000000001],[0.3999999999999999],[3.1],[1.8333333333333333],[1.4000000000000001],[3.85],[2.8499999999999996],[0.7000000000000002]]
+        var datatoplot = google.visualization.arrayToDataTable(score_valies,false);
+        
+        plotcolor="#166956"
+        var options = {
+            "title":"Histograme of impact score over all protein residues",
+            "height":350, "width":620, "legend":{"position":"none"}, 
+            "chartArea":{"right":"10","left":"50","top":"50","bottom":"60"},
+            hAxis: {title: "Score"},vAxis: {title: "Frequency"},
+            colors:[plotcolor]
+
+        };
+
+        
+        var chart = new google.visualization.Histogram(document.getElementById('chart_div'));
+
+        
+        chart.draw(datatoplot, options);   
+console.log(d3.select("svg"))    
+var svg = d3.select("svg g g g");
+console.log(svg)
+d3.select("svg")
+    .append('line') 
+    .attr('id', 'lineId')
+    .attr("class","protscoretooltip")
+    .attr('style', 'stroke:rgb(0,0,0); stroke-width:3;')
+    .attr('x1', chart.getChartLayoutInterface().getXLocation(thisscore))
+    .attr('y1', chart.getChartLayoutInterface().getChartAreaBoundingBox().top)
+    .attr('x2', chart.getChartLayoutInterface().getXLocation(thisscore))
+    .attr('y2', chart.getChartLayoutInterface().getChartAreaBoundingBox().height + chart.getChartLayoutInterface().getChartAreaBoundingBox().top)
+    .append("title")
+      .append("text")
+              .text("Obtained score");
+
+d3.select("svg g g g")
+    .append('rect') 
+    .attr('id', 'rectId')
+    .attr('x',  chart.getChartLayoutInterface().getXLocation(min))
+    .attr('y',  chart.getChartLayoutInterface().getChartAreaBoundingBox().top)
+    .attr("width",chart.getChartLayoutInterface().getXLocation(max) - chart.getChartLayoutInterface().getXLocation(min))
+    .attr("height",chart.getChartLayoutInterface().getChartAreaBoundingBox().height )
+    .attr("fill","#044B94") 
+    .attr("opacity","0.4")
+    .append("title")
+      .append("text")
+              .text("Scores in selected mutation")
+      }*/
+    });
+  </script>
+  <!-- Flare plots -->
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="{% static 'view/fplot2/docs/css/flareplot-main.css' %}"
+  />
+  <script src="{% static 'view/fplot2/d3.v3.min.js' %}"></script>
+  <script src="{% static 'view/fplot2/docs/js/flareplot-main.js' %}"></script>
+  <!-- D:< -->
+
+  <!-- End Flare plots -->
+  {% endblock %}
+</body>

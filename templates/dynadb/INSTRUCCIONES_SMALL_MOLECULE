@@ -1,0 +1,36 @@
+
+This form has been conceived for being filled in a server-assisted fashion. Nevertheless, the user must provide a minimal amount of information.
+
+The Small molecule form has been created for obtaining the relevant information about all the non-protein molecules involved in the simulation. Therefore, every non-protein molecule in the simulation should be described in a Small Molecule form item. 
+
+Remember the colour code in the fields:
+White-coloured fields in the form must be manually filled. (Note that the "PubChem cid" and the "ChEMBL ID" fields are white-coloured but can be automatically retrieved)
+If the "The compound is not available in PubChem and ChEMBL" field is checked "PubChem search settings" and "ChEMBL search settings" are disabled. ######(DEBERIAMOS CAMBIAR EL COLOR)
+Red-coloured fields will be automatically filled by clicking buttons in the form. 
+Grey-coloured fields do not apply for being filled for this specific molecule. The "PubChem cid" and the "ChEMBL ID" fields are grey-coloured if the "The compound is not available in PubChem and ChEMBL" field is checked.
+Note that protein information filled in the form can be deleted by clicking the "Clean Protein" button at the bottom of the square enclosing this information.
+
+The way of filling an item form is very straightforward as the number of fields to be filled is really small. This is a three-step proccess. 
+
+1- At first, the fields "Type" and "Important for the biological process" must be filled. These two fields provide information about the role of the molecule in the simulation, i.e. it is involved in the protein complex as a relevant modulator???, it has been characterized in the X-ray structure (both options applies for "important for the biological process") or it is just a bulk component of the simulation created through computational tools (not "important for the biological process").
+
+2- Once this crucial information has been provided, the geometry of the molecule must be uploaded in either a .sdf or .mol format. After uploading the file, a 2D representation of the molecule as well as a set of fields (InChI and Open SMILES-related fields) obtained from this structure are automatically filled. This information must be thoroughly checked in terms of protonation state, tautomery or isotopical composition (if needed). Additionally a brief description of the molecule can be provided in the field "Description".
+
+3- The next step involves to search information about the molecule in the external databases PubChem and ChEMBL by clicking the "Retrieve data" button. Each request takes nearly a minute and, for complex molecules, it can be a trial-error procedure. Pay attention to the "PubChem search settings" and "ChEMBL search settings". The default configuration is expected to work about 80% of the times. Nevertheless, it has been found that "Parent Molecule" retrieve method fails when the standard molecule is being retrieved. In this case the "Closest match" retrieve method must be tried.  If either the PubChem cid or the ChEMBL ID are known, the user can provide those codes in the corresponding field and click the "Update" button near the known field to retrieve the remaining information in the form, instead of search through both databases.
+
+If the user is aware of the absence of the current molecule in both databases it is recommended to check the "The compound is not available in PubChem and ChEMBL" field. This involves to fill the "Name", "IUPAC name" and "Aliases" fields manually but saves the time it takes to unsuccessfully connect to both DB. 
+
+
+Multiple Molecules in the Model.
+
+You can add extra molecule items to this form by clicking the "+ Add Molecule" button. Extra items can be deleted from the form by clicking the "- Delete Protein" button. 
+
+Submission
+
+Every molecule in the system can be submitted separatelly by clicking the "Submit Molecule" button enclosed within the square containing this molecule information. Aditionally, all the molecules in the system can be submitted together by clicking the "Submit All Molecules" button in the bottom of the submission form.
+
+
+
+
+
+

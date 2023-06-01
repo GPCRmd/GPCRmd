@@ -1,0 +1,443 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+ <div id="left" class="col-md-12 affix"  style="padding: 0px 0px 0px 0px; width:350px" data-spy="affix" >
+{% if model_id %}
+{% include "dynadb/DYNAMICSreuse_description.html" %} 
+{% else %}
+{% include "dynadb/DYNAMICS_description.html" %} 
+                            </div>
+{% endif %}
+
+
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div id="pdynform"class="col-md-7 "> 
+<<<<<<< HEAD
+  <div id="dynform" class="col-md-12 panel "> 
+    <div class="panel-body" style="margin-top:-2.5%">
+            <div id="dynnumb" style="text-align:right;color:black" > 
+    <!--            <h4>SIMULATION #1</h4> -->
+	    </div>
+		<div class=row id='PRUEBA'>
+ 			<div style="text-align:center;height:50px;background-color:AliceBlue;" class="col-md-12 panel panel-primary">
+             			<h4 style="margin-top: 10px;margin-left:-5px;margin-right:-5px;font-size:20px;color:DarkBlue"><b> Simulation Details and Files</b></h4>
+            		</div>
+		</div>
+
+     <div class="col-md-12 panel panel-primary">
+		<div class=row id='PRUEBA'><br>
+                <div style="height:60px" class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Simulation specifications</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+		</div>
+		<div class="row">
+ 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_id_dynamics_methods"> <a title="Method: Classification of the simulation according to the computational method."> Method: </a> </label></div>
+			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px;height:26px">
+                                      {% for i in qDMeth.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+		       <!-- 	<option value="1">Molecular Mechanics (MM)               </option>
+		        	<option value="2">Quantum Mechanics/Molecular Mechanics </option>
+		        	<option value="3">NMR                           </option>
+        			<option value="4">Monte Carlo simulations </option>
+        			<option value="5">Molecular Mechanics Markov State Model </option>
+       				<option value="6">Metadynamics              </option>
+		        	<option value="7">Umbrella sampling          </option>
+		        	<option value="8">Other MM biased methods    </option>
+		        	<option value="9">MM scaled potentials       </option> -->
+	        	</select></div>
+		<br></div>
+
+	        <div class="row">
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_software"> <a title="Software: Name of the software used to compute the simulations (without version)."> Software: </a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:300px" placeholder=" NAMD" /></td></tr></div>
+		<br></div>	
+
+	        <div class="row">
+	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3" ><tr><th><label for="id_sversion" style="margin-right:-30px"><a style="margin-right:-20px;width:130px" title="Software version: Version of the software used to compute the simulations.">Software version:</a></label></th></div>
+			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300px"  placeholder=" 2.11"  /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_ff"> <a title="Force Field: Name of the force-field used to compute the simulations (without version)."> Force Field: </a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_ff" maxlength="20" name="ff" type="text" style="width:300px" placeholder=" CHARMM "  /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_ffversion"> <a title="FF version: Version of the force field used to compute the simulations."> FF version: </a> </label></th> </div>
+			<div class="col-md-6"><td><input id="id_ffversion" maxlength="15" name="ffversion" type="text" style="width:300px"  placeholder=" 36  "/></td></tr></div>
+		<br></div>
+
+
+	        <div class="row">
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_assay_types"><a title="Assay type: Classification of simulations according to an equivalent experimental assay."> Assay type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px;height:26px"  placeholder="  " > 
+                                      {% for i in qAT.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+			     <!--   <option value="1">Orthosteric binding/unbinding</option>
+			        <option value="2">Activation/Inactivation/Modulation</option>
+			        <option value="3">Oligomerization</option>
+			        <option value="4">Allosteric binding/unbinding</option>
+			        <option value="5">Allosteric modulation</option>
+			        <option value="6">G-protein coupling/uncoupling</option>
+			        <option value="7">Arrestin coupling/uncoupling</option>
+		        	<option value="8">Protein stability</option> 
+			        <option value="9">Others</option> -->
+		        </select></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_dynamics_membrane_types"><a title="Membrane type: Type of membrane used in the simulation."> Membrane type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:300px;height:26px"  placeholder="  " ><br>
+                                      {% for i in qDMT.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+        	<!--		<option value="1">Implicit</option>
+			        <option value="2">Homogeneous</option>
+			        <option value="3">Heterogeneous</option> -->
+		        </select></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_dynamics_solvent_types"><a title="Solvent type: Type of solvent used in the simulation. ">Solvent type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:300px;height:26px"  placeholder="  " >
+                                      {% for i in qDST.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+			  <!--  <option value="1">Implicit</option>
+		        	<option value="2">TIP3P</option>
+			        <option value="3">TIP4P</option>
+		        	<option value="4">TIPS</option>
+			        <option value="5">SPC</option>
+			        <option value="6">SPC/E</option>
+			        <option value="7">Other</option> -->
+	        	</select></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_solvent_num"><a title="Solvent num: Number of solvent molecules">Solvent num:</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_solvent_num" name="solvent_num" type="number" style="width:300px"  placeholder=" 10000 " /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+	        	 <div class="col-md-1"style="height:85px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Additional Information: Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
+			<div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" placeholder=" MSM binding kinectic study. " ></textarea></div>
+		</div>
+</div>
+
+     <div class="col-md-12 panel panel-primary">
+		<div class=row id='PRUEBA'><br>
+                <div style="height:60px" class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Upload the simulation files</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+		</div>
+
+		<div class=row id='PRUEBA'>
+        		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_coor"><a title="Coordinate file: Upload the initial coordinates file of the system in PDB format (.pdb) max 50 MB">Coordinate file </a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_coor" name="coor" type="file" accept="file_extension|.pdb"/></td></tr></div>
+      		</div>
+
+		<div class=row id='PRUEBA'>
+        		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_top"><a title="Topology file: Upload the file describing the topology of your system. Top (.psf, .prmtop, .top, other) max 50 MB"> Topology file</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_top" name="top" type="file" accept="file_extension|.rtf,.psf,.pmtop,.top" /></td></tr></div>
+      		</div>
+
+		<div class=row id='PRUEBA'>
+        		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_traj"><a title="Trajectory files: Upload the files containing the evolution of the system coordinates with time. Traj (.dcd, .xtc) max. 2 GB"> Trajectory files</a> </label></th></div>
+
+
+			<div class="col-md-6"><td><input id="id_traj" name="traj" type="file" accept="file_extension|.dcd,.xtc" multiple/></td></tr></div> 
+
+
+     		</div>
+
+		<div class=row id='PRUEBA'>
+        		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_parm"><a title=" Simulation parameters: Upload the file containing the force field parameters. Param (.tar.gz,.tgz) max 50 MB"> Simulation parameters</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_parm" name="parm" type="file" accept="file_extension|.tar.gz,.tgz" /></td></tr></div>
+      		</div>
+
+		<div class=row id='PRUEBA'>
+        		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_other"><a title="Others: Additional files needed for rerunning the simulation. Include here individual topology files and parameters that are not published elsewhere (e.g. resulting from optimitzation). max 50 MB "> Others </a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_other" name="other" type="file" /></td></tr></div>
+      		</div>
+
+ 			<div style="height:50px;text-align:right;margin-right:5%">
+=======
+  <div id="dynform" class="col-md-12 panel panel-primary"> 
+    <div class="panel-body">
+            <div id="dynnumb" style="height:35px;text-align:right;color:black" > 
+    <!--            <h4>SIMULATION #1</h4> -->
+	    </div>
+
+
+		<div class=row id='PRUEBA'>
+ 			<div style="text-align:center">
+             			<h4>Upload the Simulation Files</h4>
+            		</div>
+		</div><br>
+		{% for file_type,file_type_attr in file_types.items %}
+               <div class="row">
+                    <div class="col-md-1" style="height:30px"></div>
+                    <iframe id="id_{{file_type}}_iframe" src="./upload_files/{% if file_type == "traj" %}traj/{%endif%}?file_type={{file_type}}" class="col-md-12" frameBorder=0  style="width:100%;height:60px;margin:0px;padding:0px;border:0px">
+                        <div class="col-md-3" style="height:45px">
+                            <label for="id_{{file_type}}"><a title="{{file_type_attr.long_name}}: {{file_type_attr.description}}">{{file_type_attr.long_name}}</a> </label>
+                        </div>
+                        <div class="col-md-6"><a href="./upload_files/{% if file_type == "traj" %}traj/{%endif%}?file_type={{file_type}}&new_window=1" noreferrer noopener target="_blank">Use this link to upload your {{file_type_attr.long_name|lower}}.</a></div>
+                    </iframe>
+               </div>
+<!--               <br>-->
+               {%endfor%}
+               
+
+      		<br>
+                
+ 			<div style="text-align:right;margin-right:5%">
+>>>>>>> 444f55e3c0f7cea9ddb8cfbb97da76d0f5afd6b3
+					<button onclick="addFields()"> Validate </button> 
+		        </div> 		
+     </div> 		
+
+
+     <div class="col-md-12 panel panel-primary">
+		<div class=row id='PRUEBA'><br>
+                <div style="height:60px" class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Simulation components</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+		</div>
+
+ 			<div style="text-align=center">
+                        <table  style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
+                                <thead>  
+				<tr><th style="width:80px;text-align:center"><label for="id_formc-0-resname"><a title="Resname: Resname present on simulation topology file. Names from pdb are preferred but not mandatory. ">Resname</a></label></th>	
+					<th style="width:80px;text-align:center"><label for="id_formc-0-molecule"><a title="Ordinal number corresponding to the records containing sequence information that was provided in the small molecule form.  ">Molecule</a></label></th>
+					<th style="width:80px;text-align:center;display:none"><label for="id_formc-0-id_molecule"><a title="Mol ID: ID of the chemical model (“molecule”) present in  “dynamics”. ">Mol ID</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_formc-0-name"><a title="Mol name: Name of the molecule">Mol name</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_formc-0-numberofmol"><a title="Number of molecules: Number of molecules belonging to a specific residue type present on simulation topology. ">Num of mol</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_formc-0-type"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
+                                </thead>
+
+<<<<<<< HEAD
+                                <tbody id="pElement1-0"><tr id="Element1"><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ"/></td>
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="text" placeholder=" 1 "  /></td>
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_id_molecule" type="text" readonly placeholder="1" name="id_molecule">
+						</select></td>
+					<td style="padding:5px 5px 5px 5px"><input id="id_name" maxlength="60" name="name" type="text" style="width:70px" placeholder="Clozapine"  /></td>
+					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px" placeholder=" 2" /></td>
+					<td style="padding:5px 5px 5px 5px"><select id="id_type" name="type" style="width:60px;height:23.24px">
+                                      {% for i in ddC.Meta.model.MOLECULE_TYPE %}
+                                        <option value="{{i.0}}"> {{i.1}}</option>
+                                      {% endfor %}
+						</select></td></tr>
+=======
+                                <tbody id="pElement1">
+                              {% for mc in data %}
+                                <tr id="Element1-{{forloop.counter0}}">
+                                      
+                                      <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-resname" maxlength="4" name="formc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ" {% if mc.readonly %} readonly {%endif%} value="{{mc.resname}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-molecule" maxlength="4" name="formc-{{forloop.counter0}}-molecule" type="text" placeholder=" 1 " readonly value="{{mc.int_id}}"/></td>
+                                       <td style="padding:5px 5px 5px 5px;display:none"><input style="width:70px" id="id_formc-{{forloop.counter0}}-id_molecule" name="formc-{{forloop.counter0}}-id_molecule" type="hidden" readonly placeholder="   " value="{{mc.id_molecule}}"></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-name" maxlength="60" name="formc-{{forloop.counter0}}-name" type="text" style="width:140px" readonly placeholder=" Clozapine" value="{{mc.name}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-numberofmol" min="0" name="formc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{{mc.numberofmol}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-typemc" type="text" readonly name="formc-{{forloop.counter0}}-typemc" style="width:60px" value="{{mc.type}}"></td></tr>
+                                                
+                                
+                              {% endfor %}
+>>>>>>> 444f55e3c0f7cea9ddb8cfbb97da76d0f5afd6b3
+				</tbody>
+			</table>
+
+                      {%if data %}
+			<br>
+ 			<div style="text-align:center;height:40px">
+	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
+			     		<button type="button" id="id_add_element" type="button" style="height:30px;;margin: 0px 0px 0px 0px;width:160px">+ Add Component</button></div>
+	 			<div class="col-md-4" style="text-align:center">
+			     		<button type="button" id="id_del_element" type="button" style="height:30px;margin: 0px 0px 0px 0px;width:160px">- Remove Component</div>
+		        </div>
+                        <br>
+<<<<<<< HEAD
+ 		
+ 			<div style="height:50px;text-align:right;margin-right:5%">
+					<button onclick="addFields()"> Validate </button> 
+		        </div> <!-- <br><br> 		
+=======
+                        <br>
+                        <br>
+ 			<div style="text-align:right;margin-right:5%">
+                                       <div class="col-md-2" style="text-align:right;float:right;"><button id ="id_check_pdb_mol" type="button"> Validate </button></div>
+					 <div class="col-md-4" style="text-align:right;float:right;margin-right:-15px"><a id="id_logfile"  name="logfile" href="" hidden target="_blank">Download log file.</a></div>
+                                        
+                                        <br>
+                                        <div class="col-md-6" style="text-align:right;float:right;margin-right:-15px"><a id="id_pdbchecker_tar_gz" name="pdbchecker_tar_gz" hidden href="" target="_blank">Download pdbchecker results.</a></div>
+                                        <div class="col-md-2" style="text-align:right;float:right;"></div>
+		        </div>
+		         {% else %}
+                        <p style="text-align:center;">No molecules found. Please, go back to step 2.</p>
+                        {% endif %}
+                        <br>
+		        <!-- <br><br> 		
+>>>>>>> 444f55e3c0f7cea9ddb8cfbb97da76d0f5afd6b3
+
+                        <div style="text-align:center">
+	 			<div class="col-md-4" style="text-align:center">
+				     	<input type="button" value="+ Add Dynamics"  style="height:30px;width:160px" onClick="addDynamics();">
+			        </div> 		
+	 			<div class="col-md-4" style="text-align:center">
+				     	<input type="button" value="- Remove Dynamics"  style="height:30px;width:160px" onClick="delDynamics();">
+			        </div> 		
+ 				<div class="col-md-4" style="text-align:center">
+			     		<input type="button" value="Clone Dynamics"  style="height:30px;width:160px" onClick="cloneDynamics();">
+		       		</div> 
+			</div>	<br><br> 		-->
+                <div class=row id='PRUEBA'>
+                        <div style="text-align:center">
+                                <h4><br>Simulation Details</h4>
+                        </div>
+                </div><br>
+
+                <div class="row">
+                        <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_id_dynamics_methods"> <a title="Method: Classification of the simulation according to the computational method."> Method: </a> </label></div>
+                        <div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px">
+                                      {% for i in qDMeth.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+                       <!--     <option value="1">Molecular Mechanics (MM)               </option>
+                                <option value="2">Quantum Mechanics/Molecular Mechanics </option>
+                                <option value="3">NMR                           </option>
+                                <option value="4">Monte Carlo simulations </option>
+                                <option value="5">Molecular Mechanics Markov State Model </option>
+                                <option value="6">Metadynamics              </option>
+                                <option value="7">Umbrella sampling          </option>
+                                <option value="8">Other MM biased methods    </option>
+                                <option value="9">MM scaled potentials       </option> -->
+                        </select></div>
+                <br></div>
+
+                <div class="row">
+                         <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_software"> <a title="Software: Name of the software used to compute the simulations (without version)."> Software: </a> </label></th></div>
+                        <div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:300px" placeholder=" NAMD" /></td></tr></div>
+                <br></div>      
+
+                <div class="row">
+                         <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_sversion"> <a title="Software version: Version of the software used to compute the simulations."> Software version: </a></label></th></div>
+                        <div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300p"  placeholder=" 2.11"  /></td></tr></div>
+                <br></div>
+
+                <div class="row">
+                         <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_ff"> <a title="Force Field: Name of the force-field used to compute the simulations (without version)."> Force Field: </a> </label></th></div>
+                        <div class="col-md-6"><td><input id="id_ff" maxlength="20" name="ff" type="text" style="width:300px" placeholder=" CHARMM "  /></td></tr></div>
+                <br></div>
+
+                <div class="row">
+                         <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_ffversion"> <a title="FF version: Version of the force field used to compute the simulations."> FF version: </a> </label></th> </div>
+                        <div class="col-md-6"><td><input id="id_ffversion" maxlength="15" name="ffversion" type="text" style="width:300px"  placeholder=" 36  "/></td></tr></div>
+                <br></div>
+
+
+                <div class="row">
+                         <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_assay_types"><a title="Assay type: Classification of simulations according to an equivalent experimental assay."> Assay type:</a> </label></th></div>
+                        <div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px"  placeholder="  " > 
+                                      {% for i in qAT.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+                             <!--   <option value="1">Orthosteric binding/unbinding</option>
+                                <option value="2">Activation/Inactivation/Modulation</option>
+                                <option value="3">Oligomerization</option>
+                                <option value="4">Allosteric binding/unbinding</option>
+                                <option value="5">Allosteric modulation</option>
+                                <option value="6">G-protein coupling/uncoupling</option>
+                                <option value="7">Arrestin coupling/uncoupling</option>
+                                <option value="8">Protein stability</option> 
+                                <option value="9">Others</option> -->
+                        </select></td></tr></div>
+                <br></div>
+
+                <div class="row">
+                         <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_dynamics_membrane_types"><a title="Membrane type: Type of membrane used in the simulation."> Membrane type:</a> </label></th></div>
+                        <div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:300px"  placeholder="  " ><br>
+                                      {% for i in qDMT.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+                <!--            <option value="1">Implicit</option>
+                                <option value="2">Homogeneous</option>
+                                <option value="3">Heterogeneous</option> -->
+                        </select></td></tr></div>
+                <br></div>
+
+                <div class="row">
+                         <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_dynamics_solvent_types"><a title="Solvent type: Type of solvent used in the simulation. "> Solvent type:</a> </label></th></div>
+                        <div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:300px"  placeholder="  " >
+                                      {% for i in qDST.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+                          <!--  <option value="1">Implicit</option>
+                                <option value="2">TIP3P</option>
+                                <option value="3">TIP4P</option>
+                                <option value="4">TIPS</option>
+                                <option value="5">SPC</option>
+                                <option value="6">SPC/E</option>
+                                <option value="7">Other</option> -->
+                        </select></td></tr></div>
+                <br></div>
+
+                <div class="row">
+                         <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_solvent_num"><a title="Solvent num: Number of solvent molecules">Solvent num:</a> </label></th></div>
+                        <div class="col-md-6"><td><input id="id_solvent_num" name="solvent_num" type="number" min="0" style="width:300px"  placeholder=" 10000 " /></td></tr></div>
+                <br></div>
+                
+                <div class="row">
+                        <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_timestep"><a title="Time step: Simulation integration step (fs).">Time step:</a> </label></th></div>
+                        <div class="col-md-2"><td><input id="id_timestep" name="timestep" type="text" style="width:100%" min="0" placeholder="4" /></td></tr></div>
+                <br></div>
+                <div class="row">
+                        <div class="col-md-1" style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_delta"><a title="Delta: Time lapse between frames in a trajectory file (ns).">Delta:</a> </label></th></div>
+                        <div class="col-md-2"><td><input id="id_delta" name="delta" type="text" style="width:100%" placeholder="0.1" /></td></tr></div>
+                <br></div>
+
+                <div class="row">
+                         <div class="col-md-1" style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Additional Information: Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
+                        <div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" placeholder=" MSM binding kinectic study. " ></textarea></div>
+                <br></div><br>
+
+     
+     
+     
+     </div>
+     </div> 		
+        <br> <th><input type="submit" value="Submit" /> </th><br>   
+<br>
+     </div>
+</form>
+  </div> 
+
+</div>
+<div class="col-md-7 col-md-offset-4"> 
+      <div class="col-md-12 panel panel-primary">
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href=/dynadb/submitted/{{submission_id}}/  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span>  Submission </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/model/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 3: Complex Information </a>
+      	  </div>
+      </div>
+  </div>
+{% endblock content %}
+
+
+
+{% block addon_js %}
+    <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+    <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+    <script src="{% static 'dynadb/pdbCheckMolDyn.js' %}"></script>
+    <script src="{% static 'dynadb/addSimcomp.js' %}"></script>
+    <script src="{% static 'dynadb/cloneDynamics.js' %}"></script>
+
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "home/base.html" %} 
+{% load static %} 
+
+<!-- Form styles -->
+{% block addon_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'dynadb/newform_styles.css' %}" />
+{% endblock %}
+
+<!--Form javascripts -->
+{% block addon_js %}
+<script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+<script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+<script src="{% static 'dynadb/searchtop.js' %}"></script>
+<script src="{% static 'dynadb/required_fields.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="regForm row">
+<!--The main submission form tag. All the input tags refering to it will have form="mainform"-->
+  {% comment %} </form> {% endcomment %}
+    <div class="col-md-10 col-md-offset-1">
+      <div class="col-md-12 panel regPanel panel-primary">   
+        <div class="panel-body">
+          <h2 class="panel-heading">Step 5: References and authors</h2>
+      </div> 
+      </div>
+      <!-- Main Files div -->
+      <div id="main_prot_div" action="/dynadb/step4_submit/{{submission_id}}/">
+        <div class='col-md-12 panel panel-primary panel-body'>
+          <h4>Please, introduce the information concerning the authorship, publication and references of this MD simulation. </h4>
+        </div>
+        <div class='col-md-12 alert-info' id="ref_info">
+          <p><b>IMPORTANT:</b> Should your simulation not be publicated yet, please skip this step. You will still be able to fill it later on.</p>
+        </div>      
+        <div class="col-md-12 panel panel-primary panel-body">    
+        <div style="text-align: center;">
+          <div class="align_right" style="display: inline-grid;padding: 3px;width: 500px;">
+            <form id="retreiveform" action="/dynadb/doi_info/{{submission_id}}/" style="width:100%">
+              <input id="doi_in" name="doi_in" value="" type="text" placeholder="e.g. 10.1038/s41592-020-0884-y" style="margin: 5px;">
+              <input type="submit" id="retrieve_doi" value="Retrieve" style="margin: 5px;">
+            </form>
+            <div id="error_doi" class="error_loading alert alert-danger">
+            </div>
+            <div id="loading_doi" class="error_loading">
+              <p>Retrieving information...<img id="loading_icon" src="/static/view/images/loading-gear.gif" height="18px"></p><p></p>
+            </div>
+          </div>
+          <hr>
+          <form class="row" method="post" id="mainform" onsubmit="return createAllErrors('mainform','loading_submit')" action="/dynadb/step5_submit/{{submission_id}}/" enctype="multipart/form-data">
+             {% csrf_token %}
+            <div class=row id='PRUEBA'>
+              <input id="submission_id" maxlength="30" name="submission_id" type="hidden" style="width:180px" placeholder="" value="{{submission_id}}" />
+                {% for field in fdbREFF %}
+                <div class="row">
+                  <div class="col-md-3 label_div">
+                    <label for="id_name">
+                      <p>{{ field.label }}:</p>
+                    </label>
+                  </div>
+                  <div class="col-md-6">
+                    {{field.as_widget}}{{field.errors }}
+                  </div>
+                  <br>
+                </div>
+                {% endfor %}
+                
+            </div>
+          </form>
+        </div>
+      </div>    
+    </div>
+  </div>
+  {% include "dynadb/submission_steps_menu.html" %}
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+    var subm_id = window.location.pathname.split('/')[3];
+    // When the "retreive" button of the doi searcher is clicked, activate this function to retrieve information and 
+      // put in the HTML entry fields
+      $("#retreiveform").submit(function(e) {
+          e.preventDefault(); // avoid to execute the actual submit of the form.
+          // 
+          var form = $(this);
+          var url = form.attr('action');
+          var errordiv = $("#error_doi"); 
+          var loadingdiv = $("#loading_doi");
+          var doi = $('#doi_in').val();
+          var input_data = {
+          'doi_in' : doi,
+          'submission_id' : subm_id,
+          }
+          errordiv.hide()
+          loadingdiv.show()
+          $.ajax({
+              url: url,
+              data: input_data,
+              // On success, replace prot entry's values by the ones obtained in the retrieved data
+              success: function(data){
+                  doi_data = JSON.parse(data)
+                  $("#id_doi").val(doi_data['doi'])
+                  $("#id_authors").val(doi_data['auth'])
+                  $("#id_title").val(doi_data['title'])
+                  $("#id_pmid").val(doi_data['pmid'])
+                  $("#id_journal_press").val(doi_data['journal'])
+                  $("#id_issue").val(doi_data['issue'])
+                  $("#id_volume").val(doi_data['volume'])
+                  $("#id_pages").val(doi_data['pages'])
+                  $("#id_pub_year").val(doi_data['year'])
+                  $("#id_url").val(doi_data['url'])
+              },
+              //Migth something go wrong, show an error message bellow the retreive button
+              error: function(){
+                  errordiv.html("<p>Error: something failed upon retrieving information for doi </p>")
+                  errordiv.show()
+              },
+              //Hide loading div when it is done
+              complete: function(){
+                  loadingdiv.hide()
+              }
+          });
+      });
+    //To add class format to input fields
+    $("form input").addClass("input_step")
+
+    //Alert on submit of this step
+    function conf(){
+      var con=confirm("Do you really want to finnish this submission? No further changes will be possible in the future.");
+      return(con)
+    }
+  });
+</script>
+
+
+
+
+{% endblock content %}
+

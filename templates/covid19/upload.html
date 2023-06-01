@@ -1,0 +1,207 @@
+<head>
+{% extends "covid19/base_covid19.html" %} 
+{% load static %} 
+{% block addon_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'covid19/css/base.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'covid19/css/upload.css' %}" />
+{% endblock %}
+
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+  <base href="your_domain/" target="_PARENT">
+
+</head>
+
+<body style="padding:20px 0">
+{% block content %} 
+
+
+ <!-- description column -->
+<div class="col-md-12 "> 
+
+   <div class="row pagetitle" >  
+       <div >
+          <h2  >Simulation Upload</h2>
+       </div> 
+   </div>
+
+  <div style="padding:0 40px;margin-top:20px">
+  <form enctype="multipart/form-data" method="post" action="{% url 'covid19:upload' %}">{% csrf_token %}
+      <!--<form action="{% url 'covid19:upload' %}" method="post">{% csrf_token %}
+      </form>-->
+
+        <!--<input type="hidden" name="file_type" value="title"/>-->
+    <div  class="row panel panel-primary paneldef"> 
+      <div class="panel-body">
+        <div> 
+          {% if form.non_field_errors %}
+            <div class="row cont_non_field_errors" > 
+              <div class="alert alert-danger alert-dismissible fade in" >
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+                         <div>
+                           {% for err in form.non_field_errors %}
+                              <p  class=text-danger>{{ err }}</p>
+                          {% endfor %}
+                         </div>
+              </div>
+
+            </div>
+          {% endif %}
+          <h4 >
+            Protein
+          </h4>
+          {% include "covid19/form_field_snippet.html" with field=form.uniprotkbac %}
+
+          {% include "covid19/form_field_snippet.html" with field=form.model_source %}
+          
+          {% include "covid19/form_field_snippet.html" with field=form.pdb_id %}
+
+          {% include "covid19/form_field_multiplesel_snippet.html" with field=form.final_prots %}
+        </div>
+      </div>
+    </div>
+
+    <div  class="row panel panel-primary paneldef"> 
+      <div class="panel-body">
+        <div> 
+          <h4 >
+            Ligand
+          </h4>
+          {% include "covid19/form_field_snippet.html" with field=form.has_lig %}
+
+          {{form.ligand_count}}
+          <span id="ligand_section" style="display:none">
+             <span id="ligand_fields"></span>
+           <div class="row" >
+             <div class="centered_btn">
+              <button type="button" data-target=".lig_addedfields" class="remove_field btn btn-default btn_lig">Remove ligand</button>
+              <button  data-fieldtype="ligand" type="button" class="add-another btn btn-default btn_lig">Add ligand</button>
+             </div>
+           </div>
+
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div  class="row panel panel-primary paneldef"> 
+      <div class="panel-body">
+        <div> 
+          <h4 >
+            Membrane
+          </h4>
+          {% include "covid19/form_field_snippet.html" with field=form.has_membrane %}
+
+          {{form.membrane_count}}
+          <span id="membrane_section" style="display:none">
+             <span id="membrane_fields"></span>
+           <div class="row" >
+             <div class="centered_btn">
+              <button  data-target=".memb_addedfields" type="button" class="remove_field btn btn-default btn_memb">Remove membrane molecule</button>
+              <button  data-fieldtype="membrane" type="button" class="add-another btn btn-default btn_memb">Add membrane molecule</button>
+             </div>
+           </div>
+
+          </span>
+
+
+
+        </div>
+      </div>
+    </div>
+
+    <div  class="row panel panel-primary paneldef"> 
+      <div class="panel-body">
+        <div> 
+          <h4 >
+            Author details
+          </h4>
+          {% include "covid19/form_field_snippet.html" with field=form.first_name %}
+
+          {% include "covid19/form_field_snippet.html" with field=form.last_name %}
+
+          {% include "covid19/form_field_snippet.html" with field=form.institution %}
+        </div>
+      </div>
+    </div>
+
+    <div  class="row panel panel-primary paneldef"> 
+      <div class="panel-body">
+        <div> 
+          <h4 >
+            Simulation details
+          </h4>
+          {% include "covid19/form_field_snippet.html" with field=form.dyn_name %}
+          
+          {% include "covid19/form_field_snippet.html" with field=form.delta %}
+
+          {% include "covid19/form_field_snippet.html" with field=form.timestep %}
+
+          {% include "covid19/form_field_snippet.html" with field=form.software %}
+
+          {% include "covid19/form_field_snippet.html" with field=form.sversion %}
+
+          {% include "covid19/form_field_snippet.html" with field=form.ff %}
+
+          {% include "covid19/form_field_snippet.html" with field=form.ffversion %}
+          
+          {% include "covid19/form_field_snippet.html" with field=form.description %}
+          </div>
+      </div>
+    </div>
+
+    <div  class="row panel panel-primary paneldef"> 
+      <div class="panel-body">
+        <div> 
+          <h4 >
+            Files
+          </h4>
+          {% include "covid19/form_field_snippet.html" with field=form.coord_file %}
+          
+          {% include "covid19/form_field_snippet.html" with field=form.traj_files %}
+          
+          {% include "covid19/form_field_snippet.html" with field=form.other_files %}
+
+
+        </div>
+      </div>
+    </div>
+
+   <div class="row" >
+     <div id="submit_btn" class="centered_btn">
+          <span id="warning_loading_time">
+            <div class="alert alert-warning alert-dismissible fade in" >
+              <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+              <strong>
+                <span class="glyphicon glyphicon-exclamation-sign"></span>
+                  Note:
+              </strong> Loading trajectory files may take a while.
+            </div>
+          </span>
+        <button class="btn btn-success btn-lg" type="submit">Upload</button>
+     </div>
+   </div>
+  </form>
+ </div>
+ </div>
+</div>
+
+
+{% endblock content %}
+{% block addon_js %} 
+
+<!-- From base.html -->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+<!-- END From base.html -->
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+<script  src="{% static 'covid19/js/upload.js' %}"></script>
+{% endblock %}
+</body>

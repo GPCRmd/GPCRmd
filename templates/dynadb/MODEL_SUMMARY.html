@@ -1,0 +1,203 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% block addon_css %}
+<style>
+  label {
+    cursor: pointer;
+    font-weight: normal
+  }
+
+  .ui-autocomplete {
+    max-height: 100px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+  }
+
+  /* IE 6 doesn't support max-height
+   * we use height instead, but this forces the menu to always be this tall
+   */
+  * html .ui-autocomplete {
+    height: 100px;
+  }
+
+  th {
+    width: 80px;
+    text-align: center;
+  }
+
+  td {
+    padding: 5px 5px 5px 5px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="regForm">
+  <form class="row" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+    <!-- description column -->
+    <div class="col-md-3 col-md-offset-1">
+      <div id="left" class="col-md-12" >
+        {% include "dynadb/MODEL_description.html" %}
+      </div>
+    </div>
+
+    <!-- middle column -->
+    <div id="ssform" class="col-md-6" >
+      <div id="sform" >
+        <div class="col-md-12 regPanel panel panel-primary" id="MODEL_BUTTON">
+          <h3 class="panel-heading">
+            {% if minisummary %} <b>Crystal-derived assembly</b> summary {%else%}Toggle the (<b>3</b>)
+            <b>Crystal-derived assembly</b> block{%endif%}</h3>
+        </div>
+
+        <div class="col-md-12 panel panel-primary" id="MODEL_BLOCK"
+          style="border-color:#555;background-color:rgba(200, 150, 200, 0.1);">
+
+          <div class="row" style="margin-top:30px">
+            <div class="col-md-1" style="height:30px"></div>
+            <div class="col-md-3"><label for="id_name"><a title="Choose a name for your complex"><p>Name:</p></a></label></div>
+            <div class="col-md-6"><input cols="40" id="id_name" type="text" name="name" rows="2"
+                placeholder="5-HT1B receptor in complex with Clozapine" {% if submission_id %}
+                value="{{p.values.0.name}}" readonly {%endif%} style="width:300px"></input></div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-1" style="height:30px"></div>
+            <div class="col-md-3"><label for="id_type"><a
+                  title="Complex Type: Type of structure that is modeled."><p>Type:</p></a></label></div>
+            <div class="col-md-6"><input id="id_type" maxlength="6" name="type" type="text" {% if submission_id %}
+                value="{{TypeM}}" readonly {% endif %} placeholder=" 4IAR.A" style="width:300px" /></div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-1" style="height:30px"></div>
+            <div class="col-md-3"><label for="id_pdbid"><a
+                  title="PDB ID: PDB ID from Protein Data Bank database. It should contain chain code when necessary (e.g. 4IAR.A). "><p>PDB
+                  ID:</p></a></label></div>
+            <div class="col-md-6"><input id="id_pdbid" maxlength="6" name="pdbid" type="text" {% if submission_id %}
+                value="{{p.values.0.pdbid}}" readonly {% endif %} placeholder=" 4IAR.A" style="width:300px" /></div>
+            <br>
+          </div>
+
+          <div class="row">
+            <div class="col-md-1" style="height:30px"></div>
+            <div class="col-md-3"><label for="id_source_type"><a
+                  title="Source Type: Source of the coordinates of the “complex”. Loop repairs and other replaced missing protein residues on X-ray or NMR structures are not taken into account for setting the value of this field. In order to set the value to X-ray or NMR all the coordinates (including relative positions between different components) of protein complexes and their components should come from an X-ray or an NMR experiment."><p>Source
+                  Type:</p></a></label></div>
+            <div class="col-md-6"><input id="id_source_type" maxlength="6" name="id_source_type" type="text"
+                {% if submission_id %} value="{{SType}}" readonly {% endif %} placeholder=" 4IAR.A"
+                style="width:300px" /></div>
+            <br>
+          </div>
+
+          <div class="row" style="margin-bottom:20px;">
+
+            <div class="col-md-1" style="height:30px"></div>
+            <div class="col-md-3"><label for="id_description"><a
+                  title="Description: Description of the complex containing information that is not provided in other field such as procedure followed for the construction of the model. "><p>Description:</p></a></label>
+            </div>
+            <div class="col-md-6"><textarea cols="40" id="id_description" name="description" rows="2"
+                placeholder=" Agonist conformation (ergotamine). Clozapine binding by docking. Loop repair in Modeller 9v10."
+                {% if submission_id %} readonly {%endif%}
+                style="width:300px">{% if submission_id %}{{p.values.0.description}}{%endif%}</textarea></div>
+            <br>
+          </div>
+
+        </div>
+
+      </div>
+
+      {% if submission_id %}
+      <div class="col-md-12">
+        <div class="col-md-12 panel panel-primary">
+          <!--Submit prueba -->
+          <div class="panel-body" id="selection-">
+            <a id='selection-button' href="/dynadb/moleculereuse/{{submission_id}}/{{submission_id}}"
+              class="btn btn-success btn-lg btn-block has-spinner">
+              <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Small Molecule Information (Step
+              2)</a>
+          </div>
+          <div class="panel-body" id="selection-">
+            <a id='selection-button' href="/dynadb/modelreuse/{{submission_id}}/{{submission_id}}"
+              class="btn btn-success btn-lg btn-block has-spinner">
+              <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Complex Information (Step 3)</a>
+          </div>
+          <div class="panel-body" id="selection-">
+            <a id='selection-button' href="/dynadb/dynamicsreuse/{{submission_id}}/{{submission_id}}"
+              class="btn btn-success btn-lg btn-block has-spinner">
+              <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics
+              Information </a>
+          </div>
+        </div>
+      </div>
+      {%endif%}
+    </div>
+
+  </form>
+</div>
+{% endblock content %}
+
+
+{% block addon_js %}
+<script src="{% static 'dynadb/protein_alignment_autocomplete.js' %}"></script>
+<script src="{% static 'dynadb/notUniprotProtein.js' %}"></script>
+<script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+{% if not submission_id %}
+<script src="{% static 'dynadb/autocomplete_species.js' %}"></script>
+{% endif%}
+<script src="{% static 'dynadb/resetProtein.js' %}"></script>
+<script src="{% static 'dynadb/addProtein.js' %}"></script>
+<script src="{% static 'dynadb/delProtein.js' %}"></script>
+<script src="{% static 'dynadb/getDataUPKB.js' %}"></script>
+<script src="{% static 'dynadb/getMutations.js' %}"></script>
+<script src="{% static 'dynadb/changeMutant.js' %}"></script>
+
+<script>
+  $(document).on('click', "[id|=show_protmut]", function () {
+    self = $(this);
+    tablemut = $(this).parents("[id|=sform]").find("[id$=mutationtable]");
+    tablemut.toggle();
+  });
+
+  $(document).on('click', "#collapse-PRUEBA2", function () {
+    self = $(this);
+    tablecomp = $(this).parent().siblings("#PRUEBA2");
+    tablecomp.toggle();
+  });
+
+  $(document).on('click', "#collapse-PRUEBA3", function () {
+    self = $(this);
+    tablecomp = $(this).parent().siblings("#PRUEBA3");
+    tablecomp.toggle();
+  });
+
+  $(document).on('click', "#PROTEIN_BUTTON", function () {
+    self = $(this);
+    tablecomp = $(this).siblings("[id|=PROTEIN_BLOCK]");
+    tablecomp.toggle();
+  });
+
+  $(document).on('click', "#SMALL_BUTTON", function () {
+    self = $(this);
+    tablecomp = $(this).siblings("[id|=SMALL_BLOCK]");
+    tablecomp.toggle();
+  });
+
+  $(document).on('click', "#MODEL_BUTTON", function () {
+    self = $(this);
+    tablecomp = $(this).siblings("#MODEL_BLOCK");
+    tablecomp.toggle();
+  });
+
+  $(document).on('click', "#DYNAMICS_BUTTON", function () {
+    self = $(this);
+    tablecomp = $(this).siblings("#DYNAMICS_BLOCK");
+    tablecomp.toggle();
+  });
+</script>
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "dynadb/base.html" %}
+{% load static %}
+{% load static %} 
+{% block addon_css %}
+  <style>
+  .panel-body {
+    word-break:break-all
+}
+  
+  </style>
+{% endblock %}
+{% block content %}
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Alignment:</b></div>
+    <div class="panel-body">
+    <div id="msa">Loading Alignment...</div>
+    <pre style="display: none" id="fasta-files">{{alig}}</pre>
+    </div>
+    </div>
+    </div>
+
+{%endblock content %}
+
+{% block addon_js %}
+<script src="//cdn.bio.sh/msa/latest/msa.min.gz.js"></script>
+<script src="{% static 'dynadb/fancy_alig.js' %}"></script>
+{%endblock addon_js %}

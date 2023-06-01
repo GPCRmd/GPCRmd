@@ -1,0 +1,124 @@
+<head><style>
+.long input {
+ width:100%;
+}
+</style></head>
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %} 
+<form action="{% url 'accounts:change_data' %}" method="post">
+{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 >Simulation Submission</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+
+            <div style="text-align:center"> 
+             <h4>MODIFY THE DESIRED FIELDS</h4>
+	    </div>
+             <p style="text-align: justify;">Edit your personal account information by changing the information of the fields you wish to update.</p>
+             <p style="text-align: justify;">If you change your email address, you need access to the new address to complete the process.</p> 
+
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   <body> -->
+
+<div id="pprotform"class="col-md-7 "> 
+  <div id="protform" class="col-md-12 panel panel-primary"> 
+    <div class="panel-body">
+
+ 			<div style="text-align:center">
+             			<h4><br>Change User Information</h4>
+            		</div><br>   
+<!-- modifica a partir de aqui -->
+<div style="margin:10px">
+
+<!-- Change email -->
+     <div class="row" style="margin-bottom:8px;">
+         <div class="col-md-4 col-md-offset-1" style="width:180px;color:#337ac1;">  
+               <p style="margin-bottom:6px"><b>Email:</b></p> 
+         </div>  
+         <div class="col-md-6" > 
+           <a href="/accounts/newmail" class="btn btn-block btn-default" style="text-align:left;padding-left:2px;padding-top:3px;padding-bottom:3px;border-color:#A8A8A8">{{ user_mail }}</a>
+         </div>
+         <div class="col-md-1" >
+         </div>
+     </div>
+
+<!-- Change email end-->
+
+  <div class=row > 
+        <div class="col-md-10 col-md-offset-1" > 
+            {% if form.non_field_errors %}
+               <div class="non-field-errors alert alert-danger">
+                 {% for err in form.non_field_errors %}
+                    <p>{{ err }}</p>
+                {% endfor %}
+               </div>
+           {% endif %}
+        </div>
+  </div>
+{% for field in form %}
+  <div  style="margin-bottom:8px">
+     <div class="row">
+         <div class="col-md-4 col-md-offset-1" style="width:180px;color:#337ac1;">  
+               {{ field.label_tag }} 
+         </div>  
+         <div class="col-md-6" ><span class="long"> {{field}}</span>
+         </div>
+         <div class="col-md-1" >
+         </div>
+     </div>
+     <div class="row" >
+        <div class="col-md-11 col-md-offset-1" style="padding-left:20px;margin-bottom:8px"> 
+          {% if field.errors %}
+            <div>
+              {% for err in field.errors %}
+                 <p style="margin-bottom:px" class=text-danger>{{ err }}</p>
+              {% endfor %}
+            </div>
+         {% endif %}
+       </div>
+     </div>
+{% endfor %}
+</div>
+<!-- hasta aqui -->
+
+<div class="row" >
+  <div class="col-md-3 col-md-offset-1" style="margin-bottom:5px;width:120px">
+     <input type="submit" value="Submit" style="width:75px"/> </form>
+  </div>
+
+</div>
+
+
+<h1></h1>
+
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+
+
+{% endblock %}

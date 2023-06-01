@@ -1,0 +1,266 @@
+<head>
+
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script>document.domain=document.domain;</script>
+
+  <!--Jquery things-->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+
+  {% load static %} 
+  {{staticfiles}}
+
+  {% block addon_css %}
+  <!--Contmaps styles-->
+  <link rel="stylesheet" type="text/css" href="{% static 'corplots/corplots_main.css' %}" />
+  <!-- Bootstrap -->
+  <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <!-- jQueryUI -->
+  <link rel="stylesheet" href="{% static 'home/css/jquery-ui.min.css' %}" type="text/css" media="all" />
+  <link rel="stylesheet" href="{% static 'home/css/jquery-ui.theme.min.css' %}" type="text/css" media="all" />
+  <!--bokeh-->
+  <link href="https://cdn.pydata.org/bokeh/release/bokeh-3.0.3.min.css" rel="stylesheet" type="text/css">
+  <link href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-3.0.3.min.css" rel="stylesheet" type="text/css">
+  {% endblock %}
+
+  {% block addon_js %} 
+  <!--Contmaps javascripts -->
+  <script src="{% static 'corplots/corplots_main.js' %}"></script>
+  <!-- Bokeh -->
+  <script src="https://cdn.pydata.org/bokeh/release/bokeh-3.0.3.min.js"></script>
+  <script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-3.0.3.min.js"></script>
+
+  {% endblock %}
+
+
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <script src="{% static 'home/js/jquery.js' %}"></script>
+  <!-- jQueryUI -->
+  <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+  <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+  <script>
+  $.widget.bridge('uitooltip', $.ui.tooltip);
+  $.widget.bridge('uibutton', $.ui.button);
+  </script>
+  <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+
+</head>
+<body>
+
+{% block content %} 
+
+<header id="mainheader">
+	<h1 id="title">PSYBIAS correlation plots</h1>
+	<!-- <h3 id="subtitle"><i>By A. Morales-Pastor, D. Aranda-Garcia J. Selent and other people <href src="">[source]</href> </i></h3> -->
+</header>
+<div id="bottombar"></div>
+
+<!--Main plot container-->
+<br>
+<div id="plot-section" class="col-xs-12 section">
+  <div class="panel panel-primary">
+    <div class="panel-body">
+      <ul class="nav nav-tabs tab_list" id="plotabs">
+        <li class="navtab active"><a class="" data-toggle="tab" href="#topcorP">Top pathway-outcome correlations</a></li>
+        <li class="navtab"><a class="" data-toggle="tab" href="#customP">Customized pathway-outcome selection</a></li>
+      </ul>
+      <div class="tab-content">
+        <div id="topcorP" class="tab-pane fade in active">    
+          <form id="topcorform"class="col-md-4">
+            {% csrf_token %}
+            <table class="table table-condensed table-borderless">
+              <tbody>
+                <tr>
+                  <td>
+                    <label for="pairs">Pathway-outcome pair sorted by absolute Pearson correlation value: </label>
+                    <select required name="pairs" id="pairs" class="table-sel btn btn-sm btn-primary">
+                      {% for paircor in paircors %}
+                      {% if paircor.3 == 6 %}
+                      <option class="selopt paircor" data-out="{{paircor.1}}" data-n="{{paircor.3}}" value="{{paircor.0}}||{{paircor.1}}"> 
+                      {% else %}
+                      <option class="selopt paircor hidopt" data-out="{{paircor.1}}" disabled data-n="{{paircor.3}}" value="{{paircor.0}}||{{paircor.1}}"> 
+                      {% endif %}
+                      {{paircor.0}}||{{paircor.1}}________{{paircor.2}}____n: {{paircor.3}}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="min_n" class="minor_label">Minimum sample size (n): </label>
+                    <select name="min_n" id="min_n" class="table-sel btn btn-sm btn-secondary">
+                      <option class="selopt " value="6" selected>6</option>
+                      <option class="selopt " value="5">5</option>
+                      <option class="selopt " value="4">4</option>
+                      <option class="selopt " value="3">3</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="out_fil"  class="minor_label">Filter avaliable options by therapeutical outcome: </label>
+                    <select name="out_fil" id="out_fil" class="table-sel btn btn-sm btn-secondary">
+                      <option class="selopt ou_fil" value="all"> All</option>
+                      {% for ou in out %}
+                      <option class="selopt ou_fil" value="{{ou}}"> {{ou}}</option>
+                      {% endfor %}                      
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <input id="topcorsubmit" type="submit" name="submit" value="Plot selection" class="btn btn-success btn-sm">
+            <div class="downlink">
+              <a id="topcordown" href="">Download ploted data</a>
+            </div>
+            <div class="downlink">
+              <a class="downlink alldown" download href="/dynadb/files/Precomputed/corplots/polypharma_clinical_outcomes.csv">Download all data</a>
+            </div>
+          </form>
+          <div id="topcorplot_div" class="col-md-8">
+            <span><center id="topcorloading" class="loading-gear"><img src="{% static 'view/images/loading-gear.gif' %}"/></center></span>
+            <div id="topcorerror" class="error_message alert alert-danger">An unexpected error occurred.</div>
+            <div id="topcorplot"></div>
+            <div id="topcorscript"></div>
+          </div>
+        </div>
+        <div id="customP"  class="tab-pane fade">
+          <form id="customform"class="col-md-4">
+            {% csrf_token %}
+            <h3>Pathway</h3>
+            <table class="table table-condensed table-borderless">
+              <tbody>
+                <tr>
+                  <td>
+                    <label for="signrec">Receptor: </label>
+                  </td>
+                  <td class="right-aligned">
+                    <button id="signrecbutton" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown"> 
+                      <div class="">Receptor and signal protein <span class="caret"></span></div>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-right" id="recsign-ul">
+                    {% for recsign in recsigns %}
+                      <li class="dropdown-submenu">
+                        <label data-for="{{recsign.0}}_ul" class="rec dropdown-toggle opt_label" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> {{recsign.0}} <span class="caret-right"></span></label>
+
+                        <ul id="{{recsign.0}}_ul" class="dropdown-menu dropdown-menu-right">
+                          {% for sign in recsign.1 %}
+                          <li class="dropdown-submenu">
+                            <label for="{{recsign.0}}|{{sign}}" class="sign opt_label">
+                              <input id="{{recsign.0}}|{{sign}}" type="radio" class="recsign" name="recsign" value="{{recsign.0}}|{{sign}}" required>
+                              {{sign}}
+                            </label>
+                          </li>
+                          {% endfor %}
+                        </ul>
+
+
+                      </li>
+                    {% endfor %}
+                    </ul>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="col-md-6">
+                    <label for="assts">Assay type: </label>              
+                    <select name="assts" id="assts" class="table-sel btn btn-sm btn-primary">
+                      {% for asst in assts %}
+                      <option class="selopt signprot" value="{{asst}}"> {{asst}}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td class="col-md-6">
+                    <label for="assts">Metric: </label>              
+                    <select name="metrs" id="metrs" class="table-sel btn btn-sm btn-primary">
+                      {% for metr in metrs %}
+                      <option class="selopt signprot" value="{{metr}}"> {{metr}}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <h3>Therapeutical outcome</h3>
+            <table class="table table-condensed table-borderless">
+              <tbody>
+                <tr>
+                  <td>
+                    <label for="out">Type: </label>
+                    <select name="out" id="out" class="table-sel btn btn-sm btn-primary">
+                      {% for ou in out %}
+                      <option class="selopt ou" value="{{ou}}"> {{ou}}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <input id="customsubmit" type="submit" name="submit" value="Plot selection" class="btn btn-success btn-sm">
+            <div class="downlink">
+              <a id="customdown" class="downlink" href="">Download ploted data</a>
+            </div>
+            <div class="downlink">
+              <a class="downlink alldown" download href="/dynadb/files/Precomputed/corplots/polypharma_clinical_outcomes.csv">Download all data</a>
+            </div>
+          </form>
+          <div id="customplot_div" class="col-md-8">
+            <span><center id="customloading" class="loading-gear"><img src="{% static 'view/images/loading-gear.gif' %}"/></center></span>
+            <div id="customerror" class="error_message alert alert-danger">An unexpected error occurred.</div>
+            <div id="customplot"></div>
+            <div id="customscript"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="col-xs-12 section" >
+  <div class="panel panel-primary">
+    <div class="panel-body" data-toggle="collapse" id="info_title" data-target="#info_body" onclick="turn_arrow('info_arrow','info_title')">
+      <h4 class="section_title"> About these plots <span id="info_arrow" class="glyphicon arrow glyphicon-chevron-down"> </h4> 
+    </div>
+  </div>
+  <div class="panel panel-primary collapse" id="info_body" aria-expanded="false">
+    <div class="panel-body">
+      <!-- <h4 class="info_subtitle">What is this?</h4> -->
+      <!-- <p class="info_content">This online tool was devised for the analysis and visualization of <a href="">A. Morales-Pastor</a> results in his article <a href="">"Name of Adrian's paper"</a>. In this work, he investigates possible correlations betwen therapeutical outcomes to certain drugs and the activation of certain biological pathways mediated by G-Protein Coupled Receptors (GPCRs).</p> -->
+      <h4 class="info_subtitle">1. Custom plots</h4>
+      <p class="info_content">Select both the characteristics of a biological pathway and a terapeutical outcome to compare their response to the drugs used in the study. Then click "Plot selection" to display the specified results.</p>
+      <h4 class="info_subtitle">2. Top pathway-outcome correlations</h4>
+      <p class="info_content">In this section there are avaliable the combinations of biological pathways and therapeutical outcome with the highest values of linear correlation between them. Select one and click "plot selection" to display it. Use the "minimum sample size" option to filter out pathway-outcome combinations with smaller sample sizes than specified.</p>
+    </div>  
+  </div>
+</div>
+
+<!--
+<label for="pairs">Pathway-outcome pair sorted by absolute correlation value: </label>
+<button id="pairbutton" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown"> 
+<div class="pair col-md-6">Pathway-outcome pair</div>
+<div class="cor col-md-6">Correlation value <span class="caret"></span></div>
+</button>
+<ul class="dropdown-menu" id="pairs-ul">
+{% for paircor in paircors %}
+<li class="row">
+<div class="pair col-md-6">{{paircor.0}}</div>
+<div class="cor col-md-5">{{paircor.1}}</div>
+</li>
+{% endfor %}
+</ul>
+
+<label for="pairs">Pathway-outcome pair sorted by absolute correlation value: </label>
+<select name="pairs" id="pairs" class="table-sel btn btn-sm btn-primary">
+{% for paircor in paircors %}
+<option class="selopt paircor" value="{{paircor.0}}"> 
+{{paircor.0}} {{paircor.1}}
+</option>
+{% endfor %}
+</select>
+-->
+
+<div class="panel panel-primary collapse" id="flare_col" data-fpdir="{{fpdir}}" aria-expanded="false">
+</div>
+
+{% endblock content %} 
+</body>

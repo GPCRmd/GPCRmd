@@ -1,0 +1,252 @@
+{% include "home/cookies.html" %}
+{% load mainmenu %}
+{% load site_title %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% site_title %}</title>
+  <link rel="shortcut icon" type="image/png" href="{% static 'home/logo/gpcrmd/main.png' %}">
+  <!-- Bootstrap -->
+  <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <script src="{% static 'home/js/jquery.js' %}"></script>
+  <!-- jQueryUI -->
+  <link rel="stylesheet" href="{% static 'home/css/jquery-ui.min.css' %}" type="text/css" media="all" />
+  <link rel="stylesheet" href="{% static 'home/css/jquery-ui.theme.min.css' %}" type="text/css" media="all" />
+  <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+  <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+  <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+  </script>
+  <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+  <!-- Custom styles -->
+  <link href="{% static 'home/css/style.css' %}" rel="stylesheet">
+  <style>
+    input[type='file'] {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    @media (max-width: 1050px) {
+      .navbar-header {
+        float: none;
+      }
+
+      .navbar-left,
+      .navbar-right {
+        float: none !important;
+      }
+
+      .navbar-toggle {
+        display: block;
+      }
+
+      .navbar-collapse {
+        border-top: 1px solid transparent;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      }
+
+      .navbar-fixed-top {
+        top: 0;
+        border-width: 0 0 1px;
+      }
+
+      .navbar-collapse.collapse {
+        display: none !important;
+      }
+
+      .navbar-nav {
+        float: none !important;
+        margin-top: 7.5px;
+      }
+
+      .navbar-nav>li {
+        float: none;
+      }
+
+      .navbar-nav>li>a {
+        padding-top: 10px;
+        padding-bottom: 10px;
+      }
+
+      .collapse.in {
+        display: block !important;
+      }
+    }
+
+
+    nav .dropdown-menu {
+      background-color: #222222;
+    }
+
+    nav a {
+      color: #bfbfbf !important;
+    }
+
+    nav a:hover {
+      color: white !important;
+      background-color: #222222 !important;
+    }
+
+    nav li.active a {
+      color: white !important;
+      background-color: black !important;
+    }
+
+    nav li.active a:hover {
+      color: white !important;
+      background-color: black !important;
+    }
+
+    nav li.is_title {
+      padding: 3px 20px;
+      color: #595959;
+    }
+  </style>
+  <!-- Additional CSS -->
+  {% block addon_css %}{% endblock %}
+
+  {% comment %} {% if google_analytics %}
+  {% include "home/ga.html" %}
+  {% endif %} {% endcomment %}
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  
+  
+</head>
+
+<body>
+  {% mainmenu %}
+
+  <div class="container" id="content" style="height:auto">
+
+    <div class="alert alert-warning alert-dismissible" id='update_warning'
+      style="padding:5px 30px 5px 10px;margin:0 20px;position:absolute;z-index:10; display: none !important;">
+      <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+      <span class="glyphicon glyphicon-warning-sign"></span> Due to a recent server update, this page will be slow for
+      the next 1-2 hours. We apologize for any inconvenience this may cause.
+    </div>
+
+    {% block content %}{% endblock %}
+
+
+    <!-- Footer -->
+    <div class="row main_section foot_section" id="partners_section ">
+
+      <!-- Parters -->
+      <div class="col-md-4" style="padding:20px 30px 0 30px;margin-bottom: 20px;text-align: center">
+        <h4 class="footTitle">PARTNER SERVERS</h4>
+        <p class="footA"><a class="footA" href="https://www.gpcrdb.org/" target="_blank">GPCRdb</a></p>
+        <p class="footA"><a class="footA" href="http://open.gpcr-modsim.org/" target="_blank">GPCR-ModSim</a></p>
+        <p class="footA"><a class="footA" href="https://gpcrm.biomodellab.eu/" target="_blank">GPCRM</a></p>
+        <p class="footA"><a class="footA" href="http://nmrlipids.blogspot.com/" target="_blank">NMRlipids</a></p>
+        <p class="footA"><a class="footA" href="http://lmc.uab.cat/homolwat/" target="_blank">HomolWat</a></p>
+        <p class="footA"><a class="footA" href="https://mmcg.grs.kfa-juelich.de/links" target="_blank">Hybrid MM/CG Webserver</a></p>
+      </div>
+
+      <!-- Useful links -->
+      <div class="col-md-4" style="padding:20px 30px 0 30px;margin-bottom: 20px;text-align: center">
+        <h4 class="footTitle">CONTACT & LINKS</h4>
+        <p class="footA shortfoot"><a class="footA" href=https://twitter.com/GPCRmd><img class="footlogo" src="{% static 'home/images/footer/twitter-logo.png' %}"></img></a></p>
+        <p class="footA shortfoot"><a class="footA" href="mailto:info@gpcrmd.org"><img  class="footlogo" src="{% static 'home/images/footer/mail.png' %}"></img></a></p>
+        <p class="footA shortfoot"><a class="footA" href="https://develgpcrmd-docs.readthedocs.io/en/latest/" target="_blank">Documentation</a></p>
+        <p class="footA"><a class="footA" href="https://develgpcrmd-docs.readthedocs.io/en/latest/source/citing-gpcrmd.html" target="_blank">Cite us</a></p>
+        <p class="footA"><a class="footA" href="https://devel.gpcrmd.org/privacy-policy/" target="_blank">Privacy policy</a></p>
+        <p class="footA"><a class="footA" href="https://devel.gpcrmd.org/cookies-policy/" target="_blank">Cookies policy</a></p>
+        <p class="footA"><a class="footA" href="https://devel.gpcrmd.org/disclaimer/" target="_blank">Disclaimer</a></p>
+        <p class="footA"><a class="footA" href="https://devel.gpcrmd.org/terms&conditions/" target="_blank">Terms & Conditions</a></p>
+
+      </div>
+
+      <!-- Supported by -->
+      <div class="col-md-4" style="padding:20px 30px;margin-bottom: 20px;text-align: center;overflow: hidden">
+        <h4 class="footTitle">SUPPORTED BY</h4>
+        <p class="footA shortfoot"><a class="footA" href="https://ernest-gpcr.eu/">ERNEST</a> (COST Action CA18133)</p>
+        <center>
+          <div class="row">
+            <img class="img-responsive" src="{% static 'home/images/news/ERNESTlogo.png' %}"
+              style="height:50px;display:block;">
+          </div>
+        </center>
+        <p class="footA shortfoot"><a class="footA" href="https://www.cost.eu/actions/CM1207/">GLISTEN</a> (COST Action CM1207)
+        </p>
+        <center>
+          <div class="row">
+            <img class="img-responsive" src="{% static 'home/images/footer/glisten-modified.png' %}"
+              style="height:47px;display:block">
+          </div>
+        </center>
+        
+        
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    {% get_logos as logo_dict %}
+    $(document).ready(function () {
+      $("#logo_select").change(function (event) {
+        logo_num = parseInt($(this).val());
+        logo_img = $("#logo");
+        switch (logo_num) {
+          case 1:
+            logo_img.attr('src', '{% static logo_dict.logo_path %}');
+            logo_img.css('width', '{{ logo_dict.logo_width }}');
+            break;
+          case 2:
+            logo_img.attr('src', '{% static logo_dict.logo_path2 %}');
+            logo_img.css('width', '{{ logo_dict.logo_width2 }}');
+            break;
+          case 3:
+            logo_img.attr('src', '{% static logo_dict.logo_path3 %}');
+            logo_img.css('width', '{{ logo_dict.logo_width3 }}');
+            break;
+          default:
+            logo_img.attr('src', '{% static logo_dict.logo_path %}');
+            logo_img.css('width', '{{ logo_dict.logo_width }}');
+            $(this).val(1);
+        }
+      });
+
+      // Change text of cookie (remove ads autoadverstiment )
+      document.getElementById('cc-nb-text').innerText = "We use cookies and other tracking technologies to improve your browsing experience on our website, to analyze our website traffic, and to understand where our visitors are coming from.";
+      document.getElementById('title_targeting').style.display = "none"
+
+      //Check if load-of-all-systems-after-update is ongoing. If so show warning
+      $.ajax({
+        url: '/updating/',
+        success: function (visible) {
+          var container = $("#update_warning")
+          if (visible == 'True') {
+            container.show();
+          } else {
+            container.hide()
+          }
+        },
+        timeout: 600000
+      });
+
+      //Bootstrap tooltips
+      $('[data-toggle="tooltip"]').tooltip();
+
+    });
+  </script>
+  <!-- Include custom ajax functions -->
+  {% block addon_js %}{% endblock %}
+</body>
+
+</html>

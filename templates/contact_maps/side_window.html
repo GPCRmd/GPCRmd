@@ -1,0 +1,67 @@
+{% load static %} 
+<!--Here be side-window (the thing that opens up upon clicking on heatmap)-->
+  <div class="col-xs-3" id="info">
+    <div id="subinfo" class="panel panel-info">
+      <div class="panel-heading" style="">Interaction details
+        <button type="button" class="close" aria-label="Close" onclick="closeSideWindow()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div id="side-window-content" class="panel-body">
+          <!-- Info on clicked dyn -->
+          <p><b>Receptor:</b> <span id="recept_val"></span> <a id="recept_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
+          <p><b>PDB id:</b> <span id="pdb_id"></span> <a id="pdb_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
+          <p><b>Ligand:</b> <span id="lig_val"></span> <a id="lig_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
+          <p><b>Positions:</b> <span id="pos_val"></span></p>
+          <p id="na_comment"><i>*N/A: Position not annotated in this receptor</i></p>
+
+          {% if itype_code == "all" %}
+          <div id="freqtypes_click" class="collapsed" data-toggle="collapse" data-target="#freqtypes_list" onclick="turn_arrow('alltypes_arrow','freqtypes_list')" aria-expanded="false">
+            <p><b>Frequencies by type </b><span id="alltypes_arrow" class="glyphicon arrow glyphicon-chevron-down"></span></p>
+          </div>  
+          <ul id="freqtypes_list" class="collapse"  aria-expanded="false" >
+          {% for group, types_tuple in itypes_order %}
+            {% for typecode,typename in types_tuple  %}
+              {% if typecode == "hb" %}
+                <li><p>{{typename}}: <span id="freq_{{typecode}}" ></span></p></li>                  
+                <ul>
+                {% for hbcode,hbitype in hb_itypes.items %}
+                  <li><p>{{hbitype}}: <span id="freq_{{hbcode}}" ></span></p></li> 
+                {% endfor %}
+                </ul>
+              {% else %}
+                <li><p>{{typename}}: <span id="freq_{{typecode}}" ></span></p></li>
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+          </ul>
+          <p><b>Total interaction frequency:</b> <span id="freq_all">%</span></p>
+          {% else %}
+          <p><b>{{itype_name}} frequency:</b> <span id="freq_{{itype_code}}" ></span></p>
+          {% endif %}
+
+          <!-- Trajectory dropdown -->
+          <div class="dropdown blueDropdownDiv" id="trajsDropdown">
+            <button  id="trajButton" class="btn btn-default btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">-
+            <span class="caret"></span></button>
+            <ul id="trajsDropdown_options" class="dropdown-menu">
+              <span id="add_traj_options"></span>
+            </ul>
+          </div>
+          
+          <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>open with GPCRmd workbench</b></a>
+        
+          <!-- Loading div-->
+          <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" id="loading_NGL_side"/></center></span>
+          <!-- iframe for the ngl viewer -->
+          <div id="ngl_div">
+            <iframe id="ngl_iframe" src="{{mdsrv_url}}/html/embed_contmaps.html" scrolling="no"></iframe>
+          </div>
+          <div id="speed_warnings" data-display=true></div>
+          <div class="pull-right">                          
+            <button id="restartPos" type="button" class="btn btn-link settingsB" title="Reset position" ><span class="glyphicon glyphicon-repeat"></span></button>       
+            <button id="center" type="button" class="btn btn-link settingsB" title="Center"><span class="glyphicon glyphicon-record"></span></button>
+          </div>
+      </div>
+    </div>
+  </div>

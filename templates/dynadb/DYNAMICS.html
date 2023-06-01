@@ -1,0 +1,368 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %} 
+{% load static %} 
+{% block addon_css %}
+  <style>
+{% if model_id %}
+a {
+color: #555;
+}
+{%endif%}
+
+label{
+cursor:pointer;
+font-weight:normal
+}
+  </style>
+{% endblock %}
+
+
+{% block content %}
+
+<form method="post"  id="myformDyn" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+ <div id="left" class="col-md-12 affix"  style="padding: 0px 0px 0px 0px; width:350px" data-spy="affix" >
+{% if model_id %}
+{% include "dynadb/DYNAMICSreuse_description.html" %} 
+{% else %}
+{% include "dynadb/DYNAMICS_description.html" %} 
+                            </div>
+{% endif %}
+
+
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div id="pdynform"class="col-md-7 col-md-offset-4" style="margin-bottom:0%"> 
+  <div id="dynform" class="col-md-12 panel " style="width:100%;padding-left:0%;padding-right:0%;margin-bottom:0px"> 
+    <div class="panel-body" style="margin-top:-2.5%">
+
+                <div class=row id='PRUEBA'>
+ 			<div style="text-align:center;height:50px;background-color:AliceBlue;" class="col-md-12 panel panel-primary">
+             			<h4 style="margin-top: 10px;margin-left:-5px;margin-right:-5px;font-size:20px;color:DarkBlue"><b> Simulation Details and Files</b></h4>
+            		</div>
+		</div>
+
+     <div class="col-md-12 panel panel-primary" style="margin-left:-2.5%;margin-right:-2.5%;width:105%" >
+		<div class=row id='PRUEBA'><br>
+                <div style="height:60px" class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Upload the simulation files</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+		</div>
+
+		{% for file_type,file_type_attr in file_types.items %}
+               <div class="row" style="margin-top:15px">
+                    <iframe id="id_{{file_type}}_iframe" src="./upload_files/{% if file_type == "traj" %}traj/{%endif%}?file_type={{file_type}}" class="col-md-12" frameBorder=0  style="width:100%;height:60px;margin:0px;padding:0px;border:0px">
+                        <div class="col-md-3" style="height:45px">
+                            <label style="font-weight:normal" for="id_{{file_type}}"><a  style="cursor:pointer;font-weight:normal"title="{{file_type_attr.long_name}}: {{file_type_attr.description}}">{{file_type_attr.long_name}}</a> </label>
+                        </div>
+                        <div class="col-md-6"><a href="./upload_files/{% if file_type == "traj" %}traj/{%endif%}?file_type={{file_type}}&new_window=1" noreferrer noopener target="_blank">Use this link to upload your {{file_type_attr.long_name|lower}}.</a></div>
+                    </iframe>
+               </div>
+<!--               <br>-->
+               {%endfor%}
+               
+
+      		<br>
+                
+<!-- 			<div style="text-align:right;margin-right:5%;height:50px">
+					<button type="button" id="id_validate_traj" name="validate_traj"> Validate </button> 
+		        </div> -->		
+      		</div>
+
+
+     <div class="col-md-12 panel panel-primary" style="margin-left:-2.5%;margin-right:-2.5%;width:105%" >
+		<div class=row id='PRUEBA'><br>
+                <div style="height:60px" class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Simulation components</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+		</div>
+
+
+
+<!--                <div class="panel panel-primary col-md-10 col-md-offset-1" style="background-color:GhostWhite; border:0px"> -->
+ 			<div style="text-align=center" id='PRUEBA__2'>
+
+                        <table style="text-align:center;width:77%;margin-left:11%;margin-right:12%;margin-bottom:25px"> 
+                                <thead><tr><th style="width:60px;text-align:center"><label style="writing-mode: horizontal-rl;font-size:14px;text-align:center;height:30px"for="id_prot" size='10'><a title="Identifier number of the protein in the &quot;Step 1: Protein Information&quot; form. This identifier corresponds to the N value in the &quot;Protein #N General Information&quot; title at the top of every protein entry in the aforemetioned form.">Prot #</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="prtnam" size='10'><a title="Protein name corresponding to the protein provided in the &quot;Protein #N&quot; item in &quot;Step 1: Protein Information&quot;.">Protein name</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="uniprot" size='10'><a title="UniProtKB AC: UniProtKB Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers pointing to cannonical sequences. Mutations are handled in a different field.">UniProtKB AC</a></label></th>
+                                </thead>
+                                <tbody style="height:60px"><tr  {% if forloop.counter == lformps|length %} style="height:50px;vertical-align:top;padding:0px 5px 20px 0px" {%endif%}>
+                                 {%for prot in protlist%}      
+                                <td style="width:10%;text-align:center;padding:5px 5px 5px 0px"><input readonly id="prtnum" name="prtnum" value="{{prot.0|add:"1"}}" type="number" style="text-align:center;width:100%" placeholder="" /></td>
+				<td style="width:50%;padding:5px 5px 5px 5px;text-align:center;"><input readonly id="prtnam" value="{{prot.2}}"  maxlength="1" name="prtnam" type="text" style="width:100%;text-align:center" placeholder=""/></td>
+				<td style="width:20%;margin-right:5%;padding:5px 5px 5px 2px;text-align:center;"><input readonly id="uniprot" value="{{prot.1}}"  maxlength="1" name="uniprot" type="text" style="width:100%;text-align:center" placeholder=""/></td>
+                               </tbody>
+                                 {%endfor%}</table> 
+                             </div>
+    <!--            </div> -->
+
+
+
+
+ 			<div style="text-align=center" id='PRUEBA2'>
+                        <table  style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
+                                <thead>  
+				<tr><th style="width:80px;text-align:center"><label for="id_formc-0-resname"><a title="Resname: Resname present on simulation topology file. Names from pdb are preferred but not mandatory. ">Resname</a></label></th>	
+					<th style="width:80px;text-align:center"><label for="id_formc-0-molecule"><a title="Ordinal number corresponding to the records containing sequence information that was provided in the small molecule form.  ">Molecule</a></label></th>
+					<th style="width:80px;text-align:center;display:none"><label for="id_formc-0-id_molecule"><a title="Mol ID: ID of the chemical model (“molecule”) present in  “dynamics”. ">Mol ID</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_formc-0-name"><a title="Mol name: Name of the molecule">Mol name</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_formc-0-numberofmol"><a title="Number of molecules: Number of molecules belonging to a specific residue type present on simulation topology. ">Num of mol</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_formc-0-type"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_formc-0-cryst"><a title="Cryst: Crystalized component of the simulation">Cryst</a></label></th>
+                                </thead>
+
+                                <tbody id="pElement1">
+                          {%if not saved%}
+                              {% for mc in data %}
+                                <tr id="Element1-{{forloop.counter0}}">
+                                      
+                                      <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-resname" maxlength="4" name="formc-{{forloop.counter0}}-resname" type="text" placeholder="" {% if mc.readonly %} readonly {%endif%} value="{{mc.resname}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-molecule" maxlength="4" name="formc-{{forloop.counter0}}-molecule" type="text" placeholder="" readonly value="{{mc.int_id}}"/></td>
+                                       <td style="padding:5px 5px 5px 5px;display:none"><input style="width:70px" id="id_formc-{{forloop.counter0}}-id_molecule" name="formc-{{forloop.counter0}}-id_molecule" type="hidden" readonly placeholder="" value="{{mc.id_molecule}}"></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-name" maxlength="60" name="formc-{{forloop.counter0}}-name" type="text" style="width:100px" readonly placeholder="" value="{{mc.name}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-numberofmol" min="0" name="formc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{{mc.numberofmol}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-typemc" type="text" readonly name="formc-{{forloop.counter0}}-typemc" style="width:60px" value="{{mc.type}}">
+                                        <input id="id_formc-{{forloop.counter0}}-type_int" type="hidden" name="formc-{{forloop.counter0}}-type_int" value="{{mc.type_int}}"></td>
+                                                
+                                        <td style="padding:5px 5px 5px 5px;text-align:center"><input value="{{mc.type_int.cryst}}"  id="id_form-{{intps0}}-cryst" name="form-{{intps0}}-cryst" style="aligned:center" type="checkbox" {% if mc.cryst%} checked {%endif%} disabled placeholder=""/></td>{%if mc.cryst %} {%else%}</tr> {%endif%}
+               {%if mc.cryst%} <td style="padding:5px 5px 5px 5px;text-align:center"><a id="id_form-{{forloop.counter0}}-lock" title="The fields in this row have been automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a></td></tr> {% endif%} 
+                              {% endfor %}
+                          {% else %}
+                              {% for i in compl%} 
+                                <tr id="Element1-{{forloop.counter0}}">
+                                 <!-- %if i.id_molecule % -> values from dynamicsComponents i.molecule_id % -> SubmissionMolecule -->
+                                      
+                                      <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-resname" maxlength="4" name="formc-{{forloop.counter0}}-resname" type="text" placeholder=""{%if i.id_molecule__dyndbsubmissionmolecule__type < 6%} readonly {%endif%} value="{{i.resname}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-molecule" maxlength="4" name="formc-{{forloop.counter0}}-molecule" type="text" placeholder="" readonly value="{%if i.id_molecule %} {{i.id_molecule__dyndbsubmissionmolecule__int_id|add:"1"}} {%elif i.molecule_id %} {{i.int_id|add:"1"}}{%endif%}"/></td>
+                                       <td style="padding:5px 5px 5px 5px;display:none"><input style="width:70px" id="id_formc-{{forloop.counter0}}-id_molecule" name="formc-{{forloop.counter0}}-id_molecule" type="hidden" readonly placeholder="" value="{%if i.id_molecule %}{{i.id_molecule}}{%else%}{{i.molecule_id}}{%endif%}"></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-name" maxlength="60" name="formc-{{forloop.counter0}}-name" type="text" style="width:100px" readonly placeholder="" value="{%if i.id_molecule %}{{i.id_molecule__dyndbcompound__name}}{%else%}{{i.molecule_id__dyndbcompound__name}}{%endif%} "/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-numberofmol" min="0" name="formc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{%if i.id_molecule %}{{i.numberofmol}}{%endif%}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-typemc" type="text" readonly name="formc-{{forloop.counter0}}-typemc" style="width:60px" value="{% for t in ddctypel%}{% if forloop.counter == forloop.parentloop.counter %}{{t}}{% endif %}{% endfor %}"></td>
+                                        <input id="id_formc-{{forloop.counter0}}-type_int" type="hidden" name="formc-{{forloop.counter0}}-type_int" value="{{i.type}}"></td>  
+                                                
+                                        <td style="padding:5px 5px 5px 5px;text-align:center"><input value="{{i.type_int.cryst}}"  id="id_form-{{intps0}}-cryst" name="form-{{intps0}}-cryst" style="aligned:center" type="checkbox"  {%if i.id_molecule__dyndbsubmissionmolecule__type < 6 %} checked {%endif%}     disabled placeholder=""/></td>{%if i.id_molecule__dyndbsubmissionmolecule__type < 6 %} {%else%}</tr>{%endif%}  <!--i.type < 6 for modifications in -->
+               {%if i.id_molecule__dyndbsubmissionmolecule__type < 6 %} <td style="padding:5px 5px 5px 5px;text-align:center"><a id="id_form-{{forloop.counter0}}-lock" title="The fields in this row have been automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a></td></tr> {% endif%}
+                              {% endfor %}
+                              {% endif %}
+
+				</tbody>
+			</table>
+
+ 	        	<div class="row"style="text-align:left;height:30px;padding-top:10px">
+                              <div class="col-md-1 col-md-offset-2" style="width:30px;padding:0px 0px 0px 0px"><input id="add_mol_new" name="add_mol_new" style="aligned:center;margin-right:-0px" type="checkbox"  /></div>   
+                              <div class="col-md-9"  ><a style="font-size:13px;color:black" title="Sometimes more than one &quot;residue name&quot; may be used for one molecule type just to highlight individual molecules of this type playing a specific role in the simulation. If so, an extra row can be added by using the &quot;+ Add molecule&quot; button. The corresponding fields in the row must be manually filled" > Check the box if a simulation molecule has several resnames </a></div>
+		        </div> 	
+                    
+ 			<div id="addmoleculebutton"  style="text-align:center;height:90px;margin: 0px 0px 25px 0px" hidden>
+                             <br>
+			     <button id="id_add_element" type="button" value=""  style="height:30px;margin: 0px 0px 0px 0px;width:220px" >+ Add Molecule</button>
+			     <button id="id_del_element" type="button" value=""  style="height:30px;margin: 0px 0px 0px 0px;width:220px" >- Remove Molecule</button>
+                             <p style="margin: 10px 14% 35px 14%;text-align:justify"> Update the "<b>Molecule</b>" field in the added row to the value corresponding to the molecule with more than one "<b>Resname</b>".</p>
+		        </div> 	
+		        
+
+
+
+
+
+
+
+
+
+
+                      {%if data or saved %}
+                        <br>
+ 			<div style="text-align:right;margin-right:5%">
+                                       <div class="col-md-2" style="text-align:right;float:right;"><button id ="id_check_pdb_mol" type="button"> Validate </button></div>
+					 <div class="col-md-4" style="text-align:right;float:right;margin-right:-15px"><a id="id_logfile"  name="logfile" href="" hidden target="_blank">Download log file.</a></div>
+                                        
+                                        <br>
+                                        <div class="col-md-6" style="text-align:right;float:right;margin-right:-15px"><a id="id_pdbchecker_tar_gz" name="pdbchecker_tar_gz" hidden href="" target="_blank">Download pdbchecker results.</a></div>
+                                        <div class="col-md-2" style="text-align:right;float:right;"></div>
+		        </div>
+		         {% else %}
+                        <p style="text-align:center;">No molecules found. Please, go back to step 2.</p>
+                        {% endif %}
+                        <br>
+
+     </div> 		
+     </div>
+     <div class="col-md-12 panel panel-primary" style="margin-left:-2.5%;margin-right:-2.5%;width:105%;margin-bottom:0px" >
+		<div class=row id='PRUEBA'><br>
+                <div style="height:60px" class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Simulation specifications</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+		</div>
+                <div class="row">
+                        <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_id_dynamics_methods"> <a title="Method: Classification of the simulation according to the computational method."> Method: </a> </label></div>
+			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px;height:26px">
+                                      {%if saved%}
+		        	      <option value="{{ddown.id_dynamics_methods.0}}">{{ddown.id_dynamics_methods.1}}</option>{{qDS.values.0.id_dynamics_methods}}
+                                      {%else%}
+                                        <option value="" selected></option>
+                                      {% endif %}
+                                      {% for i in qDMeth.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+	        	</select></div>
+		<br></div>
+
+                <div class="row">
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_software"> <a title="Software: Name of the software used to compute the simulations (without version)."> Software: </a> </label></th></div>
+                        <div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:300px" placeholder="" {%if saved%}value=" {{qDS.values.0.software}}" {%endif%} /></td></tr></div>
+                <br></div>      
+
+                <div class="row">
+	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3" ><tr><th><label for="id_sversion" style="margin-right:-30px"><a style="margin-right:-20px;width:130px" title="Software version: Version of the software used to compute the simulations.">Software version:</a></label></th></div>
+			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300px"  placeholder="" {%if saved%} value=" {{qDS.values.0.sversion}}" {%endif%} /></td></tr></div>
+                <br></div>
+
+                <div class="row">
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_ff"> <a title="Force Field: Name of the force-field used to compute the simulations (without version)."> Force Field: </a> </label></th></div>
+                        <div class="col-md-6"><td><input id="id_ff" maxlength="20" name="ff" type="text" style="width:300px" placeholder="" {%if saved%} value=" {{qDS.values.0.ff}}" {%endif%}  /></td></tr></div>
+                <br></div>
+
+                <div class="row">
+	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_ffversion"> <a title="FF version: Version of the force field used to compute the simulations."> FF version: </a> </label></th> </div>
+                        <div class="col-md-6"><td><input id="id_ffversion" maxlength="15"{%if saved%}value=" {{qDS.values.0.ffversion}}" {%endif%} name="ffversion" type="text" style="width:300px"  placeholder=""/></td></tr></div>
+                <br></div>
+
+
+                <div class="row">
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_assay_types"><a title="Assay type: Classification of simulations according to an equivalent experimental assay."> Assay type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px;height:26px"  placeholder="  " > 
+                                      {%if saved%}
+		        	       <option value="{{ddown.id_assay_types.0}}">{{ddown.id_assay_types.1}}</option>
+                                      {%else%}
+                                        <option value="" selected></option>
+                                      {% endif %}
+                                      {% for i in qAT.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+                             <!--   <option value="1">Orthosteric binding/unbinding</option>
+                                <option value="2">Activation/Inactivation/Modulation</option>
+                                <option value="3">Oligomerization</option>
+                                <option value="4">Allosteric binding/unbinding</option>
+                                <option value="5">Allosteric modulation</option>
+                                <option value="6">G-protein coupling/uncoupling</option>
+                                <option value="7">Arrestin coupling/uncoupling</option>
+                                <option value="8">Protein stability</option> 
+                                <option value="9">Others</option> -->
+                        </select></td></tr></div>
+                <br></div>
+
+                <div class="row">
+	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_dynamics_membrane_types"><a title="Membrane type: Type of membrane used in the simulation."> Membrane type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:300px;height:26px"  placeholder="  " ><br>
+                                      {%if saved%}
+		        	      <option value="{{ddown.id_dynamics_membrane_types.0}}">{{ddown.id_dynamics_membrane_types.1}}</option>
+                                      {%else%}
+                                        <option value="" selected></option>
+                                      {% endif %}
+                                      {% for i in qDMT.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+                <!--            <option value="1">Implicit</option>
+                                <option value="2">Homogeneous</option>
+                                <option value="3">Heterogeneous</option> -->
+                        </select></td></tr></div>
+                <br></div>
+
+                <div class="row">
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_dynamics_solvent_types"><a title="Solvent type: Type of solvent used in the simulation. ">Solvent type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:300px;height:26px"  placeholder="  " >
+                                      {%if saved%}
+                                       <option value="{{ddown.id_dynamics_solvent_types.0}}">{{ddown.id_dynamics_solvent_types.1}}</option>
+                                      {%else%}
+                                        <option value="" selected></option>
+                                      {% endif %}
+                                     {% for i in qDST.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
+                                      
+                          <!--  <option value="1">Implicit</option>
+                                <option value="2">TIP3P</option>
+                                <option value="3">TIP4P</option>
+                                <option value="4">TIPS</option>
+                                <option value="5">SPC</option>
+                                <option value="6">SPC/E</option>
+                                <option value="7">Other</option> -->
+                        </select></td></tr></div>
+                <br></div>
+
+                <div class="row">
+                         <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_solvent_num"><a title="Solvent num: Number of solvent molecules">Solvent num:</a> </label></th></div>
+                        <div class="col-md-2"><td><input id="id_solvent_num" name="solvent_num" type="number" min="0" style="width:75px" readonly {%if saved%}value="{{qDS.values.0.solvent_num}}" {%endif%} placeholder="" /></td></tr></div> 
+                        <div class="col-md-2"style="margin-left:8px;padding-right:0px" ><tr><th><label for="id_atom_num"><a title="Num. Atoms: Number of atoms in the simulation.">Num. Atoms:</a></label></th></div>
+                        <div class="col-md-3" style="margin-left:6px;align:right"><td><input id="id_atom_num" name="atom_num" type="number" readonly style="width:75px" placeholder=""{%if saved%}value="{{qDS.values.0.atom_num}}" {%endif%} /></td></tr></div>
+                <a id="id_form-{{int0}}-lock" title="These two fields will be automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a>
+                <br></div>
+
+<!--                <div class="row">
+                        <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_framenum"><a title="Number of frames: Number of frames in the trajectory file.">Number of frames:</a> </label></th></div>
+                        <div class="col-md-2"><input id="id_framenum" name="framenum" value="{{nf}}" type="number" style="width:100%" min="0" placeholder=""{%if saved%}value=" {{qDS.values.0.framenum}}" {%endif%} /></div>
+                <a id="id_form-{{int0}}-lock" title="These two fields will be automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a>
+                <br></div> -->
+
+                <div class="row">
+                        <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_timestep"><a title="Time step: Simulation integration step (fs).">Time step:</a> </label></th></div>
+                        <div class="col-md-2"><input id="id_timestep" name="timestep" type="text" style="width:100%" min="0" placeholder=""{%if saved%}value=" {{qDS.values.0.timestep}}" {%endif%} /></div>
+                        <div class="col-md-2" style="margin-left:8px;padding-right:0px" ><label for="id_delta"><a style="padding-right:0px" title="Delta: Time lapse between frames in a trajectory file (ns).">Delta:</a> </label></div>
+                        <div class="col-md-2" style="margin-left:6px;align:right"><input id="id_delta" name="delta" type="text" style="width:100%" placeholder="" {%if saved%}value=" {{qDS.values.0.delta}}" {%endif%} /></div>
+                <br></div>
+
+                <div class="row">
+	        	 <div class="col-md-1"style="height:85px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
+                        <div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" placeholder="Description of simulaiton protocol, ensemble type, what is studied in the simulation (e.g. sodium binding)..." >{%if saved%}{{qDS.values.0.description}}{%endif%}</textarea></div>
+		</div>
+</div>
+
+</div>
+</div>
+</div>
+<div class="col-md-7 col-md-offset-4"> 
+      <div class="col-md-12 panel panel-primary">
+  	  <div class="panel-body" id="selection-">
+                <input id="id_submit" name="submit" type="submit" value="Submit " class="btn btn-success btn-lg btn-block has-spinner"  />
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+                 {%if not ModelReuse %}
+        	<a id='selection-button' href="/dynadb/model/{{submission_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%else%}
+        	<a id='selection-button' href="/dynadb/modelreuse/{{submission_id}}/{{qMOD.0.model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%endif%}
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 3: Crystalized Components Information </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+                 {%if not ModelReuse %}
+        	<a id='selection-button' href="/dynadb/molecule/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%else%}
+        	<a id='selection-button' href="/dynadb/moleculereuse/{{submission_id}}/{{qMOD.0.model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%endif%}
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 2: Small Molecule Information </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+                 {%if not ModelReuse %}
+        	<a id='selection-button' href="/dynadb/protein/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%else%}
+        	<a id='selection-button' href="/dynadb/proteinreuse/{{submission_id}}/{{qMOD.0.model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%endif%}
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 1: Protein Information </a>
+      	  </div>
+      </div>
+  </div>
+</form>
+{% endblock content %}
+
+
+
+{% block addon_js %}
+
+    <script src="{% static 'dynadb/descriptionSquare.js' %}"></script>
+    <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+    <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+    <script src="{% static 'dynadb/pdbCheckMolDyn.js' %}"></script>
+    <script src="{% static 'dynadb/addSimcomp.js' %}"></script>
+    <script src="{% static 'dynadb/checkTrajectories.js' %}"></script>
+    <script src="{% static 'dynadb/DYNAMICSpost.js' %}"></script> 
+                   
+{% endblock %}

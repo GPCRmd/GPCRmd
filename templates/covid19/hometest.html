@@ -1,0 +1,112 @@
+<head>
+  {% load static %}
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="{% static 'home/logo/gpcrmd/main_circle.png' %}" />
+  <!-- Bootstrap -->
+  <link
+    href="{% static 'bootstrap/css/bootstrap.min.css' %}"
+    rel="stylesheet"
+  />
+
+  <!-- Custom styles -->
+  <link href="{% static 'home/css/style.css' %}" rel="stylesheet" />
+
+  {% block addon_css %}
+  <style>
+    .node circle {
+      fill: #fff;
+      stroke: steelblue;
+      stroke-width: 1.5px;
+    }
+    .node {
+      font: 20px sans-serif;
+    }
+    .link {
+      fill: none;
+      stroke: #ccc;
+      stroke-width: 1.5px;
+    }
+  </style>
+
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="{% static 'covid19/css/success.css' %}"
+  />
+  {% endblock %}
+
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css"
+  />
+  <base href="your_domain/" target="_PARENT" />
+</head>
+
+<body style="padding: 20px 0">
+  {% block content %}
+
+  <!-- description column -->
+  <div class="col-md-1"></div>
+  <div class="col-md-10">
+    <div id="header_panel" class="row panel panel-primary">
+      <div class="panel-body">
+        <div>
+          <h2>COVID-19 MD</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="row panel panel-primary">
+      <div class="panel-body">
+        <div id="chart" data-tree_data="{{tree_data}}"></div>
+      </div>
+    </div>
+  </div>
+
+  {% endblock content %} {% block addon_js %}
+
+  <!-- From base.html -->
+  <script src="{% static 'home/js/jquery.js' %}"></script>
+  <!-- jQueryUI -->
+  <link
+    rel="stylesheet"
+    href="{% static 'home/css/jquery-ui.min.css' %}"
+    type="text/css"
+    media="all"
+  />
+  <link
+    rel="stylesheet"
+    href="{% static 'home/css/jquery-ui.theme.min.css' %}"
+    type="text/css"
+    media="all"
+  />
+  <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+  <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+  <script>
+    $.widget.bridge("uitooltip", $.ui.tooltip);
+    $.widget.bridge("uibutton", $.ui.button);
+  </script>
+  <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+  <!-- END From base.html -->
+  <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="{% static 'covid19/js/covidhometest.js' %}"></script>
+
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css"
+  />
+  <!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+  <script
+    type="text/javascript"
+    charset="utf8"
+    src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"
+  ></script>
+
+  <!--<script  src="{% static 'covid19/js/upload.js' %}"></script>-->
+  {% endblock %}
+</body>

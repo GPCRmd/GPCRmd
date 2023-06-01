@@ -1,0 +1,41 @@
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+ {% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">
+{% csrf_token %}
+    <input type="hidden" name="extra" value="{{extra}}">
+
+    <fieldset>
+        <legend> Protein Form </legend>	
+        {{ fdb_ProteinForm.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> Other_Protein_NamesForm </legend>	
+        {{ fdb_Other_Protein_NamesForm.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+    <fieldset>
+        <legend> fdb_Protein_SequenceForm </legend>	
+        {{ fdb_Protein_SequenceForm.as_p }}
+        <input type="submit" name="action" value="+">
+        </fieldset>
+
+<!--        <div style="text-align: right">
+        {% if not edit%}
+            <input type="submit" name="action" value="Create">
+        {% else %}
+            <input type="submit" name="action" value="Edit">
+        {% endif %}
+        </div>
+    </form> -->
+
+{% endblock content %}
+
+
+

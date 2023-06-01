@@ -1,0 +1,192 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">
+
+ <!-- description column -->
+ <div class="col-md-4">
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Simulation Submission<br>Step 3:<br>MD protocol</h3>
+        </div> 
+     </div>
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+            <div style="text-align:center"> 
+             <h4>FILL IN THE DYNAMICS FORM</h4>
+            </div>
+             <p>Fill in the following form concerning specific details on the MD simulation protocol. </p>
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+             </p>
+         </div>
+     </div>
+ </div>
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-md-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+	        <div class="row">
+	 		<div class="col-md-5">	<label for="id_id_model"> <a title="id for the “model” that have been used for obtaining the topology and initial coordinates for the simulation. Foreign key to “dyndb_model”.”id”.">Id model:</a> </label> </div>  
+			<div class="col-md-6"><select id="id_id_model" name="id_model">  
+        			<option value="" selected="selected">---------</option>
+        			<option value="1">DyndbModel object</option>
+        			</select></div>
+		<br></div>
+		<div class="row">
+ 			<div class="col-md-5"><label for="id_id_dynamics_methods"> <a title="id for the classification of molecular dynamics simulation methods."> Id dynamics methods: </a> </label></div>
+			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods">
+        			<option value="" selected="selected">---------</option>
+		        	<option value="8">DyndbDynamicsMethods object</option>
+		        	<option value="6">DyndbDynamicsMethods object</option>
+		        	<option value="5">DyndbDynamicsMethods object</option>
+        			<option value="9">DyndbDynamicsMethods object</option>
+       				<option value="7">DyndbDynamicsMethods object</option>
+		        	<option value="1">DyndbDynamicsMethods object</option>
+		        	<option value="4">DyndbDynamicsMethods object</option>
+		        	<option value="3">DyndbDynamicsMethods object</option>
+		        	<option value="2">DyndbDynamicsMethods object</option>
+	        	</select></div>
+		<br></div>
+
+	        <div class="row">
+        		<div class="col-md-5"><tr><th><label for="id_software"> <a title=" Name of the software used to compute the simulations (without version)."> Software: </a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" /></td></tr></div>
+		<br></div>	
+
+	        <div class="row">
+	        	<div class="col-md-5"><tr><th><label for="id_sversion"> <a title="Version of the software used to compute the simulations.">  Sversion: </a></label></th></div>
+			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+        		<div class="col-md-5"><tr><th><label for="id_ff"> <a title="Name of the force-field used to compute the simulations (without version)."> Ff: </a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_ff" maxlength="20" name="ff" type="text" /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+	        	<div class="col-md-5"><tr><th><label for="id_ffversion"> <a title="Version of the force field used to compute the simulations."> Ffversion: </a> </label></th> </div>
+			<div class="col-md-6"><td><input id="id_ffversion" maxlength="15" name="ffversion" type="text" /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+        		<div class="col-md-5"><tr><th><label for="id_id_assay_types"><a title="id for the classification of molecular dynamics simulation methods. See “dyndb_dynamics_methods”. Foreign key to “dyndb_assay_types”.”id”.">Id assay types:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types"> 
+		        	<option value="" selected="selected">---------</option> 
+			        <option value="1">DyndbAssayTypes object</option>
+			        <option value="2">DyndbAssayTypes object</option>
+			        <option value="3">DyndbAssayTypes object</option>
+			        <option value="4">DyndbAssayTypes object</option>
+			        <option value="5">DyndbAssayTypes object</option>
+			        <option value="6">DyndbAssayTypes object</option>
+		        	<option value="7">DyndbAssayTypes object</option>
+		        </select></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+	        	<div class="col-md-5"><tr><th><label for="id_description"><a title="short text describing other relevant information that it is not contained on other fields. ">Description:</a> </label></th></div>
+			<div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="5"></textarea></div>
+		<br></div>
+
+	        <div class="row">
+	        	<div class="col-md-5"><tr><th><label for="id_id_dynamics_membrane_types"><a title="id for the classification of membranes used in molecular dynamics simulation methods. See “dyndb_dynamics_membrane_types”. Foreign key to “dyndb_dynamics_membrane_types”.”id”.">Id dynamics membrane types:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types"><br>
+        			<option value="" selected="selected">---------</option>
+			        <option value="3">DyndbDynamicsMembraneTypes object</option>
+			        <option value="2">DyndbDynamicsMembraneTypes object</option>
+			        <option value="1">DyndbDynamicsMembraneTypes object</option>
+		        </select></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+        		<div class="col-md-5"><tr><th><label for="id_id_dynamics_solvent_types"><a title="id for the classification of solvent models used in molecular dynamics simulation methods. See “dyndb_dynamics_solvent_types”. Foreign key to “dyndb_dynamics_solvent_types”.”id”. ">Id dynamics solvent types:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types">
+		        	<option value="" selected="selected">---------</option>
+			        <option value="1">DyndbDynamicsSolventTypes object</option>
+			        <option value="7">DyndbDynamicsSolventTypes object</option>
+			        <option value="5">DyndbDynamicsSolventTypes object</option>
+		        	<option value="6">DyndbDynamicsSolventTypes object</option>
+			        <option value="2">DyndbDynamicsSolventTypes object</option>
+			        <option value="3">DyndbDynamicsSolventTypes object</option>
+			        <option value="4">DyndbDynamicsSolventTypes object</option>
+	        	</select></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+        		<div class="col-md-5"><tr><th><label for="id_solvent_num"><a title=" ">Solvent num:</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_solvent_num" name="solvent_num" type="number" /></td></tr></div>
+		<br></div>
+
+<!--	        <div class="row">
+		        <div class="col-md-5"><tr><th><label for="id_update_timestamp"><a title="Last modification timestamp of the object. Filled by DB engine automatically. ">Update timestamp:</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_update_timestamp" name="update_timestamp" type="text" /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+	        	<div class="col-md-5"><tr><th><label for="id_creation_timestamp"><a title="Creation timestamp of the object. Filled by DB engine automatically. ">Creation timestamp:</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_creation_timestamp" name="creation_timestamp" type="text" /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+		        <div class="col-md-5"><tr><th><label for="id_created_by_dbengine"><a title="DB user that created the object. Filled by DB engine automatically. ">Created by dbengine:</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_created_by_dbengine" maxlength="40" name="created_by_dbengine" type="text" /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+        		<div class="col-md-5"><tr><th><label for="id_last_update_by_dbengine"><a title="Last update_timestamp but filled by DB engine automatically. ">Last update by dbengine:</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_last_update_by_dbengine" maxlength="40" name="last_update_by_dbengine" type="text" /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+	      		<div class="col-md-5"><tr><th><label for="id_created_by"><a title="User id number that created the object. Filled by submission form. ">Created by:</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_created_by" name="created_by" type="number" /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+        		<div class="col-md-5"><tr><th><label for="id_last_update_by"><a title="User id that updated the object. Filled by modification form.">Last update by:</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_last_update_by" name="last_update_by" type="number" /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+	        	<div class="col-md-5"><tr><th><label for="id_submission_id"><a title="submission identifier.  Filled by DB engine.">Submission id:</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_submission_id" name="submission_id" type="number" /></td></tr></div> 
+		<br><br></div> -->
+        	
+<!--        <th><input type="submit" value="Submit" /> </th><br> -->
+     </div>
+  </div>
+  <div id="selection-buttons">
+      <div class="col-md-12 panel panel-primary">
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href=/dynadb/db_files/  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span>  Continue to step 4: Files uploading </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/db_model/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 2-3: System Information (Model Form) </a>
+      	  </div>
+      </div>
+  </div>
+</div>
+{% endblock content %}
+
+
+

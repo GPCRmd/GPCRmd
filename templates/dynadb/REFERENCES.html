@@ -1,0 +1,94 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+
+{% block content %}
+<div class="regForm">
+  <form class="row" method="post" action="{{ action }}" enctype="multipart/form-data" id="myformRef">{% csrf_token %}
+
+    <!-- description column -->
+    <div class="col-md-4 col-md-offset-1">
+      <div class="col-md-12 regPanel panel panel-primary">
+        <div class="panel-body">
+          <h2 class="panel-heading">Authors and References Information</h2>
+        </div>
+      </div>
+
+      <!-- main description -->
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <p style="text-align: justify;"> Please provide citation data for the submitted simulation data. Provide
+            scientific journal name or book publisher.</p>
+        </div>
+      </div>
+
+      <!-- link to docs -->
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <p>For more information on this form, see the <a class="textlink" alt="Work in progress.">docs</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--   _____________________________________________________________________________________________-->
+
+    <!-- middle column -->
+    <div id="pprotform" class="col-md-5">
+      <div id="protform" class="col-md-12 panel panel-primary">
+        <div class="panel-body">
+          <div style="text-align:center">
+            <h3 class="orangeTit">References Information</h3>
+          </div><br>
+
+          <br>
+
+          <div class=row id='PRUEBA'>
+            <div class="row">
+              <div class="col-md-3 col-md-offset-2 "> <p> Submission ID:</3></div>
+              <div class="col-md-6">
+                <input id="submission_id" maxlength="30" name="submission_id" type="text"
+                    placeholder="" class="refInput"/>
+              </div>
+            </div>
+
+            {% for field in fdbREFF %}
+            <div class="row">
+              <div class="col-md-3 col-md-offset-2 "> <p title="{{field.help_text|safe}}">
+                  {{ field.label }}:</p>
+              </div>
+              <div class="col-md-6"> {{field.as_widget}}{{field.errors }} </div>
+            </div>
+            {% endfor %}
+          </div><br><br>
+
+        </div>
+
+          <div class="col-md-3 col-md-offset-5" id="selection-" style="margin-bottom:3%">
+            <input id="id_submit" name="submit" type="submit" value="Submit"
+                class="submitBtn btn btn-success btn-lg btn-block has-spinner" />
+          </div>
+
+      </div>
+    </div>
+
+    {% comment %} <div class="col-md-6 col-md-offset-5">
+      <div class="col-md-12 panel panel-primary">
+        <div class="panel-body" id="selection-">
+          <input id="id_submit" name="submit" type="submit" value="Submit"
+            class="btn btn-success btn-lg btn-block has-spinner" />
+        </div>
+      </div>
+    </div> {% endcomment %}
+  </form>
+</div>
+
+{% endblock content %}
+
+
+
+{% block addon_js %}
+
+<script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+<script src="{% static 'dynadb/REFERENCESpost.js' %}"></script>
+
+{% endblock %}

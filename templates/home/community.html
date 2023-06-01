@@ -1,0 +1,185 @@
+<head>
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script type="text/javascript">
+    google.load("visualization", "1", { packages: ["corechart"], "language": "en" });
+  </script>
+  <script>document.domain = document.domain;</script>
+  {% extends "home/base.html" %}
+  {% load static %}
+  {% block addon_css %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  {% endblock %}
+</head>
+
+<body>
+
+  {% block content %}
+  <!-- About us -->
+  <div class="abUs ft jumbotron jumbotron-fluid">
+    <div class="row">
+      <div class="col-xs-12 col-md-6 col-md-offset-1 vcenter">
+        <h2 class="famTitle display-4">About us</h2>
+        <p class="famText lead">GPCRmd is a project developed by the <a class="textlink"
+            href="http://grib.imim.es/research/gpcr-drug-discovery/" target="_blank">
+            GPCR drug discovery group</a>, located at the
+          <a class="textlink" href="https://www.prbb.org/" target="_blank">PRBB</a>, Barcelona. The 
+          group is focussed on the functionality of G
+          protein coupled receptors (GPCRs) in the context of CNS-related disorders taking into
+          account: receptor plasticity, activation mechanism, signaling bias, ligand binding,
+          the effect of the membrane and other interaction partners. The final goal is to
+          translate obtained molecular insights into the design of drug candidates with
+          improved therapeutic profiles. <a class="textlink" href="http://grib.imim.es/about-us/jana-selent/"
+            target="_blank">Jana Selent </a>
+          is the group leader. <br> <br>
+          GPCRmd aims to promote data sharing and reproducibility. Therefore, GPCRmd stores information 
+          about starting structure, parameters and simulation protocols. <b>The data will be stored for at 
+          least 8 years after data submission</b>.
+          <br> <br> 
+          However, there are far more GPCRmd contributors forming the <a class="textlink" href="#comSection">
+          community</a>.
+        </p>
+      </div>
+      <div class="famImageDiv col-xs-12 col-md-4 vcenter">
+        <img class="famImage" src="{% static 'home/images/pages/aboutus/prbb.jpg' %}">
+      </div>
+    </div>
+  </div>
+
+  <!-- 2nd simulation
+  <div class="wb jumbotron jumbotron-fluid">
+    <div class="row">
+      <div class="leftImageDiv  col-xs-12 col-md-5 col-md-offset-1 vcenter">
+        <a href="https://www.nature.com/articles/s41592-020-0884-y" target="_blank"><img class="paperImage" src="{% static 'home/images/pages/aboutus/natuPaper.png' %}"></a>
+      </div>
+      <div class="workTextDiv col-xs-12 col-md-5 vcenter">
+        <h2 class="secRoundTitle display-4">Second simulation round</h2>
+        <p class="darkText rightText lead"> After our first successful publication in <a class="textlinkdark"
+            href="https://www.nature.com/articles/s41592-020-0884-y" target="_blank">Nature Methods</a>,
+          we are back to increase the data coverage of GPCRmd in a 2nd simulation round.<br>
+          In this round, we are focused on simulating all remaining PDB IDs which correspond
+          to <strong>GPCRs which are not in complex with G proteins, arrestins, or nanobodies</strong>. Note
+          that GPCR-G protein/arrestin/nanobody complexes will be addressed in the 3rd
+          simulation round starting in January 2021. ???
+        </p>
+      </div>
+    </div>
+  </div>  -->
+
+  <!-- Community panel -->
+  <div id="comSection" class="wholePanel row">
+    <div class="panel panel-primary ">
+      <h2 class="panel-heading">The GPCRmd community</h2>
+
+      <div class="panel-body">
+        <div class="comImgDiv col-lg-12">
+          <div class="comImg col-lg-8 col-md-8 col-sm-8">
+            <iframe title=" " aria-label="Map" id="datawrapper-chart-f743N" src="https://datawrapper.dwcdn.net/T5E0n/2/"
+              scrolling="no" frameborder="0" style="border: none;" width="1400" height="686"></iframe>
+          </div>
+        </div>
+
+        <!-- members -->
+        <div class="col-lg-6">
+          <ul class="no-bullets">
+            <li>Ismael Rodríguez-Espigares, <strong>Hospital del Mar Medical Research Institute—Pompeu Fabra
+                University</strong> (Barcelona, Spain) </li>
+            <li>Mariona Torrens-Fontanals, <strong>Hospital del Mar Medical Research Institute—Pompeu Fabra
+                University</strong> (Barcelona, Spain)</li>
+            <li>Johanna K. S. Tiemann, <strong>University of Copenhagen</strong> (Copenhagen, Denmark), <strong>Medical
+                University Leipzig</strong> (Leipzig, Germany), <strong>Charite University Medicine Berlin</strong>
+              (Berlin,
+              Germany)</li>
+            <li>David Aranda-García, <strong>Hospital del Mar Medical Research Institute—Pompeu Fabra
+                University</strong>
+              (Barcelona, Spain)</li>
+            <li>Juan Manuel Ramírez-Anguita, <strong>Hospital del Mar Medical Research Institute—Pompeu Fabra
+                University</strong> (Barcelona, Spain)</li>
+            <li>Tomasz Maciej Stepniewski, <strong>Hospital del Mar Medical Research Institute—Pompeu Fabra
+                University</strong> (Barcelona, Spain)</li>
+            <li>Nathalie Worp, <strong>Hospital del Mar Medical Research Institute—Pompeu Fabra University</strong>
+              (Barcelona, Spain)</li>
+            <li>Alejandro Varela-Rial, <strong>Pompeu Fabra University</strong> (Barcelona, Spain)</li>
+            <li>Adrián Morales-Pastor, <strong>Hospital del Mar Medical Research Institute—Pompeu Fabra
+                University</strong>
+              (Barcelona, Spain)</li>
+            <li>Brian Medel-Lacruz, <strong>Hospital del Mar Medical Research Institute—Pompeu Fabra University</strong>
+              (Barcelona, Spain)</li>
+            <li>Gáspár Pándy-Szekeres, <strong>University of Copenhagen</strong> (Copenhagen, Denmark)</li>
+            <li>Eduardo Mayol, <strong>Universitat Autònoma de Barcelona</strong> (Bellaterra, Spain)</li>
+            <li>Toni Giorgino, <strong>National Research Council of Italy</strong> (Milan, Italy), <strong>University of
+                Milan</strong> (Milan, Italy)</li>
+            <li>Jens Carlsson, <strong>Uppsala University</strong> (Uppsala, Sweden)</li>
+            <li>Xavier Deupi, <strong>Paul Scherrer Institute</strong> (Villigen PSI, Switzerland)</li>
+            <li>Slawomir Filipek,<strong> University of Warsaw</strong> (Warsaw, Poland)</li>
+            <li>Marta Filizola, <strong>Icahn School of Medicine at Mount Sinai</strong> (New York, USA)</li>
+            <li>José Carlos Gómez-Tamayo, <strong>Universitat Autònoma de Barcelona</strong> (Bellaterra, Spain)</li>
+            <li>Angel Gonzalez, <strong>Universitat Autònoma de Barcelona</strong> (Bellaterra, Spain)</li>
+            <li>Hugo Gutiérrez-de-Terán, <strong>Uppsala University</strong> (Uppsala, Sweden)</li>
+            <li>Mireia Jiménez-Rosés, <strong>Universitat Autònoma de Barcelona</strong> (Bellaterra, Spain)</li>
+            <li>Willem Jespers, <strong>Uppsala University</strong> (Uppsala, Sweden)</li>
+            <li>Jon Kapla, <strong>Uppsala University</strong> (Uppsala, Sweden)</li>
+            <li>George Khelashvili, <strong>Weill Cornell Medical College of Cornell University</strong> (New York, USA)
+            </li>
+            <li>Peter Kolb, <strong>Philipps-University Marburg</strong> (Marburg, Germany)</li>
+            <li>Dorota Latek, <strong>University of Warsaw</strong> (Warsaw, Poland)</li>
+            <li>Maria Marti-Solano, <strong>MRC Laboratory of Molecular Biology</strong> (Cambridge, UK),
+              <strong>Philipps-University Marburg</strong> (Marburg, Germany)
+            </li>
+            <li>Pierre Matricon, <strong>Uppsala University</strong> (Uppsala, Sweden)</li>
+          </ul>
+        </div>
+
+        <div class="col-lg-6">
+          <ul class="no-bullets">
+            <li>Minos-Timotheos Matsoukas, <strong>University of Patras</strong> (Patras, Greece), <strong>Universitat
+                Autònoma de Barcelona</strong> (Bellaterra, Spain)</li>
+            <li>Przemyslaw Miszta, <strong>University of Warsaw</strong> (Warsaw, Poland)</li>
+            <li>Mireia Olivella, <strong>Universitat Autònoma de Barcelona</strong> (Bellaterra, Spain)</li>
+            <li>Laura Perez-Benito,<strong> Universitat Autònoma de Barcelona</strong> (Bellaterra, Spain)</li>
+            <li>Davide Provasi, <strong>Icahn School of Medicine at Mount Sinai</strong> (New York, USA)</li>
+            <li>Santiago Ríos, <strong>Universitat Autònoma de Barcelona</strong> (Bellaterra, Spain)</li>
+            <li>Iván R. Torrecillas,<strong> Universitat Autònoma de Barcelona</strong> (Bellaterra, Spain)</li>
+            <li>Jessica Sallander, <strong>Uppsala University</strong> (Uppsala, Sweden)</li>
+            <li>Agnieszka Sztyler, <strong>University of Warsaw</strong> (Warsaw, Poland)</li>
+            <li>Silvana Vasile, <strong>Uppsala University</strong> (Uppsala, Sweden)</li>
+            <li>Harel Weinstein, <strong>Weill Cornell Medical College of Cornell University</strong> (New York, USA)
+            </li>
+            <li>Ulrich Zachariae, <strong>University of Dundee</strong> (Dundee, UK)</li>
+            <li>Peter W. Hildebrand, <strong>Medical University Leipzig</strong> (Leipzig, Germany), <strong>Charite
+                University Medicine Berlin</strong> (Berlin, Germany), <strong>Berlin Institute of Health</strong>
+              (Berlin,
+              Germany)</li>
+            <li>Gianni De Fabritiis, <strong>Pompeu Fabra University</strong> (Barcelona, Spain),
+              <strong>Acellera</strong>
+              (Barcelona, Spain)
+            </li>
+            <li>Ferran Sanz, <strong>Hospital del Mar Medical Research Institute—Pompeu Fabra University</strong>
+              (Barcelona, Spain)</li>
+            <li>David E. Gloriam, <strong>University of Copenhagen</strong> (Copenhagen, Denmark)</li>
+            <li>Arnau Cordomi, <strong>Universitat Autònoma de Barcelona</strong> (Bellaterra, Spain)</li>
+            <li>Ramon Guixà-González, <strong>Paul Scherrer Institute</strong> (Villigen PSI, Switzerland)</li>
+            <li>Irina Tikhonova, <strong>Queen's University Belfast</strong> (Belfast, UK)</li>
+            <li>Antonella di Pizio, <strong>Technical University of Munich</strong> (Munich, Germany)</li>
+            <li>Alessandro Nicoli, <strong>Technical University of Munich</strong> (Munich, Germany)</li>
+            <li>Jesper Madsen, <strong>University of South Florida</strong> (Tampa, USA)</li>
+            <li>Célien Jacquemard, <strong>University of Strasbourg</strong> (Strasbourg, France)</li>
+            <li>Aida Shahraki, <strong>Philipps-University Marburg</strong> (Marburg, Germany)</li>
+            <li>Matthaeus Drabek, <strong>Philipps-University Marburg</strong> (Marburg, Germany)</li>
+            <li>Victor Lim, <strong>Philipps-University Marburg</strong> (Marburg, Germany)</li>
+            <li>Jana Selent, <strong>Hospital del Mar Medical Research Institute—Pompeu Fabra University</strong>
+              (Barcelona, Spain)</li>
+
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  {% endblock content %}
+
+
+  {% block addon_js %}
+  {% endblock %}
+
+
+</body>

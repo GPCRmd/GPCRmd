@@ -1,0 +1,91 @@
+{% extends "home/base.html" %} 
+{% load static %} 
+
+<!-- Form styles -->
+{% block addon_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'dynadb/newform_styles.css' %}" />
+{% endblock %}
+
+{% block addon_js %}
+<script src="{% static 'dynadb/step2_functions.js' %}"></script>
+<script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+<script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+<script src="{% static 'dynadb/searchtop.js' %}"></script>
+<script src="{% static 'dynadb/required_fields.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="regForm row">
+<!--The main submission form tag. All the input tags refering to it will have form="mainform"-->
+  <form method="post" id="mainform" onsubmit="return createAllErrors('mainform','loading_submit')" action="/dynadb/step2_submit/{{submission_id}}/" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="num_entries" id="num_entries" value="" form="mainform">
+  </form>
+
+  <div class="col-md-10 col-md-offset-1">
+    <div class="col-md-12 regPanel panel panel-primary">   
+      <div class="panel-body">
+        <h2 class="panel-heading">Step 2: Small Molecules</h2>
+    </div> 
+    </div>
+    <!-- Loading small moleucles -->
+    <div id="main_loading_div" class="col-md-12 panel panel-primary panel_input">
+      <h1>Please wait</h1>
+      <h4>Your submitted structure's small molecules are being analyzed. This may take a few seconds..</h4>
+      <img id="loading_icon" src="{% static 'view/images/loading-gear.gif' %}"/>
+    </div>
+    <!-- Error loading -->
+    <div id="main_error_div" class="hidden_sections panel panel-primary panel_input">
+      <div id="inner_error_div" class="col-md-12 alert alert-danger">
+        <p>An unexpected error ocurred. Please repeat your submission</p>
+      </div>
+    </div>
+    <!-- Loading main molecule div -->
+    <div id="main_mol_div" class="hidden_sections" action="/dynadb/step2_submit/{{submission_id}}/">
+      <div class='col-md-12 panel panel-primary panel-body'>
+
+        <h4>The following non-protein molecules were found in your system PDB file. 
+          Please, create new entries for any missing molecules and revise the information of the found ones.
+        </h4>
+        
+      </div>
+    </div>
+  </div>
+
+  <div id="main_menus_div" class="hidden_sections">
+  {% include "dynadb/submission_steps_menu.html" %}
+  </div>
+
+</div>
+
+<script type="text/javascript">
+  //Find small molecules in the PDB files for this system
+  $(document).ready(function(){
+      var subm_id = window.location.pathname.split('/')[3]
+      $.ajax({
+          url: '/dynadb/find_smalmols/'+subm_id,
+          data: {
+              'subm_id': subm_id
+          },
+          data_type: 'json',
+          success: function(data){
+            smalmol_data = JSON.parse(data)
+            var container = $("#main_mol_div")
+            smalmol_entries(smalmol_data, container)
+            container.show();
+          },
+          error: function(){
+            $("#main_error_div").show();            
+          },
+          complete: function(){
+            $("#main_menus_div").show();            
+            $("#main_loading_div").hide();
+          },
+          timeout: 600000          
+      });
+  });
+</script>
+
+
+{% endblock content %}
+

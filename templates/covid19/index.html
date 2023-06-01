@@ -1,0 +1,180 @@
+<head>
+{% extends "covid19/base_covid19.html" %} 
+{% load static %} 
+
+{% load covid_custom %}         
+
+{% block addon_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'covid19/css/base.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'covid19/css/home.css' %}" />
+{% endblock %}
+
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+  <base href="your_domain/" target="_PARENT">
+
+</head>
+
+<body style="padding:20px 0">
+{% block content %} 
+
+
+ <!-- description column -->
+
+<div class="col-md-12 "> 
+
+   <div class="row pagetitle" >  
+       <div >
+          <h2  >Browse</h2>
+       </div> 
+   </div>
+
+
+  <div  class="row" style="padding:0 40px"> 
+    <div class="panel-body" style="overflow:auto">
+      <div>
+        <p>
+<!--          <a href="/covid19/upload/">Upload simulation</a> -
+          {% if user_accepted %}
+          <a href="/accounts/change_data">Change user information</a> -
+          <a href="/accounts/change_passw">Change password</a> -
+          <a href="/accounts/logout">Log out</a> 
+          {% else %}
+          <a href="/accounts/login">Log in</a> 
+          {% endif %}-->
+
+       </p>
+      </div>
+      {% if error_msn %}
+        <div class="head_info" >
+          <div class="alert alert-warning">
+            {{error_msn}}
+          </div>
+        </div>
+      {% endif %}
+      {% if variant_genome %}
+        <div class="head_info">
+          <p> 
+            <a href="/covid19/allprot/{{variant_genome}}"><span  class="label label-primary">{{variant_genome}}</span></a>
+            {% for filt_prot in is_filtered %}
+              <a href="/covid19/prot/{{filt_prot}}"><span  class="label label-info">{{filt_prot}}</span></a>
+            {% endfor %}
+          </p>
+          <p>Select a simulation to analyse the impact of the mutations found in the isolate {{variant_genome}}.</p>        
+        </div>
+      {% elif is_filtered %}
+        <div class="head_info">
+          <p> 
+            {% for filt_prot in is_filtered %}
+              <a href="/covid19/prot/{{filt_prot}}"><span  class="label label-info">{{filt_prot}}</span></a>
+            {% endfor %}
+          </p>    
+        </div>
+      {% endif %}
+      <table id="table_id" class="display mydatatable" data-pre_search="{{pre_search}}">
+
+
+        <thead>
+          <th> </th>
+          <th>Model name</th>
+          <th>Included proteins</th>
+          <th>Protein name</th>
+          <th>Uniprot entry name</th>
+          <th>Uniprot ID</th>
+          <th>PDB ID</th>
+          <th>Species</th>
+          <th>Ligand(s)</th>
+          <th>Membrane composition</th>
+          <th>Replicates</th>
+          <th>Author</th>
+          <th>Num. of atoms</th>
+          <th>Software</th>
+          <th>Force field</th>
+        </thead>
+        <tbody>
+          {% for data in tabledata %}
+            <tr>
+              <td class="links">
+                   <a  href="/covid19/{{data.dyn_id}}/{% if variant_genome %}{{variant_genome}}{% endif %}" class="btn btn-default btn-xs" role="button">Open</a>
+                   
+              </td>
+              <td class="dyn_name">
+                {{data.dyn_name}}
+              </td>  
+              <td class="included_prot">
+                {% autoescape off %}{{data.included_prot|list_to_str_break}}{% endautoescape off %}
+              </td>  
+              <td class="prot_name">
+                {% autoescape off %}{{data.prot_name|list_to_str_break}}{% endautoescape off %}
+              </td>
+              <td class="uniprot_entry">
+                {{data.uniprot_entry|list_to_str}}
+              </td>
+              <td class="uniprotkbac">
+                {% for upid in data.uniprotkbac %}
+                  <a href="https://www.uniprot.org/uniprot/{{upid}}" >{{upid}}</a>
+                {% endfor %}
+              </td>
+              <td class="pdbid">
+                {% if data.model_source %}
+                  {{data.model_source}} <br>(Template: <a href="https://www.rcsb.org/structure/{{data.pdbid}}">{{data.pdbid}}</a>)
+                {% else %}
+                  <a href="https://www.rcsb.org/structure/{{data.pdbid}}">{{data.pdbid}}</a>
+                {% endif %}
+              </td>
+              <td class="species" style="font-style:italic">
+                {% autoescape off %}{{data.species|list_to_str_break}}{% endautoescape off %}
+              </td> 
+              <td class="ligands">
+                {{data.ligands|list_to_str}}
+              </td> 
+              <td class="membrane">
+                {{data.membrane_comp|list_to_str}}
+              </td>             
+              <td class="num_traj">
+                {{data.traj_ids|length}}
+              </td>
+              <td class="author_institution">
+                {{data.author_institution}}
+              </td>
+              <td class="atom_num">
+                {{data.atom_num}}
+              </td>
+              <td class="software">
+                {{data.software}}
+                {{data.sversion}}
+              </td>
+              <td class="forcefield">
+                {{data.ff}} 
+                {{data.ffversion}}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>    
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock content %}
+{% block addon_js %} 
+
+<!-- From base.html -->
+    <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+<!-- END From base.html -->
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+<script  src="{% static 'covid19/js/covidsearchtable.js' %}"></script>
+{% endblock %}
+</body>

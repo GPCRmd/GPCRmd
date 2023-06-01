@@ -1,0 +1,154 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">
+
+ <!-- description column -->
+ <div class="col-md-4">
+     
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Simulation Submission<br>Step 2-2 </h3>
+         </div> 
+     </div>
+     
+<!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             
+<!--             <h4>FILL IN THE MOLECULE FORM</h4> -->
+            <div style="text-align:center"> 
+             <h4>FILL IN THE LIGAND FORM</h4>
+	    </div>
+             <p>Fill in the form with the relevant information concerning the ligand of interest involved in the simulation.</p>
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-md-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_id_compound"><a title="“id” of the compound that is represented with this chemical model (“molecule”). Foreign key to “dyndb_compound”.”id”.">Id compound:</a></label></div><div class="col-md-6"><select id="id_id_compound" name="id_compound">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbCompound object</option>
+				<option value="2">DyndbCompound object</option>
+				<option value="3">DyndbCompound object</option>
+				<option value="4">DyndbCompound object</option>
+				<option value="5">DyndbCompound object</option>
+				<option value="6">DyndbCompound object</option>
+			</select></div>
+		<br></div>	
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_description"><a title="Description about which specific protonation, resonance state or confomation is represented in this “molecule”.">Description:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" id="id_description" name="description" rows="3"></textarea></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_net_charge"><a title="Net charge of the molecule structure.">Net charge:</a></label></div>
+			<div class="col-md-6"><input id="id_net_charge" name="net_charge" type="number" /></div>
+		<br></div>
+	
+	        <div class="row">
+			<div class="col-md-5"><label for="id_inchi"><a title="IUPAC International Chemical Identifier (InChI) of the “molecule”.">Inchi:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" id="id_inchi" name="inchi" rows="2"></textarea></div>	
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_inchikey"><a title="Molecule InChI's hash">Inchikey:</a></label></div>
+			<div class="col-md-6"><input id="id_inchikey" maxlength="27" name="inchikey" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_inchicol"><a title="The default value of this column is '1'. The value has to be incremented in case of collision of several InChIKeys in order that “inchikey” + “inchicol” values are always unique.">Inchicol:</a></label></div>
+			<div class="col-md-6"><input id="id_inchicol" name="inchicol" type="number" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_smiles"><a title="Canonical smiles representation of the molecule in PubChem format.">Smiles:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" id="id_smiles" name="smiles" rows="2"></textarea>
+		</div><br></div>
+
+<!--	        <div class="row">
+			<div class="col-md-5"><label for="id_update_timestamp">Update timestamp:</label></div>
+			<div class="col-md-6"><input id="id_update_timestamp" name="update_timestamp" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_creation_timestamp">Creation timestamp:</label></div>
+			<div class="col-md-6"><input id="id_creation_timestamp" name="creation_timestamp" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_created_by_dbengine">Created by dbengine:</label></div>
+			<div class="col-md-6"><input id="id_created_by_dbengine" maxlength="40" name="created_by_dbengine" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_last_update_by_dbengine">Last update by dbengine:</label></div>
+			<div class="col-md-6"><input id="id_last_update_by_dbengine" maxlength="40" name="last_update_by_dbengine" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_created_by">Created by:</label></div>
+			<div class="col-md-6"><input id="id_created_by" name="created_by" type="number" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_last_update_by">Last update by:</label></div>
+			<div class="col-md-6"><input id="id_last_update_by" name="last_update_by" type="number" /></div>
+		<br></div>  
+
+
+
+        <th><input type="submit" value="Submit" /> </th><br> -->
+   </div>  
+  </div>
+
+  <div id="selection-buttons">
+      <div class="col-md-12 panel panel-primary">
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/db_compoundform/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 2-3: System Information (Compound Form) </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/db_protein/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 2-1: System Information (Protein Form) </a>
+      	  </div>
+      </div>
+  </div>
+
+
+
+
+
+
+
+</div>
+
+{% endblock content %}
+
+
+

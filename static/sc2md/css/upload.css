@@ -1,0 +1,72 @@
+.panel-primary{
+    border-color:#e6e6e6;
+}
+
+#header_panel{
+    background-color:#3278B4;
+    text-align:center;
+    margin-bottom:10px;
+    color:white;
+    overflow:auto;
+}
+
+#header_panel .panel-body{
+    min-width:400px;
+    padding-bottom:10px;
+}
+
+.long input {
+ width:100%;
+}
+
+.formfieldinfo{
+    margin:5px 0;
+}
+
+.labeltagcomp{
+    color:#0f705d;
+    font-weight: bold;
+}
+
+.centered_btn{
+    text-align:center;
+}
+
+.cont_non_field_errors{
+    text-align:center;
+    margin:auto;
+}
+.cont_non_field_errors p{
+    margin:auto;
+}
+
+.panel-body h4{
+    text-align: center;
+    margin:10px 0 35px 0;
+    font-size:22px;
+}
+
+.addedfields{
+    border:1px solid lightgrey;
+    border-radius:2px;
+    margin: 5px 0;
+}
+
+.btn_lig{
+    width:120px;
+}
+
+.btn_memb{
+    width:220px;
+}
+
+.glyphicon-info-sign{
+    cursor: default;
+    font-size:12px;
+}
+
+.alert-warning{
+    width:500px;
+    margin:0 auto 15px auto;
+    text-align:center;
+}

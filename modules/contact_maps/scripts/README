@@ -1,0 +1,41 @@
+This folder contains all scripts needed for creating get_contacts input data from the database simulations. 
+
+FOLDERS
+1. get_contacts: This folder contains all GetContacts scripts
+
+SCRIPTS
+1. get_contacts_dynfreq.sh: From the bellow inputs, this pipe runs the first two scripts of GetContacts pipe (dynamic and frequencies) and obtain the interaction frequencies tables for every interaction type for the selected topology-trajectory file. Called from getfiles_by_id.py command.
+	INPUTS: 
+		- topologyfile
+		- trajectoryfile
+		- dictfile
+		- ligandfile
+		- dynname
+	OUTPUTS: placed on /protwis/sites/files/Precomputed/get_contacts_files/
+		- DYNNAME_dynamic.tsv: Output of get_dynamic_contacts.py, and input of get_contact_frequencies.py. Tabular files with interactions in each frame
+		- frequency_tables/DYNNAME_freqs_INTERTYPE.tsv: Output of get_contact_frequencies.py. Tabular files with interaction frequency by residue.
+		- DYNNAME_labels.tsv: label-file. An optional input file needed by get_contact_frequencies, and obtained throught calling create_labelfile.py
+
+2. create_labelfile.py: Creates a labelfile for a given simulation. Labelfiles are tabular files which contain an alias (in this case, ballesteros-wallenstein IDs) for the residues of a simulation. 
+	INPUTS:/protwis/sites/files/Precomputed/get_contacts_files/
+		 - special kind of dictionary file found in /protwis/sites/files/Precomputed/get_contacts_files/dynamic_symlinks/dynID.  
+		 - output name
+		 - Ligandfile (optional)
+	OUTUPTS: 
+		- Labelfile (contained in /protwis/sites/files/Precomputed/get_contacts_files/)
+
+3. get_contacts_fingertable.sh: Summarizes all frequency files contained in /protwis/sites/files/Precomputed/get_contacts_files/frequency_tables into a series of tables (one for each type). Those tables are the main inputs for table_to_dataframe.py, which the pipe is redirected to.
+	INPUTS: None
+	OUPTUTS: 
+		- Summarized tables (one for each interaction type) of interactions in the analyzed simulations. Stored on /protwis/sites/files/Precomputed/get_contacts_files/contact_tables/
+
+4. table_to_dataframe.py: Creates the input dataframes needed by the web application contact_maps. Creates a single dataframe for each combination of "interaction partners" and "interaction type" options. It also performs the clustering. All outputs are contained in /protwis/sites/files/Precomputed/get_contacts_files/view_input_dataframe/
+	INPUTS:
+		- itype code (sb, hb, wb, ...)
+		- interaction partner code (prt, prt_lg, lg)
+
+	OUPTUTS: 
+		- ITPE_INTERPARTN_dataframe.csv: raw data for contact_maps views. Each row corresoponds to a position pair in a simulation
+		- ITPE_INTERPARTN_dendrogram_figure.txt: html data for rendering the dendrogram in web.
+		- ITPE_INTERPARTN_variables.py: some python variables required by contact_maps views. 
+

@@ -1,0 +1,273 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">
+
+ <!-- description column -->
+ <div class="col-md-4">
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Simulation Submission<br>Step 4:<br>Files uploading </h3>
+         </div> 
+     </div>
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+            <div style="text-align:center"> 
+             <h4>FILL IN THE UPLOAD SIMULATION FORM</h4>
+	    </div>
+             <p>Fill in the form with the files containing the simulation.</p>
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a alt="Work in progress.">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-md-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_filename"><a title="Name of the file. Should be automatically generated from “dyndb_files”.”id” +'.'+ corresponding file type extension.">Filename:</a></label></div>
+			<div class="col-md-6"><input id="id_filename" maxlength="80" name="filename" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_id_file_types"><a title=" ">Id file types:</a></label></div>
+			<div class="col-md-6"><select id="id_id_file_types" name="id_file_types">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbFileTypes object</option>
+				<option value="2">DyndbFileTypes object</option>
+				<option value="3">DyndbFileTypes object</option>
+				<option value="4">DyndbFileTypes object</option>
+				<option value="5">DyndbFileTypes object</option>
+				<option value="6">DyndbFileTypes object</option>
+				<option value="7">DyndbFileTypes object</option>
+			</select></div>
+		<br></div>
+<!--
+<div class="col-md-5"><label for="id_description">Description:</label></div><div class="col-md-6"><input id="id_description" maxlength="40" name="description" type="text" /></div><br></div>
+<div class="col-md-5"><label for="id_update_timestamp">Update timestamp:</label></div><div class="col-md-6"><input id="id_update_timestamp" name="update_timestamp" type="text" /></div><br></div>
+<div class="col-md-5"><label for="id_creation_timestamp">Creation timestamp:</label></div><div class="col-md-6"><input id="id_creation_timestamp" name="creation_timestamp" type="text" /></div><br></div>
+<div class="col-md-5"><label for="id_created_by_dbengine">Created by dbengine:</label></div><div class="col-md-6"><input id="id_created_by_dbengine" maxlength="40" name="created_by_dbengine" type="text" /></div><br></div>
+<div class="col-md-5"><label for="id_last_update_by_dbengine">Last update by dbengine:</label></div><div class="col-md-6"><input id="id_last_update_by_dbengine" maxlength="40" name="last_update_by_dbengine" type="text" /></div><br></div>
+<div class="col-md-5"><label for="id_created_by">Created by:</label></div><div class="col-md-6"><input id="id_created_by" name="created_by" type="number" /></div><br></div>
+<div class="col-md-5"><label for="id_last_update_by">Last update by:</label></div><div class="col-md-6"><input id="id_last_update_by" name="last_update_by" type="number" /></div><br></div>
+<div class="col-md-5"><label for="id_filepath">Filepath:</label></div><div class="col-md-6"><input id="id_filepath" maxlength="520" name="filepath" type="text" /></div><br></div> -->
+
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_id_dynamics"><a title="Id” of the molecular dynamics simulation (“dynamics”). Foreign key to “dyndb_dynamics”.”id”.">Id dynamics:</a></label></div>
+			<div class="col-md-6"><select id="id_id_dynamics" name="id_dynamics">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbDynamics object</option>
+				<option value="2">DyndbDynamics object</option>
+			</select></div>
+		<br></div>
+
+		
+	        <div class="row">
+			<div class="col-md-5"><label for="id_id_files"><a title="“Id” of file linked to a molecular dynamics simulation  (“dynamics”). Foreign key to “dyndb_files”.”id”.">Id files:</a></label></div>
+			<div class="col-md-6"><select id="id_id_files" name="id_files">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbFiles object</option>
+				<option value="2">DyndbFiles object</option>
+				<option value="3">DyndbFiles object</option>
+				<option value="4">DyndbFiles object</option>
+				<option value="5">DyndbFiles object</option>
+			</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_type"><a title="Type of file that describes the molecular dynamics simulation. VALUES: ('Input coordinates', 'Input topology', 'Trajectory', 'Other'). Only one file per type with exception of trajectory that can be up to 200 files in case of metadynamics data or other exceptions (to be discussed). 'Other' is currently used for uploading accessory information about molecular dynamic simulation (config files, parameters, colective variables, constrain definitions …) necessary to relaunch or restart simulation.">Type:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" id="id_type" name="type" rows="1"></textarea></div>
+		<br></div> 
+
+
+
+<!-- FILE TYPES -->
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_type_name"><a title="Long name of the file format.">Type name:</a></label></div>
+			<div class="col-md-6"><input id="id_type_name" maxlength="40" name="type_name" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_extension"><a title="Standard extension of the file (mandatory).">Extension:</a></label></div>
+			<div class="col-md-6"><input id="id_extension" maxlength="10" name="extension" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_is_coordinates"><a title="If 'TRUE' file format qualifies for input starting coordinates definition of a molecular dynamics simulation (limited to 50MB). Otherwise cannot be used for these purpose.">Is coordinates:</a></label></div>
+			<div class="col-md-6"><select id="id_is_coordinates" name="is_coordinates">
+				<option value="1" selected="selected">Unknown</option>
+				<option value="2">Yes</option>
+				<option value="3">No</option>
+			</select></div>
+		<br></div>
+		
+	        <div class="row">
+			<div class="col-md-5"><label for="id_is_topology"><a title="If 'TRUE' file format qualifies for topology definition in a molecular dynamics simulation (limited to 50MB). Otherwise cannot be used for these purpose.">Is topology:</a></label></div>
+			<div class="col-md-6"><select id="id_is_topology" name="is_topology">
+				<option value="1" selected="selected">Unknown</option>
+				<option value="2">Yes</option>
+				<option value="3">No</option>
+			</select></div>
+		<br></div>
+		
+	        <div class="row">
+			<div class="col-md-5"><label for="id_is_trajectory"><a title="If 'TRUE' file format qualifies for storage of molecular dynamics simulation trajectories (limited to 200 MB). Otherwise cannot be used for these purpose.">Is trajectory:</a></label></div>
+			<div class="col-md-6"><select id="id_is_trajectory" name="is_trajectory">
+				<option value="1" selected="selected">Unknown</option>
+				<option value="2">Yes</option>
+				<option value="3">No</option>
+			</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_is_parameter"><a title="If 'TRUE' file format qualifies for force field parameter definition in a molecular dynamics simulation (limited to 50MB). Otherwise cannot be used for these purpose. Currently not in use.">Is parameter:</a></label></div>
+			<div class="col-md-6"><select id="id_is_parameter" name="is_parameter">
+				<option value="1" selected="selected">Unknown</option>
+				<option value="2">Yes</option>
+				<option value="3">No</option>
+			</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_is_anytype"><a title="If 'TRUE' file format qualifies for some purposes (currently compressed sets of files) (limited to 50MB). This type is used for uploading accessory information about molecular dynamic simulation (configuration files, parameters, collective variables, constrain definitions …) necessary to relaunch or restart simulation. Otherwise cannot be used for these purpose.">Is anytype:</a></label></div>
+			<div class="col-md-6"><select id="id_is_anytype" name="is_anytype">
+				<option value="1" selected="selected">Unknown</option>
+				<option value="2">Yes</option>
+				<option value="3">No</option>
+			</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_is_image"><a title="If 'TRUE' file format qualifies for an image with structure definition of a chemical model of an small “molecule” (limited to 50MB). Otherwise cannot be used for these purpose.">Is image:</a></label></div>
+			<div class="col-md-6"><select id="id_is_image" name="is_image">
+				<option value="1" selected="selected">Unknown</option>
+				<option value="2">Yes</option>
+				<option value="3">No</option>
+			</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_is_molecule"><a title="If 'TRUE' file format qualifies for coordinate and topology definition of a chemical model of an small “molecule” (limited to 50MB). Otherwise cannot be used for these purpose.">Is molecule:</a></label></div>
+			<div class="col-md-6"><select id="id_is_molecule" name="is_molecule">
+				<option value="1" selected="selected">Unknown</option>
+				<option value="2">Yes</option>
+				<option value="3">No</option>
+			</select></div>
+		<br></div>
+	
+	        <div class="row">
+			<div class="col-md-5"><label for="id_is_model"><a title="If 'TRUE' file format qualifies for coordinate and topology definition of a molecular complex “model” (limited to 50MB). Otherwise cannot be used for these purpose.">Is model:</a></label></div>
+			<div class="col-md-6"><select id="id_is_model" name="is_model">
+				<option value="1" selected="selected">Unknown</option>
+				<option value="2">Yes</option>
+				<option value="3">No</option>
+			</select></div>
+		<br></div>
+
+   </div>
+  </div>
+
+<!--
+
+        <div class="row">
+			<div class="col-md-5"><label for="id_id_model"><a title="Id for the molecular complex “model”. Foreign key to “dyndb_model”.”id”.">Id model:</a></label></div>
+			<div class="col-md-6"><select id="id_id_model" name="id_model">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbModel object</option>
+			</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_id_files"><a title="“Id” of file with structure and topology of the “model”. Foreign key to “dyndb_files”.”id”.">Id files:</a></label></div>
+			<div class="col-md-6"><select id="id_id_files" name="id_files">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbFiles object</option>
+				<option value="2">DyndbFiles object</option>
+				<option value="3">DyndbFiles object</option>
+				<option value="4">DyndbFiles object</option>
+				<option value="5">DyndbFiles object</option>
+			</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_id_molecule"><a title="“Id” of the chemical model (“molecule”) for one of the components in the that takes part into the “experimental complex”. Foreign key to “dyndb_molecule”.”id”.">Id molecule:</a></label></div>
+			<div class="col-md-6"><select id="id_id_molecule" name="id_molecule">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbMolecule object</option>
+				<option value="3">DyndbMolecule object</option>
+				<option value="4">DyndbMolecule object</option>
+				<option value="5">DyndbMolecule object</option>
+			</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-5"><label for="id_id_files"><a title="“Id” of file with structure and topology of the “molecule” or an image of it. Foreign key to “dyndb_files”.”id”.">Id files:</a></label></div>
+			<div class="col-md-6"><select id="id_id_files" name="id_files">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbFiles object</option>
+				<option value="2">DyndbFiles object</option>
+				<option value="3">DyndbFiles object</option>
+				<option value="4">DyndbFiles object</option>
+				<option value="5">DyndbFiles object</option>
+			</select></div>
+		<br></div>
+-->
+
+<!--	        <div class="row">
+			<div class="col-md-5"><label for="id_type"><a title=" ">:</a> Type:</label></div>
+			<div class="col-md-6"><textarea cols="40" id="id_type" name="type" rows="5"></textarea></div>
+		<br></div>
+-->
+
+
+<!--           <div id="selection-buttons"> -->
+		<div class="col-md-12 panel panel-primary">   
+    <div class="panel-body" id="selection-">
+    
+        <a id='selection-button'
+        href="#"  class="btn btn-success
+        
+        btn-lg 
+        
+        btn-block has-spinner"
+        >
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Submit
+        </a>
+    
+    	</div>
+
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href=/dynadb/db_dynamics/  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 3: MD protocol </a>
+      	  </div>
+      </div>
+  
+  </div>
+
+{% endblock content %}
+
+
+
