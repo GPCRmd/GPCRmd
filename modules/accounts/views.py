@@ -312,14 +312,14 @@ def change_passw(request):
 
 
 ##### Reset password
-def reset_confirm(request, uidb64=None, token=None):
-    """The user is recognized with the url token and can enter the new password"""
-    return auth_views.PasswordResetConfirmView.as_view(request, 
-        template_name='accounts/registration/password_reset_confirm.html',
-        uidb64=uidb64, 
-        token=token,
-        succes_url=reverse('accounts:password_reset_complete')         
-        )
+# def reset_confirm(request, uidb64=None, token=None):
+#     """The user is recognized with the url token and can enter the new password"""
+#     return auth_views.PasswordResetConfirmView.as_view(request, 
+#         template_name='accounts/registration/password_reset_confirm.html',
+#         uidb64=uidb64, 
+#         token=token,
+#         succes_url=reverse('accounts:password_reset_complete')         
+#         )
 
 @login_required
 def user_submissions(request):

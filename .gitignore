@@ -3,6 +3,7 @@
 *.backup
 config/settings_*.py
 config/SECRETS.py
+config/*/*.pyc
 solr-4.10.2/example/logs/*
 logs
 *~

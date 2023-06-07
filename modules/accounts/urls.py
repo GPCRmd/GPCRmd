@@ -1,4 +1,4 @@
-from django.urls import include, re_path
+from django.urls import include, re_path, reverse
 from . import views
 from django.contrib.auth import views as auth_views 
 from .forms import AuthenticationForm, RegistrationForm, ChangeForm, ChangePassw, ChangeMailForm, PasswordResetForm
@@ -26,7 +26,10 @@ urlpatterns = [
    re_path(r'^password_reset/done/$', views.auth_views.PasswordResetDoneView.as_view( 
          template_name = 'accounts/registration/password_reset_done.html'
          ), name='password_reset_done'),
-   re_path(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,32})/$', views.reset_confirm, name='password_reset_confirm'),
+   re_path(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,32})/$', views.auth_views.PasswordResetConfirmView.as_view( 
+        template_name='accounts/registration/password_reset_confirm.html',
+      #   succes_url='/accounts/reset/done',         
+        ), name='password_reset_confirm'),
    re_path(r'^reset/done/$', views.auth_views.PasswordResetDoneView.as_view( 
         template_name = 'accounts/registration/password_reset_complete.html'
         ), name='password_reset_complete'),
