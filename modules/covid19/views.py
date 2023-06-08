@@ -32,7 +32,7 @@ from django.conf import settings
 
 def extract_table_info(request,mydyn):
     context={}
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         if request.user.has_privilege_covid:
             context["user_accepted"]=True
     dyndata={}
@@ -869,7 +869,7 @@ def dynanalysis(request,dyn_id,sel_genome_id=None,variantimpact_def=False):
 
     dyndata_report=extract_report_data(dyn_id)
 
-    d=CovidDynamics.objects.select_related("id_model__pdbid","id_model__source").prefetch_related("covidfilesdynamics_set__id_files__id_file_types","coviddynamicscomponents_set","id_model__covidmodelprotein_set__id_protein__coviduniprotseqpositions_set","id_model__final_proteins").get(id=dyn_id,is_published=True)
+    d=CovidDynamics.objects.select_related("id_model").prefetch_related("covidfilesdynamics_set__id_files__id_file_types","coviddynamicscomponents_set","id_model__covidmodelprotein_set__id_protein__coviduniprotseqpositions_set","id_model__final_proteins").get(id=dyn_id,is_published=True)
     context["dyn_id"]=dyn_id
     delta=dyndata_report["delta"]
     if not delta:
@@ -2326,7 +2326,7 @@ def query_uprot(uniprotkbac,fields):
 #@login_required
 @csrf_protect
 def upload(request):
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         #return redirect('accounts:login')
         #return HttpResponseRedirect('/accounts/logincovid/?next=/covid19/upload')
         return HttpResponseRedirect('/accounts/login/?next=/covid19/upload&is_covid=True')
@@ -2587,7 +2587,7 @@ def home(request):
 
         context["simulated_prots"]=list(simulated_prots)
         #print(context)
-        return HttpResponse(json.dumps(context), content_type='home/')   
+        return HttpResponse(json.dumps(context), content_type='/')   
     else:
 
         context={}

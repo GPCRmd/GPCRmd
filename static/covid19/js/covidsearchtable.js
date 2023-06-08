@@ -7,6 +7,7 @@ $(document).ready( function () {
     }
     $('#table_id').DataTable(
         {
+        "autoWidth": false,
          "order": [],
         //"scrollY": 100,
         //"scrollX": true,
@@ -15,6 +16,9 @@ $(document).ready( function () {
                         { "orderable": false, "searchable": false, "targets": 0 
 
                         },   //Don't give option to sort or search by column 0
+                        { 
+                          "width": "500px", "targets": [1,2,3,4,5,6,7,8,9,10,11,12,13,14] 
+                        },
                         { 
                           "className": 'dt-body-nowrap',
                           "targets": [1,5,6,9]
@@ -28,7 +32,6 @@ $(document).ready( function () {
         }
     );
     $('#table_id').css("display","table");
-
 } );
 
 

@@ -1,5 +1,7 @@
 from django.urls import include, re_path
 from django.conf import settings
+from django.views.generic.base import RedirectView
+
 from . import views
 
 app_name = "covid19"
@@ -8,7 +10,7 @@ urlpatterns = [
     re_path(r'^search/$', views.index, name='index'),
     re_path(r'^project/$', views.project, name='project'),
     re_path(r'^$', views.home, name='home'),
-    re_path(r'^home/$', views.home, name='home'),
+    re_path(r'^home/$', RedirectView.as_view(url='/covid19', permanent=False), name='index'),
 #    re_path(r'^plottest/$', views.plottest, name='plottest'),
   #  re_path(r'^hometest/$', views.hometest, name='hometest'),
   #  re_path(r'^hometest2/$', views.hometest2, name='hometest2'),

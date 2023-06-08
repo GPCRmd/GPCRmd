@@ -1,3 +1,4 @@
+{% include "home/cookies.html" %}
 {% load static %}
 
 <!DOCTYPE html>
@@ -98,9 +99,9 @@
     <!-- Additional CSS -->
     {% block addon_css %}{% endblock %}
 
-    {% if google_analytics %}
+    {% comment %} {% if google_analytics %}
       {% include "home/ga.html" %}
-    {% endif %}
+    {% endif %} {% endcomment %}
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -131,7 +132,7 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li id="home"><a href="{% url 'covid19:home' %}">Home</a></li>
+            {% comment %} <li id="home"><a href="{% url 'covid19:home' %}">Home</a></li> {% endcomment %}
             <li id="search"><a href="{% url 'covid19:index' %}">Browse</a></li>
             <li id="upload"><a href="{% url 'covid19:upload' %}">Upload</a></li>
             <li><a href="https://covid-docs.readthedocs.io/en/latest/">Documentation</a></li>
@@ -183,6 +184,10 @@
           } else {
             activate_option(page_url_name);
           }
+
+      // Change text of cookie (remove ads autoadverstiment )
+      document.getElementById('cc-nb-text').innerText = "We use cookies and other tracking technologies to improve your browsing experience on our website, to analyze our website traffic, and to understand where our visitors are coming from.";
+      document.getElementById('title_targeting').style.display = "none"
 
       //Check if load-of-all-systems-after-update is ongoing. If so show warning
       $(document).ready(function() {
