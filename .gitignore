@@ -1,8 +1,9 @@
 *.pyc
 *.log
 *.backup
-config
 
+config/SE*
+config/se*
 config/*/*.pyc
 solr-4.10.2/example/logs/*
 logs
