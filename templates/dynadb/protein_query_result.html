@@ -62,9 +62,9 @@
 
           <br>
           <p><b>Corresponding Cannonical Protein:</b></p> <br>
-          <a class="btn btn-info" role='button' href='/dynadb/protein/id/{{answer.cannonical}}'>Protein ID:
-            {{answer.cannonical}}</a> <br>
-
+          {% for cannon in answer.cannonical %}
+          <a class="btn btn-info" role='button' href='/dynadb/protein/id/{{cannon}}'>Protein ID: {{cannon}}</a> <br>
+          {% endfor %}
           {%if answer.models%}
             <p>You can find this protein in the following complex structures:</p><br>
             {% for link in answer.models %}

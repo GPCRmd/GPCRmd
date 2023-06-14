@@ -2280,7 +2280,7 @@ def search_protein(protein_id):
     fiva['Uniprot_id']=protein_record.uniprotkbac    
     fiva['Protein_name']=protein_record.name
     fiva['is_mutated']=protein_record.is_mutated
-    fiva['cannonical']=DyndbProteinCannonicalProtein.objects.select_related("id_cannonical_proteins").get(id_protein=protein_id).id_cannonical_proteins.id_protein.id #2 hits
+    fiva['cannonical']=DyndbProteinCannonicalProtein.objects.select_related("id_cannonical_proteins").filter(id_protein=protein_id).values_list('id_cannonical_proteins__id_protein__id')[0]#.id_cannonical_proteins.id_protein.id #2 hits
     fiva['scientific_name'] = DyndbProtein.objects.select_related("id_uniprot_species").get(pk=protein_id).id_uniprot_species.scientific_name #1hit
     for match in DyndbProteinMutations.objects.filter(id_protein=protein_id):
         fiva['mutations'].append( (match.resid,match.resletter_from, match.resletter_to) )
@@ -10157,22 +10157,23 @@ def in_directory(file, directory):
 
 @csrf_exempt
 def mdsrv_redirect(request,path):
-    if hasattr(settings, 'MDSRV_REVERSE_PROXY'):
-        if settings.MDSRV_REVERSE_PROXY == 'ALL' or settings.MDSRV_REVERSE_PROXY == 'POST' and request.method in {'POST','PUT'}:
-            content_type = None
-            path_segments = path.split('/')
-            if path_segments[0] == 'dir':
-                content_type = 'application/json'
-            elif path_segments[0] == 'traj' and len(path_segments) > 2:
-                if path_segments[1] == 'frame' or path_segments[1] == 'path':
-                    content_type = 'application/octet-stream'
-                elif path_segments[1] == 'numframes':
-                    content_type = 'text/plain; charset=UTF-8'
-            proxyview = ProxyView.as_view(upstream=settings.MDSRV_UPSTREAM)
-            response = proxyview(request,request.path)
-            if content_type is not None:
-                response['Content-Type'] = content_type
-            return response
+    # print("HOLA", response['Location'])
+    # if hasattr(settings, 'MDSRV_REVERSE_PROXY'):
+    #     if settings.MDSRV_REVERSE_PROXY == 'ALL' or settings.MDSRV_REVERSE_PROXY == 'POST' and request.method in {'POST','PUT'}:
+    #         content_type = None
+    #         path_segments = path.split('/')
+    #         if path_segments[0] == 'dir':
+    #             content_type = 'application/json'
+    #         elif path_segments[0] == 'traj' and len(path_segments) > 2:
+    #             if path_segments[1] == 'frame' or path_segments[1] == 'path':
+    #                 content_type = 'application/octet-stream'
+    #             elif path_segments[1] == 'numframes':
+    #                 content_type = 'text/plain; charset=UTF-8'
+    #         proxyview = ProxyView.as_view(upstream=settings.MDSRV_UPSTREAM)
+    #         response = proxyview(request,request.path) # urllib3 bug not working with https
+    #         if content_type is not None:
+    #             response['Content-Type'] = content_type
+    #         return response
     response = HttpResponse()
     response['Location'] = "/mdsrv_redirect/"+path+request.META['QUERY_STRING']
     response.status_code = 200
@@ -11894,6 +11895,7 @@ def get_seq_coordinates(id_model, prot_id, resid_from, resid_to, chain, segid):
         }}
         dynseq = get_mutseq(pdb_path,segdict)
         # Perform alignment
+        print(uniseq,dynseq)
         alig=align_wt_mut_global(uniseq,dynseq)
         print("Alineame")
         alig_uniseq = alig[0]
