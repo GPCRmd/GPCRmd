@@ -42,6 +42,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     has_privilege_covid = models.BooleanField(default=False)
     email_new = models.EmailField(max_length=254, blank=True)
     objects = NewUserManager()
+    protec_sub_pass = models.CharField(max_length=256) # Password to protect unpublish simulations
 
     USERNAME_FIELD = 'username'
       

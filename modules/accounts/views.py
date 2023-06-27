@@ -18,10 +18,11 @@ from django.utils.translation import gettext_lazy as _
 from django.template.response import TemplateResponse
 from django.conf import settings
 from django.db.models import F
+from django.contrib.auth.hashers import make_password
 
 from modules.dynadb.models import DyndbSubmission, DyndbDynamics, DyndbSubmissionDynamicsFiles
 from modules.accounts.models import User
-from .forms import AuthenticationForm, RegistrationForm, ChangeForm, ChangePassw, ChangeMailForm, PasswordResetForm
+from .forms import AuthenticationForm, RegistrationForm, ChangeForm, ChangePassw, ChangePasswsub, ChangeMailForm, PasswordResetForm
 
 import datetime
 from .complete import deprecate_current_app
@@ -310,6 +311,21 @@ def change_passw(request):
         'form': form,
     })
 
+@login_required
+def change_passsub(request):
+    """a logged-in user can change its password to protect submissions"""
+    if request.method=='POST':
+        form = ChangePasswsub(data=request.POST, instance=request.user)
+        form.user = request.user
+        if form.is_valid():
+            form.save()
+            update_session_auth_hash(request, form.user)
+            return redirect(settings.LOGIN_REDIRECT_URL)
+    else:
+        form = ChangePasswsub()
+    return render(request, 'accounts/change_passsub.html', context={
+        'form': form,
+    }) 
 
 ##### Reset password
 # def reset_confirm(request, uidb64=None, token=None):

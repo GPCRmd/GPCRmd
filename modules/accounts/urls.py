@@ -14,7 +14,8 @@ urlpatterns = [
    re_path(r'^logout/$', views.logout, name='logout'),
    re_path(r'^memberpage/$', views.memberpage, name='memberpage'),
    re_path(r'^change_data/$', views.change_data, name='change_data'),
-   re_path(r'^change_passw/$', views.change_passw, name='change_passw'),       
+   re_path(r'^change_passw/$', views.change_passw, name='change_passw'), 
+   re_path(r'^change_passsub/$', views.change_passsub, name='change_passsub'),         
 # Reset password:
    re_path(r'^password_reset/$', views.auth_views.PasswordResetView.as_view(
         template_name='accounts/registration/password_reset_form.html',

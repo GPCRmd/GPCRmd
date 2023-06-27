@@ -9,6 +9,9 @@ from django.db.models import F
 from django.template import loader
 from django.template.defaulttags import register
 
+from modules.accounts.forms import AuthenticationFormSub
+
+from modules.accounts.models import User
 from modules.protein.models import Protein
 from modules.mutation.models import Mutation,MutationExperiment
 from modules.view.assign_generic_numbers_from_DB import obtain_gen_numbering 
@@ -2040,8 +2043,6 @@ def sub_id_redirect(request,sub_id):
         context["sub_id"]=sub_id
         return render(request, 'view/sub_id_redirect.html', context )
 
-
-
 @ensure_csrf_cookie
 def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, watervol_def=False,pharmacophore_def=False,tunnels_channels_def=False, ligprotint_def=False):
 #    if request.session.get('dist_data', False):
@@ -2049,7 +2050,25 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
 #        dist_dict=dist_data["dist_dict"]
     request.session.set_expiry(0) 
     mdsrv_url=obtain_domain_url(request)
-    delta=DyndbDynamics.objects.get(id=dyn_id).delta
+    dyn_data = DyndbDynamics.objects.get(id=dyn_id)
+    delta = dyn_data.delta
+    if not request.POST:
+        access = False
+    else:
+        form = AuthenticationFormSub(data=request.POST)
+        if form.is_valid():
+            access = request.POST["access"]
+        else:
+            access = False
+    print(access)
+    # Check if simulation is published or not:
+    if not dyn_data.is_published and access != "True": 
+        form = AuthenticationFormSub()
+        context = {}
+        context["dyn_id"]=dyn_id
+        context["form"] = form
+        return render(request, 'accounts/login_sub.html', context)
+       
     is_default_page=False
     if network_def or watervol_def or pharmacophore_def or tunnels_channels_def or ligprotint_def:
         is_default_page=True

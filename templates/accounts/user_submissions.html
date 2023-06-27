@@ -78,9 +78,11 @@
       <div class="panel-body">
         <div class="container-fluid" style="padding-top:15px">
           <p>
-            <a class="textlink" href="/accounts/change_data">Change user information</a> -
+            <a class="textlink" href="/accounts/change_data">Edit user information</a> -
             <a class="textlink" href="/accounts/change_passw">Change password</a> -
+            <a class="textlink" href="/accounts/change_passsub">Secret submission key</a> -
             <a class="textlink" href="/accounts/logout">Log out</a></li>
+
           </p>
 
           <form action="{% url 'dynadb:db_inputform' submission_id=sub.submission_id %}" method="post">

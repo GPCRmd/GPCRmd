@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'drf_yasg',
+    'revproxy',
+    'sendfile',
     'modules.accounts.apps.AccountsConfig',
     'modules.api',
     'modules.common',
@@ -79,9 +81,9 @@ DEBUG_TOOLBAR_MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware']
     
 if not DEBUG_TOOLBAR:
     DEBUG_TOOLBAR_MIDDLEWARE = []
-    
+
 # ['config.custom_middlewares.MultipleProxyMiddleware']+\
-MIDDLEWARE = DEBUG_TOOLBAR_MIDDLEWARE+\
+MIDDLEWARE= DEBUG_TOOLBAR_MIDDLEWARE+\
     ['django.middleware.common.CommonMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -89,7 +91,7 @@ MIDDLEWARE = DEBUG_TOOLBAR_MIDDLEWARE+\
     'django_session_timeout.middleware.SessionTimeoutMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # 'config.custom_middlewares.WsgiLogErrors',
+    # 'config.custom_middlewares.WsgiLogErrors'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -270,7 +272,7 @@ CACHES = {
 }
 
 #MDSRV
-MDSRV_UPSTREAM='https://localhost:8081'
+# MDSRV_UPSTREAM='http://localhost:8081' # urllib3 bug not working with https
 
 AUTH_USER_MODEL = 'accounts.User'
 LOGIN_URL = 'accounts:login'

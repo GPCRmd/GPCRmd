@@ -1,6 +1,8 @@
 from django.conf import settings
 from django import forms
 from modules.accounts.models import User
+from modules.dynadb.models import DyndbDynamics
+
 from django.forms import ModelForm, PasswordInput
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.tokens import default_token_generator
@@ -15,6 +17,8 @@ from django.contrib.auth.forms import PasswordResetForm as PasswordResetForm_def
 
 from modules.accounts.models import User
 
+import bcrypt 
+
 class RegistrationForm(forms.ModelForm):
     """
     When a user registers, saves his data and sends him an email to activate the account.
@@ -26,8 +30,8 @@ class RegistrationForm(forms.ModelForm):
                                 label="Confirm password")
     class Meta:
         model = User
-        fields = ['first_name','last_name', 'username', 'email','country','institution','department','lab' ,'password1', 'password2']
-        labels = {'lab':'Laboratory / Group / Unit'}
+        fields = ['first_name','last_name', 'username', 'email','country','institution','department','lab' , 'protec_sub_pass', 'password1', 'password2']
+        labels = {'lab':'Laboratory / Group / Unit', 'protec_sub_pass': 'Secret submission key'}
 
     def clean(self):
         cleaned_data = super(RegistrationForm, self).clean()    
@@ -64,6 +68,9 @@ class RegistrationForm(forms.ModelForm):
              ):
         user = super(RegistrationForm, self).save(commit=False)
         user.set_password(self.cleaned_data['password1'])
+        prot_pass = self.cleaned_data['protec_sub_pass']
+        prot_hash_pass = bcrypt.hashpw(prot_pass.encode('utf-8'), bcrypt.gensalt(10))
+        user.protec_sub_pass = prot_hash_pass.decode('utf-8')
         if commit:
             user.save()
 
@@ -104,7 +111,24 @@ class AuthenticationForm(forms.Form): #Login
                 raise forms.ValidationError("Invalid login.")
         return self.cleaned_data
 
-
+class AuthenticationFormSub(forms.Form): #Login submission unpublished
+    Dynamic_ID = forms.IntegerField()
+    Submission_password = forms.CharField(widget=forms.widgets.PasswordInput(attrs={'class': 'form-control'}))
+    class Meta:
+        model = DyndbDynamics
+        fields = ['Dynamic_ID', 'Submission_password']
+    def clean(self):
+        d_id = self.cleaned_data.get('Dynamic_ID')
+        passsub = self.cleaned_data.get('Submission_password')
+        passsub = passsub.encode('utf-8')
+        self.cleaned_data["access"] = True
+        # user.set_password(self.cleaned_data['passsub1'])
+        dyn_data = DyndbDynamics.objects.get(id=d_id)
+        user_id = dyn_data.created_by 
+        protec_sub_pass = User.objects.filter(id=user_id).values("protec_sub_pass")[0]["protec_sub_pass"].encode('utf-8')
+        if not bcrypt.checkpw(passsub, protec_sub_pass):
+            raise forms.ValidationError("Invalid password access.")
+        return self.cleaned_data
 class ChangeForm(forms.ModelForm):
     """Form to change the personal data of a user"""
     class Meta:
@@ -136,7 +160,33 @@ class ChangePassw(forms.ModelForm):
             user.save()
         return user
 
- 
+# Protection submission form
+class ChangePasswsub(forms.ModelForm):
+    """Change submission password"""
+    passsub1 = forms.CharField(widget=forms.PasswordInput,
+                                label="Password")
+    passsub2 = forms.CharField(widget=forms.PasswordInput,label="Confirm password")    
+    class Meta:
+        model=User
+        fields = ['passsub1','passsub2']
+    def clean(self):
+        cleaned_data = super(ChangePasswsub, self).clean()
+        passsub1 = self.cleaned_data.get('passsub1')
+        passsub2 = self.cleaned_data.get('passsub2')
+        if passsub1 and passsub2:
+            if passsub1 != passsub2:
+                raise forms.ValidationError("The two passwords did not match.")
+        return self.cleaned_data
+    def save(self, commit=True):
+        user = super(ChangePasswsub, self).save(commit=False)
+        # user.set_password(self.cleaned_data['passsub1'])
+        user_data = User.objects.get(username=user)
+        prot_pass = self.cleaned_data['passsub1']
+        prot_hash_pass = bcrypt.hashpw(prot_pass.encode('utf-8'), bcrypt.gensalt(10))
+        user_data.protec_sub_pass = prot_hash_pass.decode('utf-8')
+        if commit:
+            user_data.save()
+        return user 
 ## Change email
 
 class ChangeMailForm(forms.ModelForm):

@@ -1,5 +1,5 @@
 # local settings
-from config.SECRETS import POSTGRESQLADMIN_USER, POSTGRESQLADMIN_PASS
+from config.SECRETS import *
 from config.settings import SSL
 
 import os
@@ -36,7 +36,7 @@ DATABASES = {
 QUERY_CHECK_PUBLISHED = False
 FILES_NO_LOGIN = False
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_TRANSACTIONAL_HEADERS = {}
 
 # SECURITY WARNING: keep the secret key used in production secret!
