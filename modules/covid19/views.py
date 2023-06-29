@@ -2179,6 +2179,7 @@ def get_file_name_dict():
     filenamedict['dynamics']['subtypes']["topology"] = dict()
     filenamedict['dynamics']['subtypes']["trajectory"] = dict()
     filenamedict['dynamics']['subtypes']["parameters"] = dict()
+    filenamedict['dynamics']['subtypes']["protocol"] = dict()
     filenamedict['dynamics']['subtypes']["other"] = dict()
     filenamedict['dynamics']['subtypes']["log"] = dict()
 
@@ -2186,8 +2187,9 @@ def get_file_name_dict():
     filenamedict['dynamics']['subtypes']["pdb"]["ext"] = ["pdb","gro"]
     filenamedict['dynamics']['subtypes']["topology"]["ext"] = ["psf","prmtop","top"]
     filenamedict['dynamics']['subtypes']["trajectory"]["ext"] = ["xtc","dcd"]
-    filenamedict['dynamics']['subtypes']["parameters"]["ext"] = ["prm","tar.gz"]
-    filenamedict['dynamics']['subtypes']["other"]["ext"] = ["tar.gz"]
+    filenamedict['dynamics']['subtypes']["parameters"]["ext"] = ["prm","tar.gz","zip"]
+    filenamedict['dynamics']['subtypes']["protocol"]["ext"] = ["zip","tar.gz"]
+    filenamedict['dynamics']['subtypes']["other"]["ext"] = ["tar.gz","zip"]
     filenamedict['dynamics']['subtypes']["log"]["ext"] = ["log"]
     
     #define subtype part(icles)
@@ -2196,6 +2198,7 @@ def get_file_name_dict():
     filenamedict['dynamics']['subtypes']["trajectory"]["part"] = "trj"
     filenamedict['dynamics']['subtypes']["parameters"]["part"] = "prm"
     filenamedict['dynamics']['subtypes']["other"]["part"] = "oth"
+    filenamedict['dynamics']['subtypes']["protocol"]["part"] = "prt"
     filenamedict['dynamics']['subtypes']["log"]["part"] = "dyn"
     return filenamedict
 
