@@ -8206,9 +8206,9 @@ def get_file_name_dict():
     filenamedict['dynamics']['subtypes']["pdb"]["ext"] = ["pdb"]
     filenamedict['dynamics']['subtypes']["topology"]["ext"] = ["psf","prmtop","top"]
     filenamedict['dynamics']['subtypes']["trajectory"]["ext"] = ["xtc","dcd"]
-    filenamedict['dynamics']['subtypes']["parameters"]["ext"] = ["prm","tar.gz"]
+    filenamedict['dynamics']['subtypes']["parameters"]["ext"] = ["prm","tar.gz","zip"]
     filenamedict['dynamics']['subtypes']["protocol"]["ext"] = ["zip","tar.gz"]
-    filenamedict['dynamics']['subtypes']["other"]["ext"] = ["tar.gz"]
+    filenamedict['dynamics']['subtypes']["other"]["ext"] = ["tar.gz","zip"]
     filenamedict['dynamics']['subtypes']["log"]["ext"] = ["log"]
     filenamedict['summary']['subtypes']['summary']['ext']=['txt']
     #define subtype part(icles)
@@ -9705,6 +9705,9 @@ def submission_summaryiew(request,submission_id):
                fh.write("".join(["\n\t\tCrystalized Molecule:  ",str(DyndbSubmissionMolecule.COMPOUND_TYPE[qSub.filter(molecule_id=mol).values_list('type',flat=True)[0]][1])]))
             fh.write("\n")
         pp=p[0]
+        # Fix bug of description None value for summary
+        if pp.description == None or pp.description == "":
+            pp.description = " "
         fh.write("".join(["\n\tMODEL INVOLVED IN THE SUBMISSION ",str(submission_id),"\n"])) 
         fh.write("".join(["\n\t\tMODEL ID:  ",str(model_id)])) 
         fh.write("".join(["\n\t\tName:  ", pp.name])) 
@@ -10855,6 +10858,16 @@ def step1_submit(request, submission_id):
     }
     # Get Post info            
     dictpost=request.POST
+    # Fix bug of description None value for summary
+    if dictpost['add_info'] == None or dictpost['add_info'] == "":
+        add_info = "-"
+    else:
+        add_info = dictpost['add_info']
+    
+    if dictpost['description'] == None or dictpost['description'] == "":
+        description = dictpost['description']
+    else:
+        description = dictpost['description']
     dictfiles=request.FILES
     # Dynamics and model dictionaries to convert in database tables
     dynamics_dict = {
@@ -10865,7 +10878,7 @@ def step1_submit(request, submission_id):
         'ff' : dictpost['ff'],
         'ffversion' : dictpost['ffversion'],
         'id_assay_types' : dictpost['id_assay_types'],
-        'description' : dictpost['add_info'],
+        'description' : add_info,
         'id_dynamics_membrane_types' : dictpost['id_dynamics_membrane_types'],
         'id_dynamics_solvent_types' : dictpost['id_dynamics_solvent_types'],
         'timestep' : dictpost['timestep'],
@@ -10877,7 +10890,7 @@ def step1_submit(request, submission_id):
             'type' : dictpost['type'],
             'source_type' : dictpost['source_type'],
             'pdbid' : dictpost['pdbid'],
-            'description' : dictpost['description'],
+            'description' : description,
             'template_id_model' : None,
             'model_creation_submission_id':submission_id,
     }
@@ -11721,7 +11734,11 @@ def find_prots(request,submission_id):
             dps = DyndbProteinSequence.objects.get(id_protein=dp.id)
             prot_synonims = ';'.join(DOPN.values_list('other_names', flat=True)) if len(DOPN) else ''
             # Get Uniprot sequence (if any). Otherwise just take itself as model
-            uniseq = get_uniprot_seq(dp.uniprotkbac) if dp.uniprotkbac else dps.sequence
+            if dp.uniprotkbac != "-":
+                uniseq = get_uniprot_seq(dp.uniprotkbac) if dp.uniprotkbac else dps.sequence
+            else: #Proteins without uniprotkbac
+                uniseq = dps.sequence
+            print("HOLITAAA", uniseq)
             # Extract data to send into form
             mydict = {
                 'uniprot': dp.uniprotkbac,
@@ -12006,14 +12023,20 @@ def save_protein_table(dictpost, entry_id, submission_id, mutation_ids, update_f
         receptor_id = P[0].id
     # Find if there is already a protein entry for this protein in GPCRmd database, return its prot_id
     uniprotkbac = dictpost['prot_uniprot'+entry_id]
+    print("UNIPROTKBAC",uniprotkbac)
+    name = dictpost['name'+entry_id]
     isoform = dictpost['isoform'+entry_id]
     if not dictpost['num_muts'+entry_id]:
-        DP = DyndbProtein.objects.filter(uniprotkbac=uniprotkbac, isoform=isoform)
+        if uniprotkbac == "-": #New proteins without uniprotkbac
+            DP = DyndbProtein.objects.filter(uniprotkbac=uniprotkbac, isoform=isoform, name=name)
+        else: 
+            DP = DyndbProtein.objects.filter(uniprotkbac=uniprotkbac, isoform=isoform)
         if len(DP):
             return(DP[0].pk)
     # Get mutant sequences by applying our mutations into the GPCRdb sequence of the receptor (or the uniprot one, in case there is none in GPCRdb)
     tomutseq = P[0].sequence if len(P) else dictpost['unisequence'+entry_id] 
     mutseq = apply_mutations(dictpost, mutation_ids, entry_id, tomutseq)
+    print("seq", mutseq)
     # Save DyndbProtein entry 
     prot_dict = {
         'uniprotkbac' : uniprotkbac,
@@ -12079,7 +12102,8 @@ def interprot_tables(dictpost, entry_id, prot_id, submission_id):
     if not len(DSP):
         dsp = dyndb_Submission_Protein(subprot_dict)
         print(dsp.errors)
-        dsp.save()
+        if dsp.is_valid():
+            dsp.save()
 
 def save_cannonical_proteins(dictpost, entry_id, submission_id, prot_id, update_fields, creation_fields):
     """
@@ -12277,7 +12301,7 @@ def step3_submit(request, submission_id,):
     for entry_id in entries_ids:
         # IF this entry has no uniprotkbac, assign an empty string as token
         if 'prot_uniprot'+entry_id not in dictpost:
-            dictpost['prot_uniprot'+entry_id] = ''
+            dictpost['prot_uniprot'+entry_id] = '-'
         # Protein entry 
         prot_id = save_protein_table(dictpost, entry_id, submission_id, mutations_ids, update_fields, creation_fields)
         # Relational tables for DyndbProtein

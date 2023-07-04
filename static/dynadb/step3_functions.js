@@ -220,7 +220,7 @@ class prot_entry {
             </p>
           </div>
           <div class='col-md-6'>
-            <textarea id='unisequence${id}' cols="40" rows="2" form="mainform" readonly class='readonly_text input_step input_step${id}' name='unisequence${id}'>${unisequence}</textarea>
+            <textarea id='unisequence${id}' cols="40" rows="2" form="mainform" required readonly class='readonly_text input_step input_step${id}' name='unisequence${id}'>${unisequence}</textarea>
           </div>
         </div>      
 
@@ -589,7 +589,7 @@ function notuniprot_checkbox(id) {
     $("#retrieve_uniprot"+id).prop('disabled',isenabled)
     silence_field("#uniprot"+id, isenabled)
     silence_field("#prot_uniprot"+id, isenabled)
-    silence_field("#unisequence"+id, isenabled)
+    // silence_field("#unisequence"+id, isenabled)
     silence_field("#align_button"+id, isenabled)
     silence_field("#mut_button"+id, isenabled)
   });
