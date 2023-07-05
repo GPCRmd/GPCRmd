@@ -32,3 +32,5 @@ dynadb/b2ar_isoprot/
 /view/create_substr_plot
 /view/mytests
 view/static/view/fplot_old/
+config/SECRETS.py
+.gitignore

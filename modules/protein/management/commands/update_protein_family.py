@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import io
+from tqdm import tqdm
 from os import path 
 import sys
 import re
@@ -39,13 +40,13 @@ class Command(BaseCommand):
 
             #Read information & generate diccionary of information
             prot_fam_dic = {}
-            for pfdata in urlData: # {'slug': '100_001_005', 'name': 'GPa1 family', 'parent': {'slug': '100_001', 'name': 'Alpha'}}
+            for pfdata in tqdm(urlData, total=len(urlData)):  # {'slug': '100_001_005', 'name': 'GPa1 family', 'parent': {'slug': '100_001', 'name': 'Alpha'}}
                 slug = pfdata["slug"]
                 name = re.sub(html_cleaner, '', pfdata["name"])
                 try:
                     slugparent = pfdata["parent"]["slug"]
                 except TypeError:
-                    print (f"        > Family {name} do not have parent...")
+                    # print (f"        > Family {name} do not have parent...")
                     if "parent_nf" not in l_errors.keys():                        
                         l_errors['parent_nf'] = [name]
                     else:
@@ -70,12 +71,12 @@ class Command(BaseCommand):
         print("- UPDATE STEP...")
         print("     > Update table ProteinFamily...")
 
-        for f in data_protfam:
+        for f in tqdm(data_protfam, total=len(data_protfam)):
             ref_slug = f.slug
             if ref_slug in prot_fam_dic.keys():
                 name = prot_fam_dic[ref_slug]["name"]
             else:
-                print(f"        - Family with slug {ref_slug} not found on GPCRdb...")
+                # print(f"        - Family with slug {ref_slug} not found on GPCRdb...")
                 if "family_nf" not in l_errors.keys():                        
                     l_errors['family_nf'] = [f"{name}:{ref_slug}"]
                 else:
@@ -87,9 +88,9 @@ class Command(BaseCommand):
         # Add new entries to ProteinFamily
         print("     > Search of new entries for table ProteinFamily...")
         slug_protfam = list(ProteinFamily.objects.values_list("slug",flat=True))     
-        for key in prot_fam_dic.keys():
+        for key in tqdm(prot_fam_dic.keys(), total=len(prot_fam_dic.keys())):
             if key not in slug_protfam:
-                print(f"        - New family {key} found on GPCRdb...")
+                # print(f"        - New family {key} found on GPCRdb...")
                 slug = key
                 name = prot_fam_dic[slug]["name"]
                 slug_parent = prot_fam_dic[slug]["slug_parent"]
