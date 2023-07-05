@@ -27,3 +27,14 @@ def error500(request):
         print(e)
 
     return HttpResponse(content=template.render(context), content_type='text/html; charset=utf-8', status=500)
+
+def error503(request):
+    try:
+        template = loader.get_template('home/503.html')
+        context = {
+            'message': 'All: %s' % request,
+            }
+    except Exception as e: 
+        print(e)
+
+    return HttpResponse(content=template.render(context), content_type='text/html; charset=utf-8', status=503)

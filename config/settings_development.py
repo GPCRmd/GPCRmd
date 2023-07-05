@@ -27,7 +27,7 @@ DATABASES = {
         'PASSWORD': POSTGRESQLADMIN_PASS,
         'HOST': 'localhost',
         'OPTIONS': {
-            'options': '-c search_path=public'
+            'options': '-c search_path=dev_public'
         },
     }
 }

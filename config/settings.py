@@ -10,6 +10,9 @@ FILES_NO_LOGIN = False
 #Determine http or https (ssl)
 SSL=True
 DEV = True
+MAINTENANCE_MODE = 0
+# MAINTENANCE_MODE = int(os.environ.get("MAINTENANCE_MODE", 0))
+# MAINTENANCE_BYPASS_QUERY = os.environ.get("MAINTENANCE_BYPASS_QUERY")
 
 #Settings selection
 if DEV == False:
@@ -91,7 +94,7 @@ MIDDLEWARE= DEBUG_TOOLBAR_MIDDLEWARE+\
     'django_session_timeout.middleware.SessionTimeoutMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # 'config.custom_middlewares.WsgiLogErrors'
+    'config.custom_middlewares.MaintenanceModeMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -201,58 +204,58 @@ if DEBUG:
     INTERNAL_IPS = ('10.0.2.2')
 
 # Logging
-if DEBUG:
-    LOGGING = {
-       'version': 1,
-       'disable_existing_loggers': True,
-       'formatters': {
-           'verbose': {
-               'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-               'datefmt' : "%d/%b/%Y %H:%M:%S"
-           },
-       },
-       'handlers': {
-           'django': {
-               'level': 'DEBUG',
-               'class': 'logging.handlers.RotatingFileHandler',
-               'filename': f'{BASE_DIR}/logs/django.log',
-               'formatter': 'verbose',
-               'backupCount': 10, # keep at most 10 log files
-                'maxBytes': 5242880, # 5*1024*1024 bytes (5MB)
-           },
-           'build': {
-               'level': 'DEBUG',
-               'class': 'logging.handlers.RotatingFileHandler',
-               'filename': f'{BASE_DIR}/logs/build.log',
-               'formatter': 'verbose',
-               'backupCount': 10, # keep at most 10 log files
-                'maxBytes': 5242880, # 5*1024*1024 bytes (5MB)
-           },
-           'gpcrmd': {
-               'level': 'DEBUG',
-               'class': 'logging.handlers.RotatingFileHandler',
-               'filename': f'{BASE_DIR}/logs/gpcrmd.log',
-               'formatter': 'verbose',
-               'backupCount': 10, # keep at most 10 log files
-                'maxBytes': 5242880, # 5*1024*1024 bytes (5MB)
-           },
-       },
-       'loggers': {
-           'django': {
-               'handlers':['django'],
-               'propagate': True,
-               'level':'DEBUG',
-           },
-           'build': {
-               'handlers': ['build'],
-               'level': 'DEBUG',
-           },
-           'gpcrmd': {
-               'handlers': ['gpcrmd'],
-               'level': 'DEBUG',
-           },
-       }
-    }
+# if DEBUG:
+#     LOGGING = {
+#        'version': 1,
+#        'disable_existing_loggers': True,
+#        'formatters': {
+#            'verbose': {
+#                'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+#                'datefmt' : "%d/%b/%Y %H:%M:%S"
+#            },
+#        },
+#        'handlers': {
+#            'django': {
+#                'level': 'DEBUG',
+#                'class': 'logging.handlers.RotatingFileHandler',
+#                'filename': f'{BASE_DIR}/logs/django.log',
+#                'formatter': 'verbose',
+#                'backupCount': 10, # keep at most 10 log files
+#                'maxBytes': 5242880, # 5*1024*1024 bytes (5MB)
+#            },
+#            'build': {
+#                'level': 'DEBUG',
+#                'class': 'logging.handlers.RotatingFileHandler',
+#                'filename': f'{BASE_DIR}/logs/build.log',
+#                'formatter': 'verbose',
+#                'backupCount': 10, # keep at most 10 log files
+#                 'maxBytes': 5242880, # 5*1024*1024 bytes (5MB)
+#            },
+#            'gpcrmd': {
+#                'level': 'DEBUG',
+#                'class': 'logging.handlers.RotatingFileHandler',
+#                'filename': f'{BASE_DIR}/logs/gpcrmd.log',
+#                'formatter': 'verbose',
+#                'backupCount': 10, # keep at most 10 log files
+#                 'maxBytes': 5242880, # 5*1024*1024 bytes (5MB)
+#            },
+#        },
+#        'loggers': {
+#            'django': {
+#                'handlers':['django'],
+#                'propagate': True,
+#                'level':'DEBUG',
+#            },
+#            'build': {
+#                'handlers': ['build'],
+#                'level': 'DEBUG',
+#            },
+#            'gpcrmd': {
+#                'handlers': ['gpcrmd'],
+#                'level': 'DEBUG',
+#            },
+#        }
+#     }
 
 SESSION_ENGINE="django.contrib.sessions.backends.file"
 

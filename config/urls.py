@@ -7,6 +7,7 @@ from modules.dynadb import views as dyn_views
 
 urlpatterns = [
     re_path(r'^', include('modules.home.urls')),
+    re_path(r'^maintenance/', views.error503, name='maintenance'),
     re_path(r'^accounts/', include('modules.accounts.urls')),
     re_path(r'^api/', include('modules.api.urls')),
     re_path(r'^contmaps/', include('modules.contact_maps.urls')),
@@ -29,6 +30,7 @@ urlpatterns += [ re_path(r'^mdsrv/(?P<path>.*)$', dyn_views.mdsrv_redirect,name=
 
 handler404 = views.error404
 handler500 = views.error500
+# handler503 = views.error503
 
 if settings.DEBUG:
     import debug_toolbar
