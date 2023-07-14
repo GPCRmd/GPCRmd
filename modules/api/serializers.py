@@ -11,12 +11,22 @@ class AllPdbsSerializer(serializers.ModelSerializer):
         fields = ['pdbid']
 
 # search_dyn_pdbs/ & # search_dyn_uniprots/
-class DynsSerializer(serializers.ModelSerializer):
+class DynsPdbsSerializer(serializers.ModelSerializer):
+    pdb = serializers.CharField(source = "id_model.pdbid", allow_null=True)
     dyn_id = serializers.IntegerField(source='id') 
     class Meta:
         model = DyndbDynamics
-        fields = ['dyn_id']
+        fields = ['pdb', 
+            'dyn_id']
 
+class DynsUniprotsSerializer(serializers.ModelSerializer):
+    uniprot = serializers.CharField(source = 'id_model.id_protein.uniprotkbac', allow_null=True)
+    dyn_id = serializers.IntegerField(source='id') 
+    class Meta:
+        model = DyndbDynamics
+        fields = ['uniprot', 
+            'dyn_id']
+        
 # search_alluniprots
 class AllUniprotsSerializer(serializers.ModelSerializer):
     class Meta:

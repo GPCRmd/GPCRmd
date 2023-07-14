@@ -10,9 +10,7 @@ FILES_NO_LOGIN = False
 #Determine http or https (ssl)
 SSL=True
 DEV = True
-MAINTENANCE_MODE = 0
-# MAINTENANCE_MODE = int(os.environ.get("MAINTENANCE_MODE", 0))
-# MAINTENANCE_BYPASS_QUERY = os.environ.get("MAINTENANCE_BYPASS_QUERY")
+MAINTENANCE_MODE = 0 # 0 False 1 True
 
 #Settings selection
 if DEV == False:
@@ -51,6 +49,7 @@ INSTALLED_APPS = [
     'modules.home',
     'modules.interaction',
     'modules.ligand',
+    'modules.manage_db',
     'modules.mutation',
     'modules.news',
     'modules.protein',

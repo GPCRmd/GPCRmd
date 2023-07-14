@@ -22,12 +22,12 @@ GOOGLE_ANALYTICS_KEY = False
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'gpcrmd',
+        'NAME': 'gpcrmd_dev',
         'USER': POSTGRESQLADMIN_USER,
         'PASSWORD': POSTGRESQLADMIN_PASS,
         'HOST': 'localhost',
         'OPTIONS': {
-            'options': '-c search_path=dev_public'
+            'options': '-c search_path=public'
         },
     }
 }

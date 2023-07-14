@@ -1,4 +1,4 @@
-from django.urls import include, re_path
+from django.urls import include, re_path, path
 from django.conf.urls import handler404, handler500
 from django.contrib import admin
 from django.conf import settings
@@ -8,6 +8,7 @@ from modules.dynadb import views as dyn_views
 urlpatterns = [
     re_path(r'^', include('modules.home.urls')),
     re_path(r'^maintenance/', views.error503, name='maintenance'),
+    path(r'admin/', admin.site.urls),
     re_path(r'^accounts/', include('modules.accounts.urls')),
     re_path(r'^api/', include('modules.api.urls')),
     re_path(r'^contmaps/', include('modules.contact_maps.urls')),
@@ -27,6 +28,8 @@ if not settings.FILES_NO_LOGIN:
 urlpatterns += [ re_path(r'^mdsrv/(?P<path>.*)$', dyn_views.mdsrv_redirect,name='mdsrv_redirect'),
     re_path(r'^html/(?P<path>.*)$', dyn_views.mdsrv_redirect,name='mdsrv_redirect'),
 ]
+
+urlpatterns += [path('', include('django.contrib.auth.urls'))]
 
 handler404 = views.error404
 handler500 = views.error500

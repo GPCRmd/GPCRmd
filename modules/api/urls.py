@@ -16,7 +16,7 @@ from . import views
 schema_view = get_schema_view(
    openapi.Info(
       title="GPCRmd API",
-      default_version='v1',
+      default_version='v1.2',
       description="Tools related with values stored into the GPCRmd database (e.g. dynamic ids, pdb ids, uniprot ids, state,...)",
    ),
    public=True,

@@ -26,7 +26,7 @@ class SearchByPdbs(generics.ListAPIView):
     """
     Retrieve a list with all dynamic ids related with the pdb code in GPCRmd database. The input is case sensitive. (e.g. 5TVN not 5tvn)
     """
-    serializer_class = DynsSerializer # Get info from DyndbDynamics using ids relationships
+    serializer_class = DynsPdbsSerializer # Get info from DyndbDynamics using ids relationships
 
     def get_queryset(self, *args, **kwargs):
         pdbid = self.kwargs['pdbid']
@@ -49,11 +49,14 @@ class SearchByUniprots(generics.ListAPIView):
     """
     Retrieve a list with all dynamic ids related with the pdb code in GPCRmd database. The input is case sensitive. (e.g. P28222 not p28222)
     """
-    serializer_class = DynsSerializer # Get info from DyndbDynamics using ids relationships
+    serializer_class = DynsUniprotsSerializer # Get info from DyndbDynamics using ids relationships
 
     def get_queryset(self, *args, **kwargs):
         uniprotid = self.kwargs['uniprotid']
-        query_ids=DyndbProtein.objects.filter(uniprotkbac__contains=uniprotid).filter(is_published=True).values_list('id', flat=True)
+        uniprotid = uniprotid.replace(" ", "")
+        uniprotid = uniprotid.split(",")
+        uniprotid = list(filter(None, uniprotid)) # Remove empty strings in list
+        query_ids = DyndbProtein.objects.filter(uniprotkbac__in=uniprotid).filter(is_published=True).values_list('id', flat=True)
         model_ids = DyndbModel.objects.filter(id_protein__in=query_ids)
         queryset = DyndbDynamics.objects.filter(id_model__in=model_ids)
 
@@ -65,11 +68,14 @@ class SearchByDyn(generics.ListAPIView):
     Retrieve information related with the dynamic id in GPCRmd database. Same information displayed in the Search tool: https://devel.gpcrmd.org/dynadb/search/ (e.g. 11 or 17 or 21)
     """
     serializer_class = DynsSearchSerializer # Get info from DyndbDynamics using ids relationships
-
+    
     def get_queryset(self, *args, **kwargs):
         dyn_id = self.kwargs['dyn_id']
-        queryset=DyndbDynamics.objects.filter(id=dyn_id)
-
+        dyn_id = dyn_id.replace(" ", "")
+        dyn_id = dyn_id.split(",")
+        dyn_id = list(filter(None, dyn_id)) # Remove empty strings in list
+        dyn_id = [ int(x) for x in dyn_id ] # Convert to int
+        queryset=DyndbDynamics.objects.filter(id__in=dyn_id)
         return queryset
 
 # NOT API TOOLS ###############################################################################################################################################################
