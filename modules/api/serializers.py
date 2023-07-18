@@ -12,18 +12,36 @@ class AllPdbsSerializer(serializers.ModelSerializer):
 
 # search_dyn_pdbs/ & # search_dyn_uniprots/
 class DynsPdbsSerializer(serializers.ModelSerializer):
-    pdb = serializers.CharField(source = "id_model.pdbid", allow_null=True)
-    dyn_id = serializers.IntegerField(source='id') 
+    pdb = serializers.SerializerMethodField()
+    dyn_id = serializers.SerializerMethodField()
+    
+    def get_pdb(self,obj):
+        pdbid = obj["pdbid"]
+        
+        return pdbid
+    
+    def get_dyn_id(self,obj):
+        model_ids = obj["mol_ids"]
+        dynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True)
+
+        return dynids
     class Meta:
         model = DyndbDynamics
         fields = ['pdb', 
             'dyn_id']
 
 class DynsUniprotsSerializer(serializers.ModelSerializer):
-    uniprot = serializers.CharField(source = 'id_model.id_protein.uniprotkbac', allow_null=True)
-    dyn_id = serializers.IntegerField(source='id') 
+    uniprot = serializers.CharField(source = 'uniprotkbac', allow_null=True)
+    # dyn_id = serializers.IntegerField(source = 'id') 
+    dyn_id = serializers.SerializerMethodField()
+    
+    def get_dyn_id(self,obj):
+        model_ids = DyndbModel.objects.filter(id_protein=obj.id).values_list('id', flat=True)
+        dynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True)
+        return dynids
+    
     class Meta:
-        model = DyndbDynamics
+        model = DyndbProtein
         fields = ['uniprot', 
             'dyn_id']
         

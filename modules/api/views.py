@@ -1,4 +1,5 @@
 # DJANGO REST-API DATABASE TOOLS ########################################################################################################################################
+from django.db.models import Q
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -24,16 +25,22 @@ class SearchAllPdbs(generics.ListAPIView):
 
 class SearchByPdbs(generics.ListAPIView):
     """
-    Retrieve a list with all dynamic ids related with the pdb code in GPCRmd database. The input is case sensitive. (e.g. 5TVN not 5tvn)
+    Retrieve a list with all dynamic ids in GPCRmd database using as input one or more pdbid codes (e.g. 5TVN,4DKL).
     """
     serializer_class = DynsPdbsSerializer # Get info from DyndbDynamics using ids relationships
 
     def get_queryset(self, *args, **kwargs):
         pdbid = self.kwargs['pdbid']
-        model_ids = DyndbModel.objects.filter(pdbid__contains=pdbid).filter(is_published=True).values_list('id', flat=True)
-        queryset = DyndbDynamics.objects.filter(id_model__in=model_ids)
-        
-        return queryset
+        pdbid = pdbid.replace(" ", "").upper()
+        pdbid = pdbid.split(",")
+        pdbid = list(filter(None, pdbid)) # Remove empty strings in list
+        model_ids = []
+        for pdb in pdbid: 
+            m_ids = DyndbModel.objects.filter(pdbid__contains=pdb).filter(is_published=True).values_list("id", flat = True)
+            model_ids.append({"pdbid":pdb, "mol_ids":m_ids})
+        # queryset = DyndbDynamics.objects.filter(id_model__in=model_ids)
+                
+        return model_ids
         
 # search_all_uniprots
 class SearchAllUniprots(generics.ListAPIView):
@@ -47,19 +54,17 @@ class SearchAllUniprots(generics.ListAPIView):
 # search_dyn_uniprots/
 class SearchByUniprots(generics.ListAPIView):
     """
-    Retrieve a list with all dynamic ids related with the pdb code in GPCRmd database. The input is case sensitive. (e.g. P28222 not p28222)
+    Retrieve a list with all dynamic ids in GPCRmd database using as input one or more uniprotkbac codes (e.g. P28222, P42866).
     """
     serializer_class = DynsUniprotsSerializer # Get info from DyndbDynamics using ids relationships
 
     def get_queryset(self, *args, **kwargs):
         uniprotid = self.kwargs['uniprotid']
-        uniprotid = uniprotid.replace(" ", "")
+        uniprotid = uniprotid.replace(" ", "").upper()
         uniprotid = uniprotid.split(",")
         uniprotid = list(filter(None, uniprotid)) # Remove empty strings in list
-        query_ids = DyndbProtein.objects.filter(uniprotkbac__in=uniprotid).filter(is_published=True).values_list('id', flat=True)
-        model_ids = DyndbModel.objects.filter(id_protein__in=query_ids)
-        queryset = DyndbDynamics.objects.filter(id_model__in=model_ids)
-
+        queryset = DyndbProtein.objects.filter(uniprotkbac__in=uniprotid).filter(is_published=True).distinct("uniprotkbac")
+        
         return queryset
     
 # search_dyn
