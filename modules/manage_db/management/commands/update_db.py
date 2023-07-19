@@ -98,10 +98,10 @@ class Command(BaseCommand):
             
         def update_prot_state(*args, **kwargs):
             """
-            Update the protein state table of GPCRmd database.
+            Update the protein state & pdb tables of GPCRmd database.
             """
             
-            print(f"    - Protein state table...")
+            print(f"    - Protein state & pdb tables...")
                 
             if kwargs["update"]:
                 print(f"    - Force update of the data from GPCRdb...")
