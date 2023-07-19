@@ -9,7 +9,7 @@ from numpy import empty as nd_empty, float32 as nd_float32
 
 from mdtraj import open as mdtraj_open, load as mdtraj_load, load_pdb as mdtraj_load_pdb
 from mdtraj import load
-from mdtraj.formats import DCDTrajectoryFile
+from mdtraj.formats import DCDTrajectoryFile, XTCTrajectoryFile, TRRTrajectoryFile
 from mdtraj.formats import XTCTrajectoryFile
 from sys import stderr as sys_stderr, stdout as sys_stdout
 
@@ -841,6 +841,8 @@ def get_frames_num(filepath,file_type,ext=None):
                 trajfile = DCDTrajectoryFile(filepath)
             elif ext2 == 'xtc':
                 trajfile = XTCTrajectoryFile(filepath)
+            elif ext2 == 'trr':
+                trajfile = TRRTrajectoryFile(filepath)
             else:
                 raise ValueError('Extension "'+ext+'" not implemented.')
         numframes = mdtraj_get_frames_num(trajfile)
@@ -870,6 +872,8 @@ def get_atoms_num(filepath,file_type,ext=None):
                 trajfile = DCDTrajectoryFile(filepath)
             elif ext2 == 'xtc':
                 trajfile = XTCTrajectoryFile(filepath)
+            elif ext2 == 'trr':
+                trajfile = TRRTrajectoryFile(filepath)
             else:
                 raise ValueError('Extension "'+ext+'" not implemented.')
         res = trajfile.read(1)

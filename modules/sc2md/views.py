@@ -903,7 +903,7 @@ def get_file_name_dict():
     #define file ext(ensions)    
     filenamedict['dynamics']['subtypes']["pdb"]["ext"] = ["pdb","gro"]
     filenamedict['dynamics']['subtypes']["topology"]["ext"] = ["psf","prmtop","top"]
-    filenamedict['dynamics']['subtypes']["trajectory"]["ext"] = ["xtc","dcd"]
+    filenamedict['dynamics']['subtypes']["trajectory"]["ext"] = ["xtc","dcd", "trr"]
     filenamedict['dynamics']['subtypes']["parameters"]["ext"] = ["prm","tar.gz"]
     filenamedict['dynamics']['subtypes']["other"]["ext"] = ["tar.gz"]
     filenamedict['dynamics']['subtypes']["log"]["ext"] = ["log"]
