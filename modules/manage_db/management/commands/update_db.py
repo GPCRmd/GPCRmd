@@ -31,13 +31,16 @@ class Command(BaseCommand):
         # SQL options (database dumps)
         sqlparser = parser.add_argument_group("PostgreSQL options", "Manage the GPCRmd database.")
         sqlparser.add_argument("-r", "--restore", type=str, help="Restore the database from a dump file.", metavar="file")
-        sqlparser.add_argument("-pf", "--pathfile", help="Replace the urls of path files with correct ones.", action="store_true")
+        sqlparser.add_argument("-f", "--pathfile", help="Replace the urls of path files with correct ones.", action="store_true")
 
         # Protein tables
         protparser = parser.add_argument_group("Protein tables options", "Options to update the protein tables using data from GPCRdb.")
-        protparser.add_argument("-p", "--protein", help="Update all the protein tables in the database. Englobe all the other options listes below.", action="store_true")
-        protparser.add_argument("-fa", "--protfamily", help="Update the protein family table in the database.", action="store_true")
+        protparser.add_argument("-p", "--protein", help="Update all the protein tables in the database. Englobe all the other options list below.", action="store_true")
+        protparser.add_argument("-m", "--protfamily", help="Update the protein family table in the database.", action="store_true")
         protparser.add_argument("-s", "--protstate", help="Update the protein state table in the database.", action="store_true")
+        protparser.add_argument("-o", "--species", help="Update the species table in the database.", action="store_true")
+        protparser.add_argument("-g", "--gene", help="Update the gene table in the database.", action="store_true")
+
     
     def handle(self, *args, **kwargs):
         
@@ -55,16 +58,16 @@ class Command(BaseCommand):
             Restores a database from a dump file.
             """
             
-            print(f"- Checking if the file {path_dump} exists...")
+            print(f"    - Checking if the file {path_dump} exists...")
             
             if not os.path.isfile(path_dump):
                 raise Exception("Dump file not found.")
             
-            print(f"- Restoring database using dump file {path_dump}...")
+            print(f"    - Restoring database using dump file {path_dump}...")
 
             os.system(f"pg_restore -U gpcrmd_admin -d gpcrmd --no-owner --password -h localhost --clean  -v {path_dump}")
             
-            print("- Database restored!")
+            print("     - Database restored!")
             
         def path_files_db(*args, **kwargs): 
             """
@@ -83,14 +86,27 @@ class Command(BaseCommand):
                     )
             
         # Protein functions
+        def update_prot (*args, **kwargs):
+            """
+            Update protein table of GPCRmd database.
+            """
+            
+            print(f"    - Protein table...")
+                
+            if args[0]["update"]:
+                print(f"    - Force update of the data from GPCRdb...")
+                return os.system(f"python /var/www/GPCRmd/manage.py update_protein --update")
+                
+            os.system(f"python /var/www/GPCRmd/manage.py update_protein")
+            
         def update_prot_family(*args, **kwargs):
             """
             Update the protein family table of GPCRmd database.
             """
             
             print(f"    - Protein family table...")
-                
-            if kwargs["update"]:
+
+            if args[0]["update"]:
                 print(f"    - Force update of the data from GPCRdb...")
                 return os.system(f"python /var/www/GPCRmd/manage.py update_protein_family --update")
                 
@@ -102,12 +118,38 @@ class Command(BaseCommand):
             """
             
             print(f"    - Protein state & pdb tables...")
-                
-            if kwargs["update"]:
+            
+            if args[0]["update"]:
                 print(f"    - Force update of the data from GPCRdb...")
                 return os.system(f"python /var/www/GPCRmd/manage.py update_protein_state --update")
                 
             os.system(f"python /var/www/GPCRmd/manage.py update_protein_state")
+        
+        def update_species(*args, **kwargs):
+            """
+            Update the species table of GPCRmd database.
+            """
+            
+            print(f"    - Species table...")
+                
+            if args[0]["update"]:
+                print(f"    - Force update of the data from GPCRdb...")
+                return os.system(f"python /var/www/GPCRmd/manage.py update_species --update")
+                
+            os.system(f"python /var/www/GPCRmd/manage.py update_species")
+        
+        def update_gene(*args, **kwargs):
+            """
+            Update the gene table of GPCRmd database.
+            """
+            
+            print(f"    - Gene table...")
+                
+            if args[0]["update"]:
+                print(f"    - Force update of the data from GPCRdb...")
+                return os.system(f"python /var/www/GPCRmd/manage.py update_gene --update")
+                
+            os.system(f"python /var/www/GPCRmd/manage.py update_gene")
         
         # gpcrargs = parser.parse_args()
         if len(sys.argv) < 3:
@@ -125,12 +167,15 @@ class Command(BaseCommand):
             
         # Update protein tables
         if kwargs["protein"]:
+            print(f"- Updating protein tables...")
             update_prot_family(kwargs)
             update_prot_state(kwargs)
+            update_species(kwargs)
+            update_gene(kwargs)
+            update_prot(kwargs)
 
         elif not kwargs["protein"]:
-            print(f"- Updating protein tables...")
-            
+                        
             # Protein family table
             if kwargs["protfamily"]:
                 update_prot_family(kwargs)
@@ -139,6 +184,14 @@ class Command(BaseCommand):
             if kwargs["protstate"]:
                 update_prot_state(kwargs)
             
-            
+            # Species table
+            if kwargs["species"]:
+                update_species(kwargs)
+                
+            # Genes table
+            if kwargs["gene"]:
+                update_gene(kwargs)
+                
+             
         # Exit
         print("- Exiting...")
