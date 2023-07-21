@@ -67,12 +67,24 @@ class DynsSearchSerializer(serializers.ModelSerializer):
     pdb_namechain = serializers.CharField(source = "id_model.pdbid", allow_null=True)
     uniprot = serializers.CharField(source = 'id_model.id_protein.uniprotkbac', allow_null=True)
     protname = serializers.CharField(source = 'id_model.id_protein.name', allow_null=True)
-    state = serializers.SerializerMethodField()
     species = serializers.CharField(source = 'id_model.id_protein.id_uniprot_species.scientific_name', allow_null=True)
-    fam_slug = serializers.CharField(source = 'id_model.id_protein.receptor_id_protein.family.slug', allow_null=True)
-    fam_name = serializers.CharField(source = 'id_model.id_protein.receptor_id_protein.family.parent.name', allow_null=True)
-    class_name = serializers.CharField(source = 'id_model.id_protein.receptor_id_protein.family.parent.parent.parent.name', allow_null=True)
-    uprot_entry = serializers.CharField(source = 'id_model.id_protein.receptor_id_protein.entry_name', allow_null=True)
+    state = serializers.SerializerMethodField()
+    try:
+        fam_slug = serializers.CharField(source = 'id_model.id_protein.receptor_id_protein.family.slug', allow_null=True)
+    except:
+        fam_slug = ""
+    try:
+        fam_name = serializers.CharField(source = 'id_model.id_protein.receptor_id_protein.family.parent.name', allow_null=True)
+    except:
+        fam_name = ""
+    try:
+        class_name = serializers.CharField(source = 'id_model.id_protein.receptor_id_protein.family.parent.parent.parent.name', allow_null=True)
+    except:
+        class_name = ""
+    try:
+        uprot_entry = serializers.CharField(source = 'id_model.id_protein.receptor_id_protein.entry_name', allow_null=True)
+    except:
+        uprot_entry = ""
     modelname = serializers.CharField(source = 'id_model.name', allow_null=True)
     dyncomp = serializers.SerializerMethodField()
     mysoftware = serializers.CharField(source = 'software', allow_null=True)
@@ -86,8 +98,11 @@ class DynsSearchSerializer(serializers.ModelSerializer):
     
     def get_state(self,obj):
         #(source = '.states.name')#, allow_null=True)
-        protcomps = ProteinConformation.objects.filter(protein=obj.id_model.id_protein.receptor_id_protein)
-        return ProteinConformationSerializer(protcomps, many=True).data
+        try:
+            protcomps = ProteinConformation.objects.filter(protein=obj.id_model.id_protein.receptor_id_protein)
+            return ProteinConformationSerializer(protcomps, many=True).data
+        except:
+            return ""
     
     class Meta:
         model = DyndbDynamics

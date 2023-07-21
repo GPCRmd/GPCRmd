@@ -80,7 +80,7 @@ class SearchByDyn(generics.ListAPIView):
         dyn_id = dyn_id.split(",")
         dyn_id = list(filter(None, dyn_id)) # Remove empty strings in list
         dyn_id = [ int(x) for x in dyn_id ] # Convert to int
-        queryset=DyndbDynamics.objects.filter(id__in=dyn_id)
+        queryset = DyndbDynamics.objects.filter(id__in=dyn_id)
         return queryset
 
 # NOT API TOOLS ###############################################################################################################################################################

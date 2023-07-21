@@ -58,8 +58,8 @@ class Command(BaseCommand):
 
         # If we want to update or obtain the data 
         if options['update']: 
-            print("- UPDATE STEP...")
-            print("     > Refreshing data...")
+            print("     - UPDATE FILES STEP...")
+            print("         > Refreshing data...")
             json_info = open(mode="w", file=f"{MODULES_ROOT}/protein/management/tools/gpcrdb_pdb.json")
             urlData = requests.get(url)
             urltext = urlData.text
@@ -67,7 +67,7 @@ class Command(BaseCommand):
             json_info.close()
 
         # Get the dataset from gpcrdb on pandas
-        print("     > Getting the json dataset...")
+        print("         > Getting the json dataset...")
         gpcrdb_table = pd.read_json(f"{MODULES_ROOT}/protein/management/tools/gpcrdb_pdb.json")
 
         # # Get the dataset from gpcrdb on pandas
@@ -76,7 +76,7 @@ class Command(BaseCommand):
         # gpcrdb_table = gpcrdb_table[0].iloc[1:,1:-1] 
 
         # Create State dictionary from table 
-        print("     > Creating the state dictionary ([pdb] = state)... & update ProteinState model.")
+        print("         > Creating the state dictionary ([pdb] = state)... & update ProteinState model.")
         dic_state = {}
         for index, row in tqdm(gpcrdb_table.iterrows(), total=gpcrdb_table.shape[0]):
             pdb_id = str(row["pdb_code"])
@@ -93,7 +93,7 @@ class Command(BaseCommand):
                     continue
 
         # Write information into data.py file on dynadb main directory
-        print("     > Writing info into modules/dynadb/data.py...")
+        print("         > Writing info into modules/dynadb/data.py...")
         dic_state_file = open(mode="w", file=f"{MODULES_ROOT}/dynadb/data.py")
         dic_state_file.write(f"pdb_state={dic_state}")
         dic_state_file.close()

@@ -31,18 +31,19 @@ class Command(BaseCommand):
         html_cleaner = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')#Clean tags and some not enclosed elements like &nsbm  
         l_errors = {} #Store possible errors & warnings to display them at the end
 
+        print(kwargs)
         if kwargs['update'] or prot_fam_dic == {}: 
-            print("- UPDATE FILES STEP...")
+            print("     - UPDATE FILES STEP...")
             if prot_fam_dic == {}:
-                print("     > Dictionary of families on prot_fam_data,py not found... Refreshing data...")
+                print("         > Dictionary of families on prot_fam_data,py not found... Refreshing data...")
             else:
-                print("     > Refreshing data...")
+                print("         > Refreshing data...")
 
             #Read information & generate diccionary of information
             prot_fam_dic = {}
             for pfdata in tqdm(urlData, total=len(urlData)):  # {'slug': '100_001_005', 'name': 'GPa1 family', 'parent': {'slug': '100_001', 'name': 'Alpha'}}
                 slug = pfdata["slug"]
-                name = re.sub(html_cleaner, '', pfdata["name"])
+                name = pfdata["name"]
                 try:
                     slugparent = pfdata["parent"]["slug"]
                 except TypeError:
@@ -55,7 +56,7 @@ class Command(BaseCommand):
                 prot_fam_dic[slug] = {"name": name, "slug_parent": slugparent}
 
             # Write information into data.py file on dynadb main directory
-            print("     > Writing info into ../modules/protein/management/tools/prot_fam_data.py...")
+            print("         > Writing info into ../modules/protein/management/tools/prot_fam_data.py...")
             dic_prot_fam_file = open(mode="w", file=f"{MODULES_ROOT}/protein/management/tools/prot_fam_data.py")
             dic_prot_fam_file.write("# This information is to update the families protein table of GPCRmd database.\n")
             dic_prot_fam_file.write(f"prot_fam_dic={prot_fam_dic}")
@@ -63,13 +64,13 @@ class Command(BaseCommand):
         
         # Read information from table ProteinFamily     
        
-        print("- READING STEP...")
-        print("     > Reading table ProteinFamily from database...")
+        print("     - READING STEP...")
+        print("         > Reading table ProteinFamily from database...")
         data_protfam = ProteinFamily.objects.all() # slug, name, parent        
 
         # Update table ProteinFamily
-        print("- UPDATE STEP...")
-        print("     > Update table ProteinFamily...")
+        print("     - UPDATE STEP...")
+        print("         > Update table ProteinFamily...")
 
         for f in tqdm(data_protfam, total=len(data_protfam)):
             ref_slug = f.slug
@@ -81,12 +82,12 @@ class Command(BaseCommand):
                     l_errors['family_nf'] = [f"{name}:{ref_slug}"]
                 else:
                     l_errors['family_nf'].append(f"{name}:{ref_slug}")
-                name = re.sub(html_cleaner, '', f.name)
+                name = f.name
             query = ProteinFamily.objects.filter(slug=ref_slug)
             query.update(name=name)
         
         # Add new entries to ProteinFamily
-        print("     > Search of new entries for table ProteinFamily...")
+        print("         > Search of new entries for table ProteinFamily...")
         slug_protfam = list(ProteinFamily.objects.values_list("slug",flat=True))     
         for key in tqdm(prot_fam_dic.keys(), total=len(prot_fam_dic.keys())):
             if key not in slug_protfam:
@@ -111,16 +112,16 @@ class Command(BaseCommand):
                 continue
 
         # Errors
-        if l_errors != {}:
-            print("- ERRORS & WARNINGS...")
+        if l_errors['family_nf'] == [] and l_errors['family_new'] == [] and l_errors['parent_nf'] == []:
+            print("     - ERRORS & WARNINGS...")
         if "parent_nf" in l_errors.keys():                        
-            print("     > List of families without parents:")
+            print("         > List of families without parents:")
             print(f"    {l_errors['parent_nf']}")
         if "family_nf" in l_errors.keys():                        
-            print("     > List of families not founded on GPCRdb:")
+            print("         > List of families not founded on GPCRdb:")
             print(f"    {l_errors['family_nf']}")
         if "family_new" in l_errors.keys():                        
-            print("     > List of new families not added:")
+            print("         > List of new families not added:")
             print(f"    {l_errors['family_new']}")
 
 
