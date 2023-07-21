@@ -1,0 +1,75 @@
+<head>
+<style>
+.falselist{
+    margin-bottom:4px;
+    padding-left:15px
+}
+</style>
+</head>
+<body>
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %} 
+{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 >GPCR viewer</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+
+            <div style="text-align:center"> 
+             <!--<h4 >GPCR VIEWER</h4>-->
+	    </div>
+             <p style="text-align: justify;">Please select what you want to display in your molecular representation.</p>
+
+	     <p style="text-align: justify;">You can choose one of the selections we propose or define a new one using the <a href="http://proteinformatics.charite.de/ngl/doc/index.html#User_manual/Usage/Selection_language" target="_blank">NGL selection language</a> to limit which atoms/residues are shown.<p>
+             <p style="text-align: justify;margin-bottom:4px">Mouse controls:</p>
+		<span><p class="falselist">Left button hold and move: rotate camera around center.</p>
+		<p class="falselist">Middle button hold and move: zoom camera in and out.</p>
+		<p class="falselist">Middle button click: center camera on atom.</p>
+		<p style="padding-left:15px" >Right button hold and move: translate camera in screen plane.</p></span>
+             <p style="text-align: justify;">For more information about the viewer, visit the <a href="http://proteinformatics.charite.de/ngl/doc/index.html" target="_blank">NGL documentation</a>.</p>
+             <p style="text-align: justify;">If you wish a more complete visualization or to add a trajectory, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>
+
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary alert alert-info">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   <body> -->
+
+<div id="pprotform"class="col-md-7 ">
+  <div id="protform" class="col-md-12 panel-danger alert alert-danger"> 
+    <div class="panel-body">
+      <div style="text-align: justify;text-justify: inter-word;">
+         <p style="margin:0"><b style="font-size:17px">Error: </b> {{ error }}</p>
+       </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+{% endblock %}
+
+
+</body>
+

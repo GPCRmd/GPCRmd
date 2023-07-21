@@ -1,0 +1,331 @@
+<head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script>document.domain=document.domain;</script>
+<style>
+.myheader {
+    margin-top: 20px;
+    font-weight:bold;
+    border-bottom:2px solid blue;
+    padding-bottom:5px;
+}
+
+.subsect{
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color:#4646b9;
+    font-weight:bold;
+
+}
+.ptext{
+    margin-bottom:20px;
+    margin-left:10px;
+    margin-right:10px;
+}
+.prelist{
+    margin-bottom:5px;
+    margin-left:10px;
+    margin-right:10px;
+}
+
+.highlight{
+    color:#5992C4;
+}
+
+.input_ex{
+    background-color: #fff4e6;
+}
+.function {
+    font-style: italic;
+    font-weight: bold
+}
+
+
+</style>
+</head>
+<body>
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %} 
+{% csrf_token %}
+ <div class="col-md-10 col-md-offset-1  panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">
+  <div class="panel-body">
+	<h3 >GPCR viewer</h3>
+ </div> 
+ </div>
+ <div class="col-md-10 col-md-offset-1  panel panel-primary">
+    <div class="panel-body">
+        <!--<div style="text-align:center"> 
+            <h4>DOCUMENTATION</h4>
+	    </div>-->
+<div style="margin:40px;text-align:justify">
+<!--<p>The GPCR viewer provides online visualization and analysis of the dynamics stored at GPCRmd.</p>-->
+<div>
+        <h4 class=myheader >Video tuturial</h4>
+          <center >
+            <iframe width="700" height="366" src="https://www.youtube.com/embed/kgEA2AnkcgM?rel=0&amp;showinfo=0" style="border:none;margin-bottom:5px""  allow="autoplay; encrypted-media" allowfullscreen></iframe>
+          </center>
+          
+        <h4 class=myheader>General features</h4>
+
+        <p class=prelist>Mouse controls:</p>
+        <ul>
+        <li><span class=highlight>Left button hold and move:</span> rotate camera around center.</li>
+        <li><span class=highlight>Middle button hold and move:</span> zoom camera in and out.</li>
+        <li><span class=highlight>Middle button click:</span> center camera on atom.</li>
+        <li><span class=highlight>Right button hold and move:</span> translate camera in screen plane.</li>
+        <li><span class=highlight>Left button click:</span> pick atom or distance. 
+            <ul>
+                <li><span style="font-style: italic;">On click show distance</span> mode:
+                    <ul>
+                        <li>When an atom is clicked, a label with information about it appears. Click at the background to deselect it, the label will disappear. To maintain a label, double-click on an atom. Double-click on a label to remove it. </li>
+                        <li>To draw a distance line between two atoms just single-click one atom after the other. Distances can be removed by double-clicking on one of the atoms at the edges.</li> 
+                        <li>It is also possible to remove all the atom labels and distances at once, with the <span class=highlight>Clear dists. button</span>.</li>
+                    </ul>
+                </li>
+                <li><span style="font-style: italic;">On click show variants</span> mode:
+                    <ul>Click on the blue dots to obtain information on known natural variants of a residue. Data obtained from the <a href="https://gnomad.broadinstitute.org/" target="_blank" >gnomAD database</a>.</ul>
+                </li>
+                <li><span style="font-style: italic;">On click show mutations</span> mode:
+                    <ul>Click on the blue dots to obtain information on mutational experiments done on a residue. Data obtained from <a href="https://www.gpcrdb.org/" target="_blank" >GPCRdb</a>.</ul>
+                </li>
+            </ul>
+        </li>
+        </ul>
+
+        <p class=ptext>If you wish to use more complex visualization options, you can open the structure and trajectories in <a href="http://arose.github.io/mdsrv/"  target="_blank" style="text-decoration: underline;">MDsrv</a> just by clicking at the <span class="glyphicon glyphicon-cog" style="color: rgb(88, 88, 88)"></span> button.</p>
+
+        <h4 class=myheader>Selection tools</h4>
+        <!--<p class=ptext>The viewer offers a set of tools to ease the selection of the atoms or molecules of interest.</p>-->
+        
+        <h5 class=subsect>Quick selection</h5>
+        <p class=ptext>Quick-selection buttons allow to rapidly display the molecules present at the dynamics. Hover the buttons with your mouse to see the abbreviated name of these molecules, which can be used to create your own selections.</p>
+        
+        <p class=prelist>In the case of <span style="font-style:italic;">Structure selections</span>, It is also possible to select the residues or molecules that are found <span class=highlight>within a certain distance of a ligand</span>. It is only necessary to:</p>
+        <ol style="margin-bottom:20px;">
+            <li>Indicate what you want to visualize (residues or molecules found at the simulation).</li>
+            <li>Input the wanted threshold distance (in angstroms).</li>
+            <li>Indicate the molecule type around which the selection is made. Apart from predefined molecules, it is also possible to show the residues/molecules that are close to a personalized selection which, again, can include generic GPCR residue numbering.</li>
+        </ol>
+        <p class=ptext>If the selection is correct, a green checkmark (<span style="color:#7acc00;font-size:10px" class="glyphicon glyphicon-ok"></span>) will appear at the left. More than one distance selection can be displayed at the same time. Selections made with this tool will appear in coral red. The  distance selection will be updated for each trajectory frame, as the disposition of the atoms may change.</p> 
+        
+
+        <h5 class=subsect id="customsel">Custom selection</h5>
+        <p class=ptext>Use the text input field to indicate the residues or molecules to be represented. You can choose a representation type (licorice, cartoon, etc.) and a coloring scheme (color by element, by chain, etc.).</p>
+        <p class=ptext>Selections must be expressed using the <a href="http://proteinformatics.charite.de/ngl/doc/index.html#User_manual/Usage/Selection_language" target="_blank" style="text-decoration: underline;">NGL selection language</a>. To indicate protein residues it is also possible to use <span class=highlight>generic GPCR residue numbering</span>: sequence-based (Ballesteros-Weinstein for class A, Wootten for class B, Pin for C and Wang for F.) (ex. <span style="font-style:italic">1.50</span>), structure-based (ex. <span style="font-style:italic">1x50</span>) or a combination (ex. <span style="font-style:italic">1.50x50</span>).</p>
+        
+        <p class=ptext>For example, if you input <span class="input_ex">40-70:P or CLZ</span>, residues numbered from 40 to 70 at the PDB belonging to chain P and Clozapine will be displayed. Another example, using a combination of different generic GPCR numbering styles, could be <span class="input_ex">1.50 - 2x48 or 3.35x35  or SOD</span>.</p>
+
+        <h5 class=subsect>Sequence selection</h5>
+        <p class=ptext>The GPCR Workbench also provides the option to select a protein segment from its sequence. Set your selection by clicking at the desired range or ranges of residues, selected segments will appear at the sequence in green. To deselect a residue range from the sequence, just click on it. Finally, click at <span class=highlight>Confirm selection</span>: the residue range(s) will be added to a text input field, which you can modify to adjust the selection to what you want to display. If you want to add new sequence selections, click at the <span style="color: rgb(87, 200, 87)" class="glyphicon glyphicon-plus-sign"></span> button.</p>
+
+        <h5 class=subsect>GPCR conserved positions</h5>
+        <p class=ptext>The <span class=highlight>GPCR conserved positions</span> selection provides the possibility to rapidly select positions or domains conserved in the different GPCR family classes. The GPCR class of the protein being represented will be selected by default, and therefore the conserved positions/domains corresponding to that GPCR class will be available to visualize.
+        </p>
+        <p class=ptext>It is also possible to visualize the positions that correspond to conserved positions from other GPCR classes. For example, if your protein belongs to class A, you can represent the residue that corresponds to class B <span style="font-style:italic">2.50</span> (<span style="font-style:italic">2.50b</span>). Hover the buttons with your mouse for more information about the conserved positions and motifs, if available.</p>
+
+        <h4 class=myheader>GPCRmd Toolkit</h4>
+
+        <h5 class=subsect>Interaction network (Flare plots)</h5>
+        <p class=ptext>Flare Plots are a tool for the study and representation of intra-protein interactions developed at the Stanford University by Dr. Fonseca and Dr Venkatakishnan. This approach makes it possible to obtain a highly visual depiction of complex data, such as the set of interactions formed between protein residues throughout MD simulations, in the form of circular interactive networks named Flare plots. Residue-residue interactions are represented as lines connecting residue pairs. Hover or click a residue to highligh the lines representing the interactions in which it participates.</p>
+        <p class=ptext style="margin-bottom:10px">There are several options available </p>
+        <ul>
+            <li><span class=highlight>Interacion type:</span> Select the type of interaciton to display on the plot.
+                <ul>
+                    <li><span class=highlight>Hydrogen bonds</span>
+                        <ul>
+                            <li><span class=highlight>Wernet Nilsson criteria (MDTraj):</span> Any combination of donor atoms (NH or OH) and acceptor atoms (N or O) that holds the condition: <br><span class="function">|AD| &lt; 3.3 Å − 0.00044 * ∠HDA * ∠HDA</span> <br>Where |AD| is the distance in Angstroms between donor and acceptor heavy atoms, and ∠HDA is the angle formed by the hydrogen atom, donor, and acceptor atoms in degrees. Defined by the MDTraj module function <a href=http://mdtraj.org/1.8.0/api/generated/mdtraj.wernet_nilsson.html>wernet_wilson</a>.
+                            </li>
+                            <li><span class=highlight>GetContacts criteria:</span> <br>
+
+                                <span class="function">|AD| &lt; 3.5Å<br>
+                                ∠AHD &lt; 70°<br></span>
+                              Where A (acceptor) and D (donor) are any atom except hydrogen, carbon or sulphur.<br> Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                            </li>
+                        </ul>
+                    </li>
+                    <li><span class=highlight>Salt bridges:</span> <br>
+                               <span class="function">|AC| &lt; 4.0Å</span>
+                                <br>
+                                  Where:<br>
+                                  A (anion): ASP/OD1+OD2, GLU/OE1+OE2<br>
+                                  C (cation): LYS/NZ, ARG/NH1+NH2, HIS/ND1+NE2<br>
+                                  Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                    </li>
+                    <li><span class=highlight>Pi-cation:</span><br>
+                                <span class="function">
+                                |AC| &lt; 6.0Å<br>
+                                ∠CAn &lt; 60°<br></span>
+                                Where:<br>
+                                  A (aromatic): center(PHE/CG+CE1+CE2), center(TRP/CD2+CZ2+CZ3), center(TYR/CG+CE1+CE2), center(HIS/CG+CD2+CE1)<br>
+                                  C (cation): LYS/NZ, ARG/NH1+NH2, HIS/ND1+NE2<br>
+                                Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                    </li>
+                    <li><span class=highlight>Pi-stacking:</span><br>
+                            <span class="function">
+                            |A1A2| &lt; 7.0Å<br>
+                            ∠(n1, n2) &lt; 30°<br>
+                            ∠(n1, A1A2) &lt; 45°<br>
+                            ∠(n2, A1A2) &lt; 45°<br>
+                            </span>
+                            Where:<br>
+                            A1, A2 (aromatic rings): center(PHE/CG+CE1+CE2), center(TRP/CD2+CZ2+CZ3), center(TYR/CG+CE1+CE2), center(HIS/CG+CD2+CE1)<br>
+                            Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.                        
+                    </li>
+                    <li><span class=highlight>T-stacking:</span><br>
+                        <span class="function">
+                            |A1A2| &lt; 5.0Å<br>
+                            60° &lt; ∠(n1, n2) &lt; 90°<br>
+                            ∠(n1, A1A2) &lt; 45°<br>
+                            ∠(n2, A1A2) &lt; 45°<br>
+                        </span>
+                        Where: <br>A1, A2 (aromatic rings): center(PHE/CG+CE1+CE2), center(TRP/CD2+CZ2+CZ3), center(TYR/CG+CE1+CE2), center(HIS/CG+CD2+CE1)<br>
+                        Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                    </li>
+                    <li><span class=highlight>Van der Waals:</span><br>
+                              <span class="function">
+                                |AB| &lt; R<sub>vdw</sub>(A) + R<sub>vdw</sub>(B) + 0.5<br>
+                              </span>
+                              Where A and B are any non-hydrogen atoms.<br>
+                              Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+
+                    </li>
+                    <li><span class=highlight>Water volume distribution :</span>  Two different residues forming an Hydrogen bond with the same water molecule. Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                    </li>
+                    <li><span class=highlight>Extended water bridges:</span>  Two different residues forming an Hydrogen bond with two different water moleucules which also form an hydrogen bond between them. Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                    </li>
+                    <li><span class=highlight>Hydrophobic:</span><br>
+                        <span class="function">
+                            |AB| &lt; R<sub>vdw</sub>(A) + R<sub>vdw</sub>(B) + 0.5<br>
+                        </span>
+                        Where:<br>
+                          A, B: ALA+CYS+PHE+GLY+ILE+LEU+MET+PRO+VAL+TRP and element C or S<br>
+                        Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+
+                    </li>
+                </ul>
+            </li>
+            <li><span class=highlight>Display:</span>
+                <ul>
+                    <li><span class=highlight>Interacting pairs:</span>Show only a subset of interactions (intra- or inter-helix) or all of them.</li>
+                    <li><span class=highlight>Simulation:</span> It is possible to summarize the interactions formed through all the trajectory frames. The frequency of each interaction is represented by the thickness of the lines connecting residues.</li>
+                </ul>
+            </li>
+            <li><span class=highlight>Show in structure:</span> Click to display structural representations of the residues selected (clicked) at the flare plot. Unclick to hyde them. If there are no residues selected at the flare plot, nothing will happen.</li>
+            <li><span class=highlight>Clear plot:</span> Click to delete all selections made on the plot.</li>
+            <li><span class=highlight>Download data (<span style="color: rgb(88, 88, 88);" title="Download data" class="glyphicon glyphicon-download-alt"></span>):</span> Click to download the plot data.</li>
+        </ul>
+
+        <h5 class=subsect>Interaction frequencies</h5>
+
+        <h6 class=subsect>Hydrogen bonds</h6>
+        <p class=ptext>This tool identifies Hydrogen Bonds formed in a simulation, splitting the results between protein-protein hydrogen bonds and protein-not protein bonds. We use the MDTraj module function  <a href=http://mdtraj.org/1.8.0/api/generated/mdtraj.wernet_nilsson.html>wernet_nilson</a> , which basically stablishes a threshold distance of 3.3 Angstroms between the donor and acceptor atoms; this threshold becomes progressively stricter as the angle formed by H-D-A increases (a perfect straight bond is 0 degrees, as the donor atom is central). It's possible to choose between a few options:</p>
+        <ol style="margin-bottom:20px;">
+            <li><span class=highlight>Do not include hydrogen bonds between neighbours:</span> If selected, excludes hydrogen bonds among residues which are less than 5 residues apart. These are usually the hydrogen bonds stabilizing alpha helices.</li>
+
+            <li><span class=highlight>All hydrogen bonds:</span> If selected, includes hydrogen bonds formed between backbone (BB) atoms or side chains (SC) atoms, in any combination (SC-SC,BB-BB,SC-BB).</li>
+
+            <li><span class=highlight>Only side chain hydrogen bonds:</span> If selected, only includes hydrogen bonds formed between side chain atoms.</li>
+        </ol>
+
+        <p class=ptext>
+
+        Finally, you can set a frequency threshold so only those hydrogen bonds which hold the cited condition in a proportion of the frames greater than the value you have set will appear in the results. You can also define an interval of frames into which perform the analysis. <br>
+
+        Results have a "Show Hbond" button next to them which displays the bond in the viewer. At the end of the results table, you can find a "Show All" button, which displays all the bonds in that table at once.<br>
+        </p>
+
+        <h6 class=subsect>Ligand receptor contacts </h6>
+        <p class=ptext>This analysis tool calculates the frequency of interaction between the protein residues and a given ligand across a trajectory. When the distance between any of their atoms and the ligand is smaller than the threshold, it is considered to be an interaction. It is possible to chose which residue atoms will be considered (heavy atoms only or all atoms).
+        The result is presented as table and a plot, which can be downloaded as an image (<span class="glyphicon glyphicon-stats" title="Save plot as image">)</span>. The residues that are found to interact can be displayed at the viewer screen (shown in purple), which can be deactivated using the "Display interacting residues" checkbox. It is also possible to download the interaction data obtained (<span class="glyphicon glyphicon-file save_data_dist_plot" title="Save data"></span>).</p>
+
+
+        <h6 class=subsect>Salt bridges</h6>
+        <p class=ptext> This tool allows you to identify the salt bridges formed through a simulation. Salt bridges are defined as any combination between these two sets: {Arg-NH1, Arg-NH2, Lys-NZ, His-NE2, His-ND1} and {Glu-OE1, Glu-OE2, Asp-OD1, Asp-OD2} in which the participating atoms are closer than 4 Angstroms. Histidine atoms are only considered if the residue is protonated. As with hydrogen bond analysis, you can select a percentage threshold, and the results include a "Show Salt Bridge" button and a "Show All" button. Furthermore, you can select an interval of frames, instead of the whole trajectory.
+        </p>
+
+
+
+        <h5 class=subsect>Distance</h5>
+        <p class=ptext  style="margin-bottom:10px">This tool is used to calculate the distance between atom pairs across the different frames of a trajectory, and therefore across time. 
+        To calculate a distance, you need to indicate the pair or pairs of atoms you are interested in. This can be done in different ways:</p>
+        <ul>
+        <li>Select a pair of atoms at the viewer screen by clicking on them and, afterwards, <span class=highlight>importing the created distances</span> with the blue arrow button <span style="color:#1e90ff" class="glyphicon glyphicon-circle-arrow-down"></span>.</li>
+        <li>Indicate the desired atom pairs manually, by selecting "Compute distance between" <span class=highlight>atoms</span> and inputting a pair of atom indices at the text input fields.</li>
+        <li>Indicate the desired atom pairs manually, by selecting "Compute distance between" <span class=highlight>residues</span> and indicating the residue, chain and atom name you are interested in. The residue number and chain name must be indicated according to the NGL selection language (ex. 50:P), and the atom name selected from the droplist.</li>
+        </ul>
+       <p class=ptext>It is also necessary to select the trajectory that will be used for the calculation. <br>
+        
+        Finally, just click at <span class=highlight>Compute</span>. Only atom pairs which are marked with a green checkmark (<span style="color:#7acc00;font-size:10px" class="glyphicon glyphicon-ok"></span>) will be considered, since the absence of a checkmark indicates an error in the input (only numbers are allowed).
+        The result will appear as a plot of distance by time or by frame, which can be downloaded as an image (<span class="glyphicon glyphicon-stats" title="Save plot as image">)</span>. It is also possible to download the data obtained as a csv file (<span class="glyphicon glyphicon-file save_data_dist_plot" title="Save data"></span>). Moreover, the distances calculated can be displayed at the viewer screen, in the colors indicated at the plot legend. Such distance representations can be deactivated by deselecting the "Display distance" checkbox.</p>
+
+        <h5 class=subsect>RMSD</h5>
+        <p class=ptext>This tool computes the RMSD of all the conformations in a target trajectory to a reference conformation. It is necessary to indicate the trajectory to be used and the frames to be considered. Also, a reference frame of a given trajectory. It is possible to chose which atoms are going to be considered in the calculation: only alpha carbons, non-hydrogen protein atoms, protein C-alpha, etc.
+        As in the case of distance analysis, the result will be shown in a plot (RMSD by time or by frame). It is possible to download the plot as an image (<span class="glyphicon glyphicon-stats" title="Save plot as image"></span>) or all the obtained data as a csv file (<span class="glyphicon glyphicon-file save_data_dist_plot" title="Save data"></span>).</p>
+
+        <h5 class=subsect>Water volume distribution </h5>
+        <p class=ptext>
+            Displays an averaged water density map of the MD trajectory under study. Maps are precomputed <a href="https://www.ks.uiuc.edu/Research/vmd/vmd-1.9.1/ug/node153.html">VMD VolMap Tool</a>. They are generated only for oxygen atoms of a water molecule in a cutoff distance of 10 Å to the protein using a resolution of 1 Å. Atoms are treated as spheres using the atomic radii. 
+
+        </p>
+
+        <h5 class="subsect">Dynamic pharmacophores</h5>
+        <p class="ptext">
+            Each atom in the pharmacophore represents a ligand or receptor atom in a position in which a ligand-receptor interaction occured during the simulation. In sake of performance, only 6000 these interactions are displayed on the viewer as maximum. If more interactions were obtained, only 6000 randomly selected ones will be displayed on the pharmacophore. 
+            Interaction data was obtained using GetContacts, and the interaction types are defined by the aforementioned GetContacts interaction criteria.
+        </p>
+
+        <h5 class="subsect">Tunnels and channels</h5>
+        <p class="ptext">
+            Displays the tunnels and channels formed in the receptor during the simulation. Tunnels are defined as void pathways leading from a cavity buried in a protein core to the surrounding solvent, while in channels both endings are opened to the surrounding solvent.
+        </p>
+        <p class="ptext">
+            Tunnels/channels are precalculated using the software <a href='https://caver.cz/index.php'>Caver</a>. The starting point coordinates are set to the centre of the binding pocket, and the following input parameters are used: probe_radius=1.4, shell_radius=3, shell_depth=4.
+        </p>
+        <p class="ptext">
+            All the tunnels/channels identified in the simulation are clustered by similarity. Such clusters of identified tunnels can be displayed by selecting them in the “Clusters” column.
+        </p>
+        <p class="ptext">
+            It is also possible to display the tunnel with the highest throughput of each cluster. <a href='https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002708'>As defined by Caver</a>, the throughput of a tunnel or channel corresponds to the importance of the pathway, which is the probability that the pathway is used as a route for transportation. Tunnel throughput is calculated based on the radius and length of the tunnel. The frame at which the highest-throughput tunnel of each cluster is found can be displayed by clicking at the “Display frame x” button.
+        </p>
+
+<!--        <h5 class=subsect>SASA analysis</h5>
+        <p class=ptext> This tool allows you to compute the Solvent Accesible Surface Area(SASA) of a given set of atoms. We use the <a href=http://mdtraj.org/1.8.0/examples/solvent-accessible-surface-area.html>shrake_rupley</a> function from MDTraj module. Once we have the SASA value for each atom at each frame, we sum the SASA of all the atoms belonging to each frame. Then, we plot the obtained value per frame, so you can see how the SASA of that set of atoms fluctuates through time. We have defined a few options to define the atoms that will be considered:</p>
+
+        <ol style="margin-bottom:20px;">
+            <li><span class=highlight>All atoms:</span> Includes all atoms in the simulation.</li>
+
+            <li><span class=highlight>Sequence Selection:</span> Imports the selection you have defined in the <span class=highlight>Sequence Selection<span> tool (remember to click "Confirm Selection" button).</li>
+
+            <li><span class=highlight>Receptor:</span>Includes all GPCR atoms.</li>
+
+            <li><span class=highlight>Lower half of receptor:</span> Includes atoms in the GPCR whose Z component is less than the mean Z component of P atoms in the lipid leaflets.</li>
+
+            <li><span class=highlight>Upper half of receptor:</span> The opposite of option 4.</li>
+
+            <li><span class=highlight>Extracellular receptor:</span> Includes all atoms in the GPCR whose Z component is greater than the mean Z component of the P atoms in the outter membrane leaflet.</li>
+
+            <li><span class=highlight>Intracelular receptor:</span> Includes all atoms in the GPCR whose Z component is less than the mean Z component of the P atoms in the inner membrane leaflet.</li>
+
+        </ol>
+        <p class=ptext>
+            Furthermore, you can select an interval of frames, instead of the whole trajectory.
+        </p>-->
+
+
+            
+
+    </div>
+    </div>
+ </div>
+ </div>
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+
+{% endblock %}
+
+</body>

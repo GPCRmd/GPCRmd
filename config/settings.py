@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'modules.news',
     'modules.protein',
     'modules.residue',
+    'modules.secret_view.apps.ViewConfig',
     'modules.sc2md',
     'modules.structure',
     'modules.view.apps.ViewConfig'

@@ -1,0 +1,47 @@
+<head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script>document.domain=document.domain;</script>
+<style>
+#content{
+    width:100%;
+}
+
+
+</style>
+</head>
+<body>
+{% extends "home/base.html" %} 
+{% load static %} 
+
+
+{% block content %} 
+{% csrf_token %}
+<div style="margin:0 20px">
+ <div class="col-md-10 col-md-offset-1  panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;">
+  <div class="panel-body">
+    <h2 >GPCRmd Workbench
+</h2>
+ </div> 
+ </div>
+ <div class="col-md-10 col-md-offset-1  panel panel-primary">
+    <div class="panel-body">
+<div class="alert alert-info" style="margin:30px;padding:20px;font-size:17px">
+    <span class="glyphicon glyphicon-info-sign"></span>
+  Simulation available soon.
+</div>
+<div style="margin:40px;text-align:justify">
+<!--<p>The GPCR viewer provides online visualization and analysis of the dynamics stored at GPCRmd.</p>-->
+<div>
+
+
+ </div>
+ </div>
+</div>
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+
+{% endblock %}
+
+</body>

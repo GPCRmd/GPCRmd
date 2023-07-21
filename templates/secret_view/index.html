@@ -3396,9 +3396,7 @@
                               {% endif %}
       
                               <!-- ============= Chemical Shift (CS) =========== -->
-                              {% comment %} {% if cs_data_avail %} {% endcomment %}
-                              {% if dyn_id %} 
-                              {% else %}
+                              {% if cs_data_avail %}
                                 <div class="row">
                                   <div id="analysis_cs_pan" class="section_pan check_if_cs_struc" data-toggle="collapse"
                                     data-target="#analysis_cs"><span>Chemical Shift (CS)</span><span id="analysis_cs_icon"
@@ -3760,9 +3758,7 @@
                               {% endif %}
       
                               <!-- ============= Allosteric communication (ac) =========== -->
-                              {% comment %} {% if ac_data_avail %}       {% endcomment %}
-                              {% if dyn_id %} 
-                              {% else %}
+                              {% if ac_data_avail %}      
                                 <div class="row">
                                   <div id="analysis_ac_pan" class="section_pan" data-toggle="collapse"
                                     data-target="#analysis_ac">
