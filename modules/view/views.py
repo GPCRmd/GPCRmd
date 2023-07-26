@@ -214,6 +214,9 @@ ac_options_codes = {
     'it' : 'GPCR_Interhelix',
     'sd' : 'Spatially_distant',
 }
+ap_options = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
+
 # Sort ac_options in ordered dict
 def tuple_to_ordered(mytuple):
     """
@@ -2580,6 +2583,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         "cs_data_avail":cs_data_avail,
                         "cs_sparta_avail":cs_sparta_avail,
                         "cs_selection_params":cs_selection_params,
+                        "ap_options" : ap_options,
                         "ac_data_avail" : ac_data_avail,
                         "ac_options" : ac_options,
                         "ac_options_codes" : ac_options_codes,
@@ -2654,6 +2658,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         "ac_data_avail" : ac_data_avail,
                         "ac_options" : ac_options,
                         "ac_options_codes" : ac_options_codes,
+                        "ap_options" : ap_options,
                         "tunnels_channels_def":tunnels_channels_def,
                         "ligprotint_def":ligprotint_def,
                         "predef_int_data":predef_int_data,
@@ -2730,6 +2735,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         "ac_data_avail" : ac_data_avail,
                         "ac_options" : ac_options,
                         "ac_options_codes" : ac_options_codes,                        
+                        "ap_options" : ap_options,
                         "seg_li":"",
                         "delta":delta,
                         "bind_domain":bind_domain,
@@ -2760,6 +2766,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                     "ac_data_avail" : ac_data_avail,
                     "ac_options" : ac_options,
                     "ac_options_codes" : ac_options_codes,
+                    "ap_options" : ap_options,
                     "watervol_def":watervol_def,
                     "pharmacophore_def":pharmacophore_def,
                     "tunnels_channels_def":tunnels_channels_def,
@@ -4070,72 +4077,98 @@ def quickloadall(request):
             }
     return render(request, 'view/quickloadall.html', context)
 
+def into_ngl(inline):
+    inary = inline.split(':')
+    return(":%s and %s and %s" % (inary[0], inary[1], inary[-1])) 
+
+def get_color(weight, max_w, min_w):
+    """
+    Get corresponinding color for this weight
+    """
+
+    # colorscales
+    wtbl = ['#f7fbff', '#f4f9fe', '#f1f7fd', '#eef6fc', '#ebf4fb', '#e8f3fa', '#e5f1f9', '#e3f0f9', '#e0eef8', '#ddecf7', '#daebf6', '#d7e9f5', '#d4e8f4', '#d1e6f4', '#cfe5f3', '#cce3f2', '#c9e1f1', '#c6e0f0', '#c3deef', '#c0ddef', '#bddbee', '#bbdaed', '#b8d8ec', '#b5d6eb', '#b2d5ea', '#afd3ea', '#acd2e9', '#a9d0e8', '#a7cfe7', '#a4cde6', '#a1cbe5', '#9ecae5', '#9bc8e4', '#98c7e3', '#95c5e2', '#93c4e1', '#90c2e0', '#8dc0e0', '#8abfdf', '#87bdde', '#84bcdd', '#81badc', '#7fb9db', '#7cb7db', '#79b5da', '#76b4d9', '#73b2d8', '#70b1d7', '#6dafd6', '#6baed6', '#68abd3', '#66a8d1', '#64a6cf', '#62a3cd', '#60a1cb', '#5e9ec8', '#5c9cc6', '#5a99c4', '#5896c2', '#5694c0', '#5491bd', '#528fbb', '#508cb9', '#4e8ab7', '#4c87b5', '#4a84b3', '#4882b0', '#467fae', '#447dac', '#427aaa', '#4078a8', '#3e75a5', '#3c72a3', '#3a70a1', '#386d9f', '#366b9d', '#34689b', '#326698', '#306396', '#2e6094', '#2c5e92', '#2a5b90', '#28598d', '#26568b', '#245489', '#225187', '#204e85', '#1e4c83', '#1c4980', '#1a477e', '#18447c', '#16427a', '#143f78', '#123c75', '#103a73', '#0e3771', '#0c356f', '#0a326d', '#08306b']
+    wtyl = ['#fff5eb', '#fef2e7', '#fef0e3', '#feeee0', '#feecdc', '#feead9', '#fee8d5', '#fee6d2', '#fee4ce', '#fee1ca', '#fedfc7', '#feddc3', '#fedbc0', '#fed9bc', '#fed7b9', '#fed5b5', '#fed3b1', '#fed0ae', '#feceaa', '#fecca7', '#fecaa3', '#fec8a0', '#fec69c', '#fec498', '#fec295', '#fdbf91', '#fdbd8e', '#fdbb8a', '#fdb987', '#fdb783', '#fdb57f', '#fdb37c', '#fdb178', '#fdae75', '#fdac71', '#fdaa6e', '#fda86a', '#fda666', '#fda463', '#fda25f', '#fda05c', '#fd9d58', '#fd9b55', '#fd9951', '#fd974d', '#fd954a', '#fd9346', '#fd9143', '#fd8f3f', '#fd8d3c', '#fa8a3a', '#f78839', '#f58638', '#f28437', '#f08236', '#ed8035', '#eb7e34', '#e87c32', '#e57a31', '#e37830', '#e0762f', '#de742e', '#db712d', '#d96f2c', '#d66d2a', '#d36b29', '#d16928', '#ce6727', '#cc6526', '#c96325', '#c76124', '#c45f22', '#c15d21', '#bf5b20', '#bc581f', '#ba561e', '#b7541d', '#b5521c', '#b2501a', '#af4e19', '#ad4c18', '#aa4a17', '#a84816', '#a54615', '#a34414', '#a04212', '#9d3f11', '#9b3d10', '#983b0f', '#96390e', '#93370d', '#91350c', '#8e330a', '#8b3109', '#892f08', '#862d07', '#842b06', '#812905', '#7f2704']
+
+    # Choose colorscale and minimum dpending if weight is negative or positive
+    if weight >= 0:
+        myscale = wtbl
+        min_w = min_w if min_w >= 0 else 0
+    else: 
+        myscale = wtyl 
+        weight = abs(weight)
+        max_w = abs(min_w)
+        min_w = abs(max_w) if max_w < 0 else 0
+
+    if min_w==max_w: 
+        return myscale[-1].upper()
+    else:
+        totalcolors = len(myscale)-1
+        dif_range = max_w - min_w
+        dif_weight = weight-min_w
+        colorindex = abs(int(round(totalcolors*dif_weight/dif_range)))-1
+        color = myscale[colorindex].upper()
+        return color
+
+def get_cyldiam(weight, max_w, min_w):
+    """
+    Get corresponinding cylinder diameter for this weight
+    """
+
+    # Choose colorscale and minimum dpending if weight is negative or positive
+    if weight >= 0:
+        min_w = min_w if min_w >= 0 else 0
+    else: 
+        weight = abs(weight)
+        max_w = abs(min_w)
+        min_w = abs(max_w) if max_w < 0 else 0
+
+    dif_range = max_w - min_w
+    max_diam = 0.9
+    if min_w == max_w: 
+        return(max_diam)
+    else:
+        dif_weight = weight-min_w
+        diam = (max_diam*dif_weight)/dif_range
+        return(diam)
+
+
+def format_num(num):
+    round_num = round(num, 4)
+    # Round exponentials
+    round_num = float(format(round_num, '.3g'))
+    return round_num
+
+def lupa_column(row):
+    new_row = '<span class="glyphicon glyphicon-zoom-in my_glyphicon_btn zoom_to_nglsel" data-nglsel="(%s) or (%s)"></span>' %(row.resid1,row.resid2)
+    return(new_row)
+
+def checkbox_column(row,analtype):
+    cell_id = '%s_%s-%s' %(analtype,row.resnum1,row.resnum2)
+    new_cell = "<input class='%s_sel_cbx' id='%s'  type='checkbox' \
+        onchange='$(\"body\").trigger(\"cbx_click\", \"%s\")' \
+        data-reps='{\
+        \"resid1\":\"%s\",\
+        \"resid2\":\"%s\",\
+        \"color\":\"%s\",\
+        \"cyldiam\":\"%s\",\
+        \"value\":\"%s\"\
+        }'></input>"%(analtype,cell_id,cell_id,row.resid1,row.resid2,row.color,row.cyldiam,row.weight)
+    return(new_cell)
+
+def format_resname(row,num):
+    """
+    Set format of residue names as "resid (gennum)"
+    """
+    resid = row['resid'+num].split(':')[-1]
+    gennum = row['resid'+num+'_gennum']
+    return("%s (%s)"%(resid,gennum))
+
 def ac_load_data(request,dyn_id):
     """
     Compute and return allosteric communication data of specified characteristics
     """
 
-    def into_ngl(inline):
-        inary = inline.split(':')
-        return(":%s and %s and %s" % (inary[0], inary[1], inary[2])) 
-
-    def get_color(weight, max_w, min_w):
-        """
-        Get corresponinding color for this weight
-        """
-
-        # Choose colorscale and minimum dpending if weight is negative or positive
-        if weight >= 0:
-            myscale = wtbl
-            min_w = min_w if min_w >= 0 else 0
-        else: 
-            myscale = wtyl 
-            max_w = min_w
-            min_w = min_w if max_w < 0 else 0
-
-
-        if min_w==max_w: 
-            return myscale[-1].upper()
-        else:
-            totalcolors = len(myscale)-1
-            dif_range = max_w - min_w
-            dif_weight = weight-min_w
-            colorindex = abs(int(round(totalcolors*dif_weight/dif_range)))-1
-            color = myscale[colorindex].upper()
-            return color
-
-    def format_num(num):
-        round_num = round(num, 4)
-        # Round exponentials
-        round_num = float(format(round_num, '.3g'))
-        return round_num
-
-    def lupa_column(row):
-        new_row = '<span class="glyphicon glyphicon-zoom-in my_glyphicon_btn zoom_to_nglsel" data-nglsel="(%s) or (%s)"></span>' %(row.resid1,row.resid2)
-        return(new_row)
-
-    def checkbox_column(row):
-        new_cell = "<input class='ac_sel_cbx' id='%s-%s'  type='checkbox' \
-            onchange='$(\"body\").trigger(\"cbx_click\", \"%s-%s\")' \
-            data-reps='{\
-            \"resid1\":\"%s\",\
-            \"resid2\":\"%s\",\
-            \"color\":\"%s\",\
-            \"value\":\"%s\"\
-            }'></input>"%(row.resnum1,row.resnum2,row.resnum1,row.resnum2,row.resid1,row.resid2,row.color,row.ac_value)
-        return(new_cell)
-
-    def format_resname(row,num):
-        """
-        Set format of residue names as "resid (gennum)"
-        """
-        resid = row['resid'+num].split(':')[2]
-        gennum = row['resid'+num+'_gennum']
-        return("%s (%s)"%(resid,gennum))
-
-    # colorscales
-    wtbl = ['#f7fbff', '#f4f9fe', '#f1f7fd', '#eef6fc', '#ebf4fb', '#e8f3fa', '#e5f1f9', '#e3f0f9', '#e0eef8', '#ddecf7', '#daebf6', '#d7e9f5', '#d4e8f4', '#d1e6f4', '#cfe5f3', '#cce3f2', '#c9e1f1', '#c6e0f0', '#c3deef', '#c0ddef', '#bddbee', '#bbdaed', '#b8d8ec', '#b5d6eb', '#b2d5ea', '#afd3ea', '#acd2e9', '#a9d0e8', '#a7cfe7', '#a4cde6', '#a1cbe5', '#9ecae5', '#9bc8e4', '#98c7e3', '#95c5e2', '#93c4e1', '#90c2e0', '#8dc0e0', '#8abfdf', '#87bdde', '#84bcdd', '#81badc', '#7fb9db', '#7cb7db', '#79b5da', '#76b4d9', '#73b2d8', '#70b1d7', '#6dafd6', '#6baed6', '#68abd3', '#66a8d1', '#64a6cf', '#62a3cd', '#60a1cb', '#5e9ec8', '#5c9cc6', '#5a99c4', '#5896c2', '#5694c0', '#5491bd', '#528fbb', '#508cb9', '#4e8ab7', '#4c87b5', '#4a84b3', '#4882b0', '#467fae', '#447dac', '#427aaa', '#4078a8', '#3e75a5', '#3c72a3', '#3a70a1', '#386d9f', '#366b9d', '#34689b', '#326698', '#306396', '#2e6094', '#2c5e92', '#2a5b90', '#28598d', '#26568b', '#245489', '#225187', '#204e85', '#1e4c83', '#1c4980', '#1a477e', '#18447c', '#16427a', '#143f78', '#123c75', '#103a73', '#0e3771', '#0c356f', '#0a326d', '#08306b']
-    wtyl = ['#fff5eb', '#fef2e7', '#fef0e3', '#feeee0', '#feecdc', '#feead9', '#fee8d5', '#fee6d2', '#fee4ce', '#fee1ca', '#fedfc7', '#feddc3', '#fedbc0', '#fed9bc', '#fed7b9', '#fed5b5', '#fed3b1', '#fed0ae', '#feceaa', '#fecca7', '#fecaa3', '#fec8a0', '#fec69c', '#fec498', '#fec295', '#fdbf91', '#fdbd8e', '#fdbb8a', '#fdb987', '#fdb783', '#fdb57f', '#fdb37c', '#fdb178', '#fdae75', '#fdac71', '#fdaa6e', '#fda86a', '#fda666', '#fda463', '#fda25f', '#fda05c', '#fd9d58', '#fd9b55', '#fd9951', '#fd974d', '#fd954a', '#fd9346', '#fd9143', '#fd8f3f', '#fd8d3c', '#fa8a3a', '#f78839', '#f58638', '#f28437', '#f08236', '#ed8035', '#eb7e34', '#e87c32', '#e57a31', '#e37830', '#e0762f', '#de742e', '#db712d', '#d96f2c', '#d66d2a', '#d36b29', '#d16928', '#ce6727', '#cc6526', '#c96325', '#c76124', '#c45f22', '#c15d21', '#bf5b20', '#bc581f', '#ba561e', '#b7541d', '#b5521c', '#b2501a', '#af4e19', '#ad4c18', '#aa4a17', '#a84816', '#a54615', '#a34414', '#a04212', '#9d3f11', '#9b3d10', '#983b0f', '#96390e', '#93370d', '#91350c', '#8e330a', '#8b3109', '#892f08', '#862d07', '#842b06', '#812905', '#7f2704']
     # Retrieve data from request
     options = request.POST.get('ac_option')
     protsel = request.POST.get('ac_protsel')
@@ -4152,33 +4185,39 @@ def ac_load_data(request,dyn_id):
     # Extract selected data
     myweihgt = analysis_type+'_weight'
     df_sel = df.filter(['resid1','resid2','resid1_gennum','resid2_gennum',myweihgt], axis=1)
-    df_sel.rename(columns = {myweihgt : 'ac_value'}, inplace = True)
+    df_sel.rename(columns = {myweihgt : 'weight'}, inplace = True)
 
     # Take maximum and minimum values 
-    min_w = df_sel['ac_value'].min()
-    max_w = df_sel['ac_value'].max()
+    min_w = df_sel['weight'].min()
+    max_w = df_sel['weight'].max()
 
     # Sort by (absolute) weight and select top ones
-    df_sel['ac_abs_value'] = df_sel['ac_value'].apply(lambda x: abs(x))
+    df_sel['ac_abs_value'] = df_sel['weight'].apply(lambda x: abs(x))
     df_sorted = df_sel.sort_values(by=['ac_abs_value'], ascending=False)
     df_top = df_sorted.head(int(nedges))
 
     # Get a color for each weight value
-    df_top['color'] = df_top['ac_value'].apply(
+    df_top['color'] = df_top['weight'].apply(
         lambda x: get_color(x, max_w, min_w)
     )
 
+    # Get a color for each weight value
+    print(min_w, max_w)
+    df_top['cyldiam'] = df_top['weight'].apply(
+        lambda x: get_cyldiam(x, max_w, min_w)
+    )
+    
     # Set format for Residue columns: we'll want to show both generic numbering and residue number
     df_top['Residue1'] = df_top.apply(lambda x: format_resname(x,'1'), axis=1)
     df_top['Residue2'] = df_top.apply(lambda x: format_resname(x,'2'), axis=1)
 
     # ROunded ac values for displayed table
-    df_top['Edge weight'] = df_top['ac_value'].apply(lambda x: format_num(x))
+    df_top['Edge weight'] = df_top['weight'].apply(lambda x: format_num(x))
 
 
     # For residue Selection
-    df_top['resnum1'] = df_top['resid1'].apply(lambda x: x.split(':')[2])
-    df_top['resnum2'] = df_top['resid2'].apply(lambda x: x.split(':')[2])
+    df_top['resnum1'] = df_top['resid1'].apply(lambda x: x.split(':')[-1])
+    df_top['resnum2'] = df_top['resid2'].apply(lambda x: x.split(':')[-1])
 
     # Convert resid1 and resid2 into NGL-selection-language strings
     df_top['resid1'] = df_top['resid1'].apply(lambda x: into_ngl(x))
@@ -4188,7 +4227,7 @@ def ac_load_data(request,dyn_id):
     df_top['sels'] = df_top.apply(lambda x: lupa_column(x), axis=1)
 
     # Create new column for checkboxes of specific selection
-    df_top['cbx'] = df_top.apply(lambda x: checkbox_column(x), axis=1)
+    df_top['cbx'] = df_top.apply(lambda x: checkbox_column(x,'ac'), axis=1)
 
     # Return AC info
     ac_dict = dict()
@@ -4227,6 +4266,107 @@ def ac_load_data(request,dyn_id):
     ac_dict['table'] = html_top
 
     return HttpResponse(json.dumps(ac_dict), content_type='view/'+dyn_id)
+
+def format_perc(num):
+    # Round exponentials
+    num = float(format(num, '.3g'))*100
+    round_num = round(num, 2)
+    return round_num
+
+def ap_load_data(request,dyn_id):
+    """
+    Compute and return allosteric communication data of specified characteristics
+    """
+
+    # Retrieve data from request
+    numpath = request.POST.get('numpaths')
+
+    # Open file with specified options
+    infile = settings.MEDIA_ROOT + 'Precomputed/allosteric_path/dyn%s/%spaths.csv'%(dyn_id,numpath)
+    print('hahahahyes',infile)
+    if os.path.exists(infile):
+        df = pd.read_csv(infile)
+    else: 
+        return HttpResponse(json.dumps({'filenotfound' : 1}), content_type='view/'+dyn_id)
+
+    # Take maximum and minimum values
+    df.rename(columns = {'frequency' : 'weight'}, inplace = True)
+    min_w = df['weight'].min()
+    max_w = df['weight'].max()
+
+    # Sort by (absolute) weight and select top ones
+    df_s = df.sort_values(by=['weight'], ascending=False)
+
+    # Get a color for each weight value
+    df_s['color'] = df_s['weight'].apply(
+        lambda x: get_color(x, max_w, min_w)
+    )
+    
+    # Get a color for each weight value
+    df_s['cyldiam'] = df_s['weight'].apply(
+        lambda x: get_cyldiam(x, max_w, min_w)
+    )
+
+    # Set format for Residue columns: we'll want to show both generic numbering and residue number
+    df_s['Residue1'] = df_s.apply(lambda x: format_resname(x,'1'), axis=1)
+    df_s['Residue2'] = df_s.apply(lambda x: format_resname(x,'2'), axis=1)
+
+    # ROunded ac values for displayed table
+    df_s['Frequency (%)'] = df_s['weight'].apply(lambda x: format_perc(x))
+    df_s['Nº of interactions'] = df_s['contacts']
+
+    # For residue Selection
+    df_s['resnum1'] = df_s['resid1'].apply(lambda x: x.split(':')[-1])
+    df_s['resnum2'] = df_s['resid2'].apply(lambda x: x.split(':')[-1])
+
+    # Convert resid1 and resid2 into NGL-selection-language strings
+    df_s['resid1'] = df_s['resid1'].apply(lambda x: into_ngl(x))
+    df_s['resid2'] = df_s['resid2'].apply(lambda x: into_ngl(x))
+
+    # Create new column for the NGL selection line that we will use in the "lupas" thingy
+    df_s['sels'] = df_s.apply(lambda x: lupa_column(x), axis=1)
+
+    # Create new column for checkboxes of specific selection
+    df_s['cbx'] = df_s.apply(lambda x: checkbox_column(x,'ap'), axis=1)
+
+    # Return AC info
+    ap_dict = dict()
+    ap_dict['ap_data'] = df_s.to_dict(orient='records')
+    ap_dict['min'] = format_perc(min_w)
+    #ap_dict['int'] = round(format((max_w-min_w)/2+min_w,4), '.3g')
+    ap_dict['max'] = format_perc(max_w)
+
+    # Decide colorscales to use (wtbl if positive values avaliable, wtyl if negatives avaliable )
+    colorscales = []
+    if ap_dict['min'] < 0:
+        colorscales.append('wtyl')
+        
+    if ap_dict['max'] > 0: 
+        colorscales.append('wtbl')        
+    ap_dict['colorscales'] = colorscales
+
+    # Find name of the selected options
+    # options_name = []
+    # for option in options.split('_'):
+    #     optname = ac_options_codes[option]
+    #     options_name.append(optname) 
+    # ac_dict['sel_opt'] = '-'.join(options_name)
+    ap_dict['sel_opt'] = 'Get contacts interaction frequency'
+
+    # Convert our df to a html table
+    html_top = df_s.to_html(
+        index=False,
+        escape=False,
+        columns = ['cbx','sels','Residue1', 'Residue2', 'Nº of interactions', 'Frequency (%)'],
+        classes="dataframe ap_table display compact dataTable",
+        )
+
+    # Remove unneeded column titles
+    html_top = html_top.replace('>cbx<','><')
+    html_top = html_top.replace('>sels<','><')
+    ap_dict['table'] = html_top
+
+    return HttpResponse(json.dumps(ap_dict), content_type='view/'+dyn_id)
 
 def basicview(request,dyn_id):
     #DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_trajectory=True)

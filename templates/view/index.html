@@ -3398,7 +3398,6 @@
                               <!-- ============= Chemical Shift (CS) =========== -->
                               {% comment %} {% if cs_data_avail %} {% endcomment %}
                               {% if dyn_id %} 
-                              {% else %}
                                 <div class="row">
                                   <div id="analysis_cs_pan" class="section_pan check_if_cs_struc" data-toggle="collapse"
                                     data-target="#analysis_cs"><span>Chemical Shift (CS)</span><span id="analysis_cs_icon"
@@ -3762,11 +3761,10 @@
                               <!-- ============= Allosteric communication (ac) =========== -->
                               {% comment %} {% if ac_data_avail %}       {% endcomment %}
                               {% if dyn_id %} 
-                              {% else %}
                                 <div class="row">
                                   <div id="analysis_ac_pan" class="section_pan" data-toggle="collapse"
                                     data-target="#analysis_ac">
-                                    <span>Allosteric communication (AC)</span><span id="analysis_ac_icon"
+                                    <span>Allosteric Communication (AC)</span><span id="analysis_ac_icon"
                                       class="arrow_down glyphicon glyphicon-chevron-down arrow"></span>
                                   </div>
                                 </div>
@@ -3896,11 +3894,11 @@
                                               None selected <span class="caret"></span>
                                               <option data-btn="ac_protsel" class="ac_option ac_inoption" selected value="wh">
                                                 All</option>
-                                        <option data-btn="ac_protsel" class="ac_option ac_inoption" value="in">In
-                                          contact
-                                                (GetContacts criteria)</option>
-                                        <option data-btn="ac_protsel" class="ac_option ac_inoption" value="it">
-                                          Inter-helix
+                                              <option data-btn="ac_protsel" class="ac_option ac_inoption" value="in">In
+                                                contact
+                                                      (GetContacts criteria)</option>
+                                              <option data-btn="ac_protsel" class="ac_option ac_inoption" value="it">
+                                                Inter-helix
                                               </option>
                                               <option data-btn="ac_protsel" class="ac_option ac_inoption" value="sd">Spatially
                                                 distant</option>
@@ -3934,8 +3932,10 @@
                                           </div>
                                         </div>
                                         <br>
-                                  <button class="btn btn-success" id="ac_submit" type="submit">Show in
-                                          structure</button>
+                                        <div class="row">
+                                          <button class="btn btn-success" id="ac_submit" type="submit">Show in structure</button>
+                                          <button class="btn btn-danger" id="ac_clear"  type="button">Clear</button>
+                                        </div>  
                                         <a href="/dynadb/files/Precomputed/allosteric_communication/dyn{{dyn_id}}/"
                                           id="download_ac" class="hidden_div">Download AC data <span
                                             class="glyphicon glyphicon-download-alt"></span></a>
@@ -3943,17 +3943,17 @@
                                     </div>
         
                                     <br>
-                                    <div id="ac_placeholder"></div>
+                                    <!-- <div id="ac_placeholder"></div> -->
                                     <div id="ac_results" class="container-fluid">
         
                                       <h4 style="text-align: center"><b>Results</b></h4>
                                       <div class="col-md-8">
                                         <div id="ac_table_container" class="row"></div>
                                         <div class="row">
-                                    <div data-selreps="[]" id="ac_show_selected" class="btn btn-info btn-sm">Show
-                                      selected
-                                            only</div>
-                                    <div data-allreps="[]" id="ac_clearsel" class="btn btn-danger btn-sm">Clear
+                                        <div data-selreps="[]" id="ac_show_selected" class="btn btn-info btn-sm">Show
+                                          selected
+                                                only</div>
+                                        <div data-allreps="[]" id="ac_clearsel" class="btn btn-danger btn-sm">Clear
                                       selection
                                           </div>
                                         </div>
@@ -3997,6 +3997,102 @@
                               {% endif %}                           
 
                             {% endif %}
+
+
+                              <!-- ============= Allosteric Paths (ap, Vicente's stuff) =========== -->
+                              <div class="row">
+                                <div id="analysis_ap_pan" class="section_pan" data-toggle="collapse"
+                                  data-target="#analysis_ap">
+                                  <span>Allosteric Paths (AP)</span><span id="analysis_ap_icon"
+                                    class="arrow_down glyphicon glyphicon-chevron-down arrow"></span>
+                                </div>
+                              </div>
+                              
+                              <form id="ap_form" method="post">
+                                {% csrf_token %}
+                                <div id="analysis_ap" class="row collapse">
+      
+                                  <div class="container-fluid">
+      
+                                    <br>
+                                    <div class="col-md-6">
+                                      <div class="row">
+                                        <p class="col-md-12"><b>Number of paths</b></p>
+                                        <div class="dropdown col-md-12">
+                                          <select class="btn" id="ap_numpaths" name="numpaths" type="button"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            None selected <span class="caret"></span>
+                                            {% for optnum in ap_options %}
+                                            <option data-btn="ap_numpaths" class="ap_option ap_inoption" value="{{optnum}}">{{optnum}}</option>
+                                            {% endfor %}
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+      
+                                    <div class="col-md-6">
+                                      <div class="row">
+                                        <button class="btn btn-success" id="ap_submit" type="submit">Show in structure</button>
+                                        <button class="btn btn-danger" id="ap_clear"  type="button">Clear</button>
+                                      </div>
+                                      <a href="/dynadb/files/Precomputed/allosteric_communication/dyn{{dyn_id}}/" id="download_ap" class="hidden_div">Download AP data <span
+                                          class="glyphicon glyphicon-download-alt"></span></a>
+                                    </div>
+                                  </div>
+      
+                                  <br>
+                                  <!-- <div id="ap_placeholder"></div> -->
+                                  <div id="ap_results" class="container-fluid">
+      
+                                    <h4 style="text-align: center"><b>Results</b></h4>
+                                    <div class="col-md-10">
+                                      <div id="ap_table_container" class="row"></div>
+                                      <div class="row">
+                                        <div data-selreps="[]" id="ap_show_selected" class="btn btn-info btn-sm">Show
+                                          selected
+                                                only</div>
+                                        <div data-allreps="[]" id="ap_clearsel" class="btn btn-danger btn-sm">Clear
+                                    selection
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div id="ap_legends">
+                                      <div id="ap_legend_wtbl" class="col-md-6 ap_legend">
+                                        <div id="ap_legendbar_wtbl" class="ap_legendbar wtbl col-md-6"></div>
+                                        <div class="col-md-6 ap_legend_numbers">
+                                          <p class="ap_legend_number ap_legend_min">0</p>
+                                          <p class="ap_legend_number ap_legend_int"></p>
+                                          <p class="ap_legend_number ap_legend_max">1</p>
+                                        </div>
+                                      </div>
+                                      <div id="ap_legend_wtyl" class="col-md-6 ap_legend">
+                                        <div id="ap_legendbar_wtyl" class="ap_legendbar wtyl col-md-6"></div>
+                                        <div class="col-md-6 ap_legend_numbers">
+                                          <p class="ap_legend_number ap_legend_min">0</p>
+                                          <p class="ap_legend_number ap_legend_int"></p>
+                                          <p class="ap_legend_number ap_legend_max">-1</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <br>
+      
+                                  </div>
+                                  <div class="container-fluid">
+                                    <span class="ap_loading">
+                                <center><img class="img_aploading"
+                                    src="{% static 'view/images/loading-gear.gif' %}" />
+                                      </center>
+                                    </span>
+                                    <div id="error_ap" class="error_ap alert alert-danger">
+                                      An unexpected error occurred.
+                                    </div>
+                                    <div id="ap_nofile" class="alert alert-warning">
+                                      No AP values are avaliable yet for this parameters selection.
+                                    </div>
+                                  </div>
+                                </div>
+                              </form>
+
 
                           </div><!-- end all_analysis --->
       

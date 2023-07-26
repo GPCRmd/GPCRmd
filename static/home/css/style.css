@@ -546,7 +546,7 @@ p.subtitle {
 
 .tab-content {
     padding: 10px;
-    height: calc(100% - 40px);
+    /*height: calc(100% - 40px);*/
     overflow-y: auto;
     overflow-x: hidden;
 }

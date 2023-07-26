@@ -36,6 +36,7 @@ urlpatterns = [
     re_path(r'^min/(?P<dyn_id>[0-9]+)/$', views.basicview, name="basicview"),
     re_path(r'^update_bokeh/$', views.update_bokeh, name="update_bokeh"),
     re_path(r'^ac_update/(?P<dyn_id>[0-9]+)/$', views.ac_load_data, name="ac_load_data"),
+    re_path(r'^ap_update/(?P<dyn_id>[0-9]+)/$', views.ap_load_data, name="ap_load_data"),
     re_path(r'^get_pocket_plot_and_files/$', views.get_pocket_plot_and_files, name="get_pocket_plot_and_files"),
     re_path(r'^get_pocket_and_dyn_data/$', views.get_pocket_and_dyn_data, name="get_pocket_and_dyn_data"),
 ]

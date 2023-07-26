@@ -5,6 +5,7 @@ $(document).ready(function(){
     // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
     
     $('[data-toggle="popover"]').popover(); 
+    dyn_id=$(".str_file").data("dyn_id");
 
     //---------Avoid dropdown menu to retract at click
     $('.notretract').on("click", function(e){
@@ -160,7 +161,6 @@ $(document).ready(function(){
 
 
     var struc = $(".str_file").data("struc_file");
-    var dyn_id=$(".str_file").data("dyn_id");
     var delta=$(".str_file").data("delta");
     var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
     var sel = "";
@@ -6622,8 +6622,6 @@ $("#show_nearby_residues").on("change", function() {
 
 //-------- Allosteric communications
     
-    dyn_id=$(".str_file").data("dyn_id");
-
     //Dropdowns
     $('.dropdown-submenu').on("click", function(e){
       $(this).next('ul').toggle();
@@ -6658,8 +6656,6 @@ $("#show_nearby_residues").on("change", function() {
         ac_download.attr('href',"/dynadb/files/Precomputed/allosteric_com/dyn"+dyn_id+"/"+ac_value+".csv");
     })
 
-
-
     //On click of "show only AC selected" button
     $("#ac_show_selected").click(function(){
         //Get selected pairs
@@ -6676,20 +6672,10 @@ $("#show_nearby_residues").on("change", function() {
         $(".ac_sel_cbx").prop('checked',false)
     })
 
-    //On click of any of the AC table checkboxes
-    $(document.body).bind('cbx_click',function(e, checkbox_id) {
-        mycheckbox=$("#"+checkbox_id)
-        mybutton = $("#ac_show_selected")
-        ischecked = mycheckbox.is(":checked")
-        rep = JSON.parse(mycheckbox.attr('data-reps'))
-        selreps = JSON.parse(mybutton.attr('data-selreps'))
-        if (ischecked) {
-            selreps.push(rep)
-        } else {
-            io = selreps.indexOf(rep)
-            selreps.splice(io)
-        }
-        mybutton.attr("data-selreps", JSON.stringify(selreps))
+    //On click, clear all representation and results from structure and table
+    $("#ac_clear").click(function(){
+        $("#ac_results").hide()
+        $('#embed_mdsrv')[0].contentWindow.$('body').trigger('acap_clear', 'AC');
     })
 
     //On click of submit AC
@@ -6760,6 +6746,137 @@ $("#show_nearby_residues").on("change", function() {
 
                     //Put name of selected AC type in appropiate div, so the user knows which one is active
                     $("#ac_sel_opt_name").html("<b>Selected option: </b>"+ac_dict['sel_opt'])
+
+                    //Show
+                    resultsdiv.show()
+                    seloptdiv.show()
+                }
+            },
+            error: function(e){
+                errordiv.show()
+            },
+            complete: function(){
+                loadingdiv.hide()
+            }
+        });
+    });
+
+//-------- Allosteric Paths
+
+    // If allosteric com option is clicked, update download link
+    $(".ap_option input").on("change", function(){
+        ap_value = $(this).attr('id');
+        ap_download = $("#download_ac");
+        ap_download.show()
+        ap_download.attr('href',"/dynadb/files/Precomputed/allosteric_com/dyn"+dyn_id+"/"+ap_value+".csv");
+    })
+
+    //On click of "show only AC selected" button
+    $("#ap_show_selected").click(function(){
+        //Get selected pairs
+        allsels = $(this).attr('data-selreps')
+        $('#embed_mdsrv')[0].contentWindow.$('body').trigger('ap_load', [JSON.parse(allsels)]);            
+    })
+
+    //On click, remove AC interactions selection and restore original representatoin
+    $("#ap_clearsel").click(function(){
+        allsels = $(this).attr('data-allreps')
+        $('#embed_mdsrv')[0].contentWindow.$('body').trigger('ap_load', [JSON.parse(allsels)]);
+        //Empty selection button
+        $("#ap_show_selected").attr('data-selreps',"[]")
+        $(".ap_sel_cbx").prop('checked',false)
+    })
+    
+    //On click, clear all representation and results from structure and table
+    $("#ap_clear").click(function(){
+        $("#ap_results").hide()
+        $('#embed_mdsrv')[0].contentWindow.$('body').trigger('acap_clear', 'AP');
+    })
+
+    //On click of any of the AC/AP table checkboxes
+    $(document.body).bind('cbx_click',function(e, checkbox_id) {
+        tool_type = checkbox_id.slice(0,2)
+        mycheckbox=$("#"+checkbox_id)
+        mybutton = $("#"+tool_type+"_show_selected")
+        ischecked = mycheckbox.is(":checked")
+        rep = JSON.parse(mycheckbox.attr('data-reps'))
+        selreps = JSON.parse(mybutton.attr('data-selreps'))
+        if (ischecked) {
+            selreps.push(rep)
+        } else {
+            io = selreps.indexOf(rep)
+            selreps.splice(io)
+        }
+        mybutton.attr("data-selreps", JSON.stringify(selreps))
+    })
+
+    //On click of submit AC
+    $('#ap_form').submit(function(e) {
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        var form = $(this);
+
+        //Reset scale minimums to zero
+        $(".ap_legend_min").html("0")
+
+        //Hide error and show loading
+        $("#ap_placeholder").hide()
+        errordiv = $(".error_ap")
+        loadingdiv = $(".ap_loading")
+        legends = $(".ap_legend")
+        resultsdiv = $("#ap_results")
+        seloptdiv = $("#ap_sel_opt")
+        nofilediv = $("#ap_nofile")
+        nofilediv.hide()
+        resultsdiv.hide()
+        legends.hide()
+        errordiv.hide()
+        loadingdiv.show()
+        seloptdiv.hide()
+        
+        $.ajax({
+            url: "../ap_update/"+dyn_id+"/",
+            data_type: 'json',
+            type: 'POST',
+            data: form.serialize(),
+            success: function(ap_dict) {
+                ap_dict = JSON.parse(ap_dict)
+                if ('filenotfound' in ap_dict){
+                    nofilediv.show()
+                }
+                else{
+                    ap_data = ap_dict['ap_data']
+                    $('#embed_mdsrv')[0].contentWindow.$('body').trigger('ap_load', [ap_data]);
+                    
+                    //Save ap_data in "clear selection" button (to restore original representations if required)
+                    $("#ap_clearsel").attr('data-allreps', JSON.stringify(ap_data))
+
+                    //Stablish proper minimum and maximum in legend scale
+                    //wtyl for negative values, wtbl for positive
+                    if (ap_dict['min'] <0){
+                        $('#ap_legend_wtyl .ap_legend_max').html(ap_dict['min'])
+                    } else {
+                        $('#ap_legend_wtbl .ap_legend_min').html(ap_dict['min'])
+                    }
+                    if (ap_dict['max'] <0){
+                        $('#ap_legend_wtyl .ap_legend_min').html(ap_dict['max'])
+                    } else {
+                        $('#ap_legend_wtbl .ap_legend_max').html(ap_dict['max'])
+                    }
+
+                    //Display legend with appropiate colors
+                    ap_dict['colorscales'].forEach(function(scale){
+                        $("#ap_legend_"+scale).show()
+                    })
+
+                    //Place table, and make it sortable
+                    $("#ap_table_container").html(ap_dict['table'])
+                    sorting_table('ap_table')
+
+                    //Update checkbox selection
+                    $("#ap_show_selected").attr('data-selreps','[]')
+
+                    //Put name of selected ap type in appropiate div, so the user knows which one is aptive
+                    $("#ap_sel_opt_name").html("<b>Selected option: </b>"+ap_dict['sel_opt'])
 
                     //Show
                     resultsdiv.show()
