@@ -214,8 +214,7 @@ ac_options_codes = {
     'it' : 'GPCR_Interhelix',
     'sd' : 'Spatially_distant',
 }
-ap_options = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-
+ap_options = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
 
 # Sort ac_options in ordered dict
 def tuple_to_ordered(mytuple):
@@ -4283,7 +4282,6 @@ def ap_load_data(request,dyn_id):
 
     # Open file with specified options
     infile = settings.MEDIA_ROOT + 'Precomputed/allosteric_path/dyn%s/%spaths.csv'%(dyn_id,numpath)
-    print('hahahahyes',infile)
     if os.path.exists(infile):
         df = pd.read_csv(infile)
     else: 
