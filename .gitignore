@@ -34,3 +34,6 @@ dynadb/b2ar_isoprot/
 view/static/view/fplot_old/
 config/SECRETS.py
 .gitignore
+git_conf_agarcia.sh
+git_conf_daranda.sh
+*__pycache__*
