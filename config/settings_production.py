@@ -1,7 +1,7 @@
 # local settings
 import os
 from config.settings import SSL
-from config.SECRETS import POSTGRESQLADMIN_USER, POSTGRESQLADMIN_PASS
+from config.SECRETS import *
 
 # Site specific constants
 SITE_NAME = 'gpcrmd' # used for site specific files
@@ -12,7 +12,7 @@ DEFAULT_NUMBERING_SCHEME = 'gpcrmd'
 DEFAULT_PROTEIN_STATE = 'inactive'
 REFERENCE_POSITIONS = {'TM1': '1x50', 'ICL1': '12x50', 'TM2': '2x50', 'ECL1': '23x50', 'TM3': '3x50', 'ICL2': '34x50',
     'TM4': '4x50', 'ECL2': '45x50', 'TM5': '5x50', 'TM6': '6x50', 'TM7': '7x50', 'H8': '8x50'}
-DOCUMENTATION_URL = 'http://docs.gpcrdb.org/'
+DOCUMENTATION_URL = 'https://gpcrmd-docs.readthedocs.io/en/latest/'
 
 # Analytics
 GOOGLE_ANALYTICS_KEY = False
@@ -32,9 +32,9 @@ DATABASES = {
 }
 
 # Quick-start development settings - unsuitable for production
-
 QUERY_CHECK_PUBLISHED = True
 FILES_NO_LOGIN = False
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_TRANSACTIONAL_HEADERS = {}
 

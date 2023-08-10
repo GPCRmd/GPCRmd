@@ -3396,9 +3396,9 @@
                               {% endif %}
       
                               <!-- ============= Chemical Shift (CS) =========== -->
-                              {% if cs_data_avail %}
-                              {% comment %} {% if dyn_id %} 
-                              {% else %} {% endcomment %}
+                              {% comment %} {% if cs_data_avail %} {% endcomment %}
+                              {% if dyn_id %} 
+                              {% else %}
                                 <div class="row">
                                   <div id="analysis_cs_pan" class="section_pan check_if_cs_struc" data-toggle="collapse"
                                     data-target="#analysis_cs"><span>Chemical Shift (CS)</span><span id="analysis_cs_icon"
@@ -3760,9 +3760,9 @@
                               {% endif %}
       
                               <!-- ============= Allosteric communication (ac) =========== -->
-                              {% if ac_data_avail %}      
-                              {% comment %} {% if dyn_id %} 
-                              {% else %}                               {% endcomment %}
+                              {% comment %} {% if ac_data_avail %}       {% endcomment %}
+                              {% if dyn_id %} 
+                              {% else %} 
                                 <div class="row">
                                   <div id="analysis_ac_pan" class="section_pan" data-toggle="collapse"
                                     data-target="#analysis_ac">
@@ -4002,6 +4002,8 @@
 
 
                               <!-- ============= Allosteric Paths (ap, Vicente's stuff) =========== -->
+                            {% if dyn_id %} 
+                              {% else %}
                               <div class="row">
                                 <div id="analysis_ap_pan" class="section_pan" data-toggle="collapse"
                                   data-target="#analysis_ap">
@@ -4025,7 +4027,7 @@
                                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             None selected <span class="caret"></span>
                                             {% for optnum in ap_options %}
-                                            <option data-btn="ap_numpaths" {% if optnum == 100 %} selected {% endif %} class="ap_option ap_inoption" value="{{optnum}}">{{optnum}}</option>
+                                            <option data-btn="ap_numpaths" {% if optnum == 50 %} selected {% endif %} class="ap_option ap_inoption" value="{{optnum}}">{{optnum}}</option>
                                             {% endfor %}
                                           </select>
                                         </div>
@@ -4094,7 +4096,7 @@
                                   </div>
                                 </div>
                               </form>
-
+                            {% endif %}
 
                           </div><!-- end all_analysis --->
       

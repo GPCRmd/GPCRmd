@@ -1,16 +1,20 @@
 {% load i18n %}{% autoescape off %}
 {% blocktrans %}You are receiving this email because you requested a change in the email associated with your account from {{ site_name }}.{% endblocktrans %}
-
+<br>
+<br>
 {% trans "Please go to the following page to confirm:" %}
 {% block reset_link %}
 {{ protocol }}://{{ domain }}{% url 'accounts:mail_confirm' uidb64=uid token=token %}
 {% endblock %}
+<br>
 {% trans "Your username, in case you forgot:" %} {{ user.get_username }}
-
+<br>
+<br>
 {% trans "Thanks for using our site!" %}
-
-{% blocktrans %}The {{ site_name }} team{% endblocktrans %}
-
+<br>
+{% blocktrans %}The GPCRmd team{% endblocktrans %}
+<br>
+<br>
 {% blocktrans %}If you do not want to recieve more emails from us, go to the following page:{% endblocktrans %} 
 {unsubscribe}
 

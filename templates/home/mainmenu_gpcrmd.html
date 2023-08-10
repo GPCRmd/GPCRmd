@@ -1,5 +1,15 @@
 <!-- top menu: Tools     Simulations     Submissions   Cite us   More-->
 <ul class="nav navbar-nav navbar-right">
+    <!-- Documentation -->
+    <li class="dropdown" id="document">
+      <a class="dropdown-toggle" data-toggle="dropdown" href="#">Documentation
+      <span id= "caret-white" class="caret"></span></a>
+      <ul class="dropdown-menu" data-pointto="document">            
+        <li id="document"><a href="https://gpcrmd-docs.readthedocs.io/en/latest/" target="_blank">User guide</a></li>
+        <li id="contact"><a href="/contact/">Contact</a></li>
+        <li id="faqs"><a href="https://gpcrmd-docs.readthedocs.io/en/latest/faqs.html">FAQs</a></li>
+      </ul> 
+    </li>
     <!-- Tools -->
     <li class="dropdown" id="Analysis_li">
       <a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools
@@ -29,7 +39,7 @@
 
     <!-- Cite us -->
     <li >
-      <a class="menuItem" href="https://develgpcrmd-docs.readthedocs.io/en/latest/citing-gpcrmd.html" target="_blank">Cite us</a>
+      <a class="menuItem" href="https://gpcrmd-docs.readthedocs.io/en/latest/citing-gpcrmd.html" target="_blank">Cite us</a>
     </li>
 
     <!-- More -->
@@ -40,8 +50,6 @@
             <li id="news"><a href="/news/" >News</a></li>    
             <li id="community"><a href="/community/" >About us</a></li>            
             <li><a href="{% url 'covid19:home' %} " target="_blank" >Response to COVID-19</a></li>
-            <li><a href="https://develgpcrmd-docs.readthedocs.io/en/latest/" target="_blank">Documentation</a></li>
-            <li id="contact"><a href="/contact/" >Contact</a></li>
         </ul>
     </li>    
 </ul>

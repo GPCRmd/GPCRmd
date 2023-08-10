@@ -87,7 +87,7 @@ def login(request):
 ###################### REGISTER AND USER ACTIVATION
 @deprecate_current_app
 @csrf_protect
-@login_required
+# @login_required
 def register(request,
        email_template_name='accounts/act/act_email.html', 
        subject_template_name='accounts/act/act_subject.txt', 
@@ -97,32 +97,32 @@ def register(request,
        html_email_template_name=None, ##*
        extra_email_context=None, 
        ):     
-    if request.user.is_staff:
-        """The user is registered and an activation email is sent"""
-        if request.method == 'POST':
-            form = RegistrationForm(data=request.POST)
-            email = form.fields["email"].to_python(form.data["email"])
-            User.objects.filter(email=email,is_active=False,last_login=None).delete()
+    # if request.user.is_staff:
+        # """The user is registered and an activation email is sent"""
+    if request.method == 'POST':
+        form = RegistrationForm(data=request.POST)
+        email = form.fields["email"].to_python(form.data["email"])
+        User.objects.filter(email=email,is_active=False,last_login=None).delete()
 
-            if form.is_valid():
-                opts = {
-                    'use_https': request.is_secure(),
-                    'token_generator': token_generator,
-                    'from_email': from_email,
-                    'email_template_name': email_template_name,
-                    'subject_template_name': subject_template_name,
-                    'request': request,
-                    'html_email_template_name': html_email_template_name,
-                    'extra_email_context': extra_email_context,
-                }
+        if form.is_valid():
+            opts = {
+                'use_https': request.is_secure(),
+                'token_generator': token_generator,
+                'from_email': from_email,
+                'email_template_name': email_template_name,
+                'subject_template_name': subject_template_name,
+                'request': request,
+                'html_email_template_name': html_email_template_name,
+                'extra_email_context': extra_email_context,
+            }
             user = form.save(**opts)
             return HttpResponseRedirect("/accounts/reg_mail/")
-        else:
-            form = RegistrationForm()
-        return render(request, 'accounts/register.html', {
-            'form': form,
-            'username':request.user.username,
-        })
+    else:
+        form = RegistrationForm()
+    return render(request, 'accounts/register.html', {
+        'form': form,
+        'username':request.user.username,
+    })
 
 def reg_mail(request):
     """Indicates to the user that they will receive a mail for activation"""
@@ -168,8 +168,6 @@ def act_confirm(request, uidb64=None, token=None,
         context.update(extra_context)
 
     return TemplateResponse(request, template_name, context)
-
-
 
 ################## EMAIL CHANGE
 @deprecate_current_app

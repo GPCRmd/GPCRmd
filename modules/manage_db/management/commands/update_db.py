@@ -151,7 +151,6 @@ class Command(BaseCommand):
                 
             os.system(f"python /var/www/GPCRmd/manage.py update_gene")
         
-        # gpcrargs = parser.parse_args()
         if len(sys.argv) < 3:
             raise Exception("No arguments given. Use the help option (-h | --help) to check the available options.") 
         
@@ -171,7 +170,7 @@ class Command(BaseCommand):
             update_prot_family(kwargs)
             update_prot_state(kwargs)
             update_species(kwargs)
-            update_gene(kwargs)
+            # update_gene(kwargs)
             update_prot(kwargs)
 
         elif not kwargs["protein"]:
@@ -190,7 +189,8 @@ class Command(BaseCommand):
                 
             # Genes table
             if kwargs["gene"]:
-                update_gene(kwargs)
+                # update_gene(kwargs)
+                print("Developing gene function!")
                 
              
         # Exit

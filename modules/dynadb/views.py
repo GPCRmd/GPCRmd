@@ -12725,7 +12725,10 @@ def step5_submit(request, submission_id):
     # Check whether the fdbREFF instance of dyndb_ReferenceForm is valid:
     SubmitRef=True
     qRFdoi=DyndbReferences.objects.filter(doi=request.POST['doi'])
-    FRpk = FRpk[0]
+    try:
+        FRpk = FRpk[0] #Only works with a list of values
+    except:
+        pass
     qSubmission=DyndbSubmission.objects.filter(id=submission_id)
     qT=list(qSubmission.filter(dyndbsubmissionprotein__submission_id=submission_id,dyndbsubmissionmolecule__submission_id=submission_id,dyndbsubmissionmodel__submission_id=submission_id,dyndbdynamics__submission_id=submission_id).values('dyndbsubmissionprotein__protein_id','dyndbsubmissionmolecule__molecule_id','dyndbsubmissionmolecule__molecule_id__id_compound','dyndbsubmissionmodel__model_id','dyndbdynamics__id'))
     dictprot={'id_protein':qT[0]['dyndbsubmissionprotein__protein_id'], 'id_references':FRpk}

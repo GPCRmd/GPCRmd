@@ -9,8 +9,8 @@ FILES_NO_LOGIN = False
 
 #Determine http or https (ssl)
 SSL=True
-DEV = True
-MAINTENANCE_MODE = 0 # 0 False 1 True
+DEV = False
+MAINTENANCE_MODE = 1 # 0 False 1 True
 
 #Settings selection
 if DEV == False:
@@ -100,6 +100,7 @@ ROOT_URLCONF = 'config.urls'
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 # Analytics
 GOOGLE_ANALYTICS_KEY = False
 
