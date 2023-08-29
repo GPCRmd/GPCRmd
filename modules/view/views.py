@@ -2054,16 +2054,20 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
     mdsrv_url=obtain_domain_url(request)
     dyn_data = DyndbDynamics.objects.get(id=dyn_id)
     delta = dyn_data.delta
-    if not request.POST:
-        access = False
-    else:
-        form = AuthenticationFormSub(data=request.POST)
-        if form.is_valid():
-            access = request.POST["access"]
-        else:
-            access = False
-    print(access)
+    
     # Check if simulation is published or not:
+    try:
+        if not request.POST:
+            access = False
+        else:
+            form = AuthenticationFormSub(data=request.POST)
+            if form.is_valid():
+                access = request.POST["access"]
+            else:
+                access = False
+    except: #Some GPCRmd webkit tools need index function, this is to avoid the access method
+        access = False
+    print(access)
     if not dyn_data.is_published and access != "True": 
         form = AuthenticationFormSub()
         context = {}

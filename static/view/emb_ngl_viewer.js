@@ -4531,6 +4531,25 @@ $("#analysis_pockets_pan").on("click", function() {
     }
 });
 
+// Fix bug dyn id not found when select the tool on the selector #analysis_pocket...
+var lpocketPan = $("#analysis_pockets_pan").length;
+if (lpocketPan) {
+    $.ajax({
+        type: "POST",
+        url: "/view/get_pocket_and_dyn_data/", 
+        dataType: "json",
+        data: { 
+            "dyn_id": $(".str_file").data("dyn_id"),
+        },                
+        success: function(result) {
+            window.allPocketData = result["dyn_data"];
+            update_pocket_table();
+        },
+        error: function(error){
+            alert("Something went wrong. Please, try again later.");
+        }, 
+    });
+}
 
 // Update frame line of pocket volume plot whenever there is a frame change
 $("#analysis_pockets").bind('update_pocket_frame', function(e, frame) {

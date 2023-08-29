@@ -70,7 +70,7 @@ class SearchByUniprots(generics.ListAPIView):
 # search_dyn
 class SearchByDyn(generics.ListAPIView):
     """
-    Retrieve information related with the dynamic id in GPCRmd database. Same information displayed in the Search tool: https://devel.gpcrmd.org/dynadb/search/ (e.g. 11 or 17 or 21)
+    Retrieve information related with the dynamic id in GPCRmd database. Same information displayed in the Search tool: https://www.gpcrmd.org/dynadb/search/ (e.g. 11 or 17 or 21)
     """
     serializer_class = DynsSearchSerializer # Get info from DyndbDynamics using ids relationships
     
