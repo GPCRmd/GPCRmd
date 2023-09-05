@@ -3055,7 +3055,7 @@ def query_dynamics(request,dynamics_id):
     dyna_dic["mut_sel"]=mut_sel
 
     for match in DyndbReferencesDynamics.objects.select_related('id_references').filter(id_dynamics=dynamics_id):
-        ref={'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
+        ref={'id':match.id_references.id, 'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
         counter=0
         for element in ref:
             if element is None:
@@ -6424,7 +6424,7 @@ def get_dynamics_file_types():
     file_types['other']['long_name'] = "Other files"
     file_types['prt']['long_name'] = "Simulation protocol"
     file_types['coor']['description'] = "Upload the initial coordinates file of the system in PDB format (.pdb) max 50 MB."
-    file_types['top']['description'] = "Upload the file describing the topology of your system. Top (.psf, .prmtop, .top, other) max 50 MB."
+    file_types['top']['description'] = "Upload the file describing the topology of your system. Top (.psf, .prmtop, .top, .cms, other) max 50 MB."
     file_types['traj']['description'] = "Upload the files containing the evolution of the system coordinates with time. Traj (.dcd, .xtc) max. 2 GB."
     file_types['parm']['description'] = "Upload the file containing the force field parameters. Param (.tar.gz,.tgz) max 50 MB."
     file_types['other']['description'] = "Additional files needed for rerunning the simulation. Include here individual topology files and parameters that are not published elsewhere (e.g. resulting from optimitzation). max 50 MB."

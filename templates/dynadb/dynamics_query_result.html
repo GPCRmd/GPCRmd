@@ -263,7 +263,13 @@
                   (<a class="textlink"
                     href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}
                     </a>) {%endif%} </p> <br>
-                    {%endfor%}
+                  {%if reference.id%}
+                  <br>
+                  <p> GPCRmd publication page: 
+                  <a class="textlink"
+                    href=/dynadb/publications/{{reference.id}}>{{reference.id}}
+                    </a> {%endif%}   
+                {%endfor%}
               </div>
             </div>
             {% endif %}
