@@ -1755,3 +1755,14 @@ label {
     height: 100%;
 }
 
+#stats_time_AnnotationChart_legendContainer span{
+    font-size: 10px;
+}
+
+.google-visualization-controls-stringfilter label{
+    font-size: 10px;
+}
+
+.google-visualization-table-td span{
+    font-size: 10px;
+}

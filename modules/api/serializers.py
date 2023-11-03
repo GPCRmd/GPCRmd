@@ -1,8 +1,58 @@
 from modules.dynadb.models import DyndbDynamics, DyndbModel, DyndbProtein, DyndbDynamicsComponents, DyndbModelComponents 
-from modules.protein.models import ProteinConformation, ProteinState
+from modules.protein.models import ProteinConformation, ProteinState, Protein
 from rest_framework import serializers
 import copy
 from collections import OrderedDict
+
+
+# search_dyn_class/ 
+class DynsClassSerializer(serializers.ModelSerializer):
+    classname = serializers.SerializerMethodField()
+    dyn_id = serializers.SerializerMethodField()
+
+    def get_classname(self,obj):
+        classname = f'Class {obj["classname"]}' 
+
+        return classname
+
+    def get_dyn_id(self,obj):
+        fam_ids = obj["fam_ids"] 
+        protids = Protein.objects.filter(family_id__in=fam_ids).values_list("id", flat = True)
+        dynprotids = DyndbProtein.objects.filter(receptor_id_protein__in=protids).values_list("id", flat = True)
+        model_ids = DyndbModel.objects.filter(id_protein__in=dynprotids).values_list("id", flat = True)
+        ldynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True)
+        dynids = list(ldynids)
+        dynids.sort()
+
+        return dynids
+
+    class Meta:
+        model = DyndbDynamics
+        fields = ['classname', 
+            'dyn_id']
+
+# search_dyn_lig_type/ 
+class DynsLigTypeSerializer(serializers.ModelSerializer):
+    ligtype = serializers.SerializerMethodField()
+    dyn_id = serializers.SerializerMethodField()
+
+    def get_ligtype(self,obj):
+        ligtype = obj["ligtype"] 
+
+        return ligtype
+
+    def get_dyn_id(self,obj):
+        model_ids = obj["model_ids"] 
+        ldynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True)
+        dynids = list(ldynids)
+        dynids.sort()
+
+        return dynids
+
+    class Meta:
+        model = DyndbDynamics
+        fields = ['ligtype', 
+            'dyn_id']
 
 # search_allpdbs
 class AllPdbsSerializer(serializers.ModelSerializer):

@@ -1,0 +1,49 @@
+<head>
+<script>
+    document.domain=document.domain;//to avoid cross-domain errors with the iframe
+</script>
+{% extends "home/base.html" %} 
+{% load static %} 
+{% load view_custom %}
+{% block addon_css %}
+  <link rel="stylesheet" type="text/css" href="{% static 'view/css/index.css' %}" />
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+{% endblock %}
+</head>
+<body>
+{% block content %}
+
+<br>
+<div id="title">
+    <h1> Insert title </h1>
+    <h2> Authors: Adrian Morales-Pastor1, Jana Selent1 </h2>
+    <h3> 1. Hospital del Mar Medical Research Institute(IMIM), Parc de Recerca Biomèdica de Barcelona (PRBB). </h2>
+</div>
+<div>
+    <div id="dropdownAndIframe"
+    style="margin:auto;position:relative;overflow-y:hidden;overflow-x:auto;height:445px;max-width:622px;margin-bottom:5px">
+        <div class="dropdown" style="z-index:10">
+            <button id="onclicksel" class="btn btn-default btn-xs dropdown-toggle showWhenNGLLoad"
+                type="button" data-toggle="dropdown" aria-expanded="false"
+                style="margin-top:7px;width:217px">
+                <span class="pull-left indexBtnSize">
+                <b>Select figure: </b>
+                <span class="indexBtnSize" id="onclickbtntext">Fig. 3A</span>
+                </span>
+                <span class="caret pull-right" style="margin-top:13px"></span></button>
+            <ul id="onclickshowdropd" class="dropdown-menu" style="height: auto;padding:0">
+                <li id="showfig3A" style="padding:5px 10px 5px 10px;background-color:#FFF7F7"
+                    title="Structural representation of ACN and LigACN top and bottom alongside conserved microswitches in the CB2R."
+                    class="onclickshow is_active" data-short="fig3a">Figure 3A</li>
+                <li id="showfig5A" style="padding:5px 10px 5px 10px;" data-short="fig5a"
+                    title=""
+                    class="onclickshow">Figure 5A</li>
+            </ul>
+        </div>
+        <iframe class="str_file traj_file sim_data" id="embed_mdsrv" src="{{mdsrv_url}}/html/embed_fig.html" scrolling="no" height="400px" width="590px" data-struc_file="{{struc_file}}" ></iframe>
+    </div>
+</div>
+<br>
+
+{% endblock content %}
+</body>

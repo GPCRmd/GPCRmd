@@ -489,29 +489,37 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
     if multiple_chains:
         chain_nm_seq_pos=":"+chain_name
     pos_gnum = numbers[current_class]
+    # Check interfase between index (alignment vs gnum vs pdb)
+    s_3p_gnum = pos_gnum[1][0] + pos_gnum[2][0] + pos_gnum[3][0] #dyn90: 1,2,3 MEE  dyn211: 1,2,3 EEM 
+    s_3p_alig = result[0][0][0] + result[1][0][0] + result[2][0][0] #dyn90: 38,39,40 YIV dyn211: 41,42,43 EEM
+    if s_3p_gnum != s_3p_alig: # No interfase need
+        interfase = 0
+    else: #interfase need
+        l_numbers = list(pos_gnum.keys())
+        interfase = result[0][1][1] - l_numbers[0] #Fix generic num on pdbs that not start from 0 and align goes to start from 0, mismatch of index
     for pos in result:
         if pos[0] != "-": #Consider only num in the pdb
             db_pos=pos[1][1]
             if db_pos:
                 gnum_or_nth=""
-                this_gnum = pos_gnum[db_pos][1]
+                this_gnum = pos_gnum[db_pos-interfase][1]
                 if this_gnum: #If exist GPCR num for this position
                     if simplified:
                         (chain_num,bw,gpcrdb)=re.split('\.|x', this_gnum)
                         this_gnum=chain_num+"x"+gpcrdb
                         if add_aa:
-                            this_pdb=str(pos[0][1])+"-"+chain_name+"-"+pos_gnum[db_pos][0]
+                            this_pdb=str(pos[0][1])+"-"+chain_name+"-"+pos_gnum[db_pos-interfase][0]
                         else:
                             this_pdb=str(pos[0][1])+"-"+chain_name
                     else:
                         if add_aa:
-                            this_pdb=[pos[0][1],chain_name,pos_gnum[db_pos][0]]
+                            this_pdb=[pos[0][1],chain_name,pos_gnum[db_pos-interfase][0]]
                         else:
                             this_pdb=[pos[0][1],chain_name]
                     gpcr_pdb[this_gnum]=this_pdb
-                    gpcr_aa[this_gnum]=[pos_gnum[db_pos][0], chain_name]
+                    gpcr_aa[this_gnum]=[pos_gnum[db_pos-interfase][0], chain_name]
                     gnum_or_nth=this_gnum
-                    rs_by_seg[pos_gnum[db_pos][2]].append(pos[0][1]+chain_nm_seq_pos) #Chain!!
+                    rs_by_seg[pos_gnum[db_pos-interfase][2]].append(pos[0][1]+chain_nm_seq_pos) #Chain!!
                 if type(seq_pdb)==dict:
                     seq_pdb[db_pos]={"pdb":[pos[0][1],chain_name],"gnum":gnum_or_nth}
                 seq_pos[seq_pos_n][2]=gnum_or_nth
@@ -1731,7 +1739,7 @@ def default_ligresint_results(request,dyn_id):
         data = {"result":None,"success": False, "e_msg":"Error with predefined results.","int_id":None ,"strided":strideVal}
     data["traj_path"]=int_traj_p
     data["threshold"]=thresh
-    data["dist_scheme"]=dist_scheme;
+    data["dist_scheme"]=dist_scheme
     return data
 
 def mix_odd_pair_list(l):
@@ -1830,7 +1838,7 @@ def generate_comparative_cs_plot(cs_df,ignore_HA,res_id_li,atoms_li,return_avail
         #title="Chemical Shift of %s %s" %("residues" if len(res_id_li)>1 else "residue", ", ".join([str(e) for e in res_id_li])), 
         x_axis_label="Chemical Shift (ppm)", 
         y_axis_label="",
-        plot_height=400,
+        height=400,
         y_range=DataRange1d(start=0),
         active_drag=None,
         toolbar_location = None,
@@ -1883,7 +1891,7 @@ def generate_comparative_cs_plot(cs_df,ignore_HA,res_id_li,atoms_li,return_avail
             #manage hover style
             hover_renderers.append(lineplot)
             #callback
-            source.callback = CustomJS(args={"source":source},code="""
+            callback = CustomJS(args={"source":source},code="""
                     var selected_ids=source.selected["0d"].indices;
                     var resid=cb_obj.data["residue"][0];
                     var atomname=cb_obj.data["atom"][0];                        
@@ -1944,7 +1952,7 @@ def generate_2d_cs_plot(data, atom1="CA", atom2="CB", resid_li="", from_frame='a
         try: 
             df1 = data.loc[int(item),atom1] #select atom 1 the row from the dataframe which matches the inputs from the user
             df2 = data.loc[int(item),atom2] #select atom 2 the row from the dataframe which matches the inputs from the user
-            resname = data.loc[[int(item),'CA'], 'resname'].unique()[0]
+            resname = df1.loc['resname']
             # Option to make "Solution NMR predictions": make a distribution out of average and variance of our cs values, and plot it
             if soluplots:
                 np1=np.array(df1[2:])
@@ -1957,6 +1965,7 @@ def generate_2d_cs_plot(data, atom1="CA", atom2="CB", resid_li="", from_frame='a
                 df_e1=df1.to_frame(name=atom1)
                 df_e2=df2.to_frame(name=atom2)
         except Exception as e:
+            print('Checmical shift generage_2d_cs_plot suffered error %s'%e)
             continue
         temp_df = pd.concat([df_e1,df_e2], axis=1, join="inner") #concatenate all the residues dataframe into a bigger one
         temp_df["IDs"]=str(item)+' '+resname #give them different ids to have differnete colors in the plot
@@ -2067,7 +2076,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                 access = False
     except: #Some GPCRmd webkit tools need index function, this is to avoid the access method
         access = False
-    print(access)
+        
     if not dyn_data.is_published and access != "True": 
         form = AuthenticationFormSub()
         context = {}
@@ -2330,7 +2339,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
         # Check if Allosteric communication data is avaliable for this entry
         ac_data_avail = os.path.exists(settings.MEDIA_ROOT + "Precomputed/allosteric_com/dyn"+str(dyn_id)) # Example file 
 
+#### -----Allosteric paths---
 
+        # Check if Allosteric communication data is avaliable for this entry
+        ap_data_avail = os.path.exists(settings.MEDIA_ROOT + "Precomputed/allosteric_path/dyn"+str(dyn_id)) # Example file 
+        
 #### --------------------------------
 
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
@@ -2588,6 +2601,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         "cs_selection_params":cs_selection_params,
                         "ap_options" : ap_options,
                         "ac_data_avail" : ac_data_avail,
+                        "ap_data_avail" : ap_data_avail,
                         "ac_options" : ac_options,
                         "ac_options_codes" : ac_options_codes,
                         "is_default_page":is_default_page,
@@ -2659,6 +2673,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         "watervol_def":watervol_def,
                         "pharmacophore_def":pharmacophore_def,
                         "ac_data_avail" : ac_data_avail,
+                        "ap_data_avail" : ap_data_avail,
                         "ac_options" : ac_options,
                         "ac_options_codes" : ac_options_codes,
                         "ap_options" : ap_options,
@@ -2736,6 +2751,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         "all_prot_names" : sysname,
                         "show_fp" : show_fp,
                         "ac_data_avail" : ac_data_avail,
+                        "ap_data_avail" : ap_data_avail,
                         "ac_options" : ac_options,
                         "ac_options_codes" : ac_options_codes,                        
                         "ap_options" : ap_options,
@@ -2767,6 +2783,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                     "is_default_page":is_default_page,
                     "network_def":network_def,
                     "ac_data_avail" : ac_data_avail,
+                    "ap_data_avail" : ap_data_avail,
                     "ac_options" : ac_options,
                     "ac_options_codes" : ac_options_codes,
                     "ap_options" : ap_options,
@@ -2813,10 +2830,6 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                     "google_analytics":False,
                     }
             return render(request, 'view/index.html', context)
-
-
-
-
 
 #########################
 

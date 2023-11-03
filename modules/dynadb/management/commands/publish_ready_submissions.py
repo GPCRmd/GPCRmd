@@ -3,6 +3,7 @@ from modules.dynadb.models import DyndbSubmission, DyndbProtein, DyndbCompound, 
 from modules.dynadb.models import DyndbSubmissionProtein, DyndbSubmissionMolecule, DyndbSubmissionModel, DyndbFilesMolecule, DyndbFilesModel , DyndbFilesDynamics, DyndbFiles
 from modules.dynadb.views import get_file_name, get_file_name_dict, get_file_paths
 from django.db.models import Count, F, Value as V, SmallIntegerField
+from django.db.models import TextField
 import re
 from os import path, rename as os_rename
 import shutil
@@ -30,6 +31,7 @@ class Command(BaseCommand):
     __topre = re.compile(r'top',flags=re.IGNORECASE)
     __trjre = re.compile(r'tra?j',flags=re.IGNORECASE)
     __prmre = re.compile(r'(pa?ra?m)|(par)',flags=re.IGNORECASE)
+    __prt = re.compile(r'prt',flags=re.IGNORECASE)
     __otherre = re.compile(r'other',flags=re.IGNORECASE)
     
     def add_arguments(self, parser):
@@ -199,6 +201,8 @@ class Command(BaseCommand):
                     subtype = "trajectory"
                 elif self.__prmre.search(type_text):
                     subtype = "parameters"
+                elif self.__prt.search(type_text):
+                    subtype = "protocol"
                 elif self.__otherre.search(type_text):
                     subtype = "other"
                 else:

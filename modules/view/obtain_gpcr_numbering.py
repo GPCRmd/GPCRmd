@@ -82,8 +82,6 @@ def generate_gpcr_pdb (dyn_id, structure_file, retrieve_rel_dict=False):
                                 gnum_classes_rel_ok[current]={}
                             gnum_classes_rel_ok[current][gclass]=changed
 
-
-
                     prot_seq_pos[dprot_id]=(dprot_name, dprot_seq)
                     gpcr_pdb_all[dprot_id]=(gpcr_pdb)
                     gpcr_id_name[dprot_id]=dprot_name
@@ -92,8 +90,6 @@ def generate_gpcr_pdb (dyn_id, structure_file, retrieve_rel_dict=False):
         return(gpcr_pdb,gnum_classes_rel_ok,current_class) #[!] For now I only consider 1 GPCR, so I only need this dict
     else:
         return(gpcr_pdb) #[!] For now I only consider 1 GPCR, so I only need this dict
-
-
 
 def obtain_class(dyn_id):
     dynobj=DyndbDynamics.objects.filter(id=dyn_id)

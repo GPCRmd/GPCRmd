@@ -158,7 +158,7 @@ def get_number_segments(pdbname):
 			jumpflag=0
 			
 	sequences.append(cseq) #append last segment, no jump is detected for last segment.
-	print(sequences)
+	# print(sequences)
 	segment_sequence_table=[]
 	for i in range(len(breaklines)):
 		segment_sequence_table.append(breaklines[i] +' --> '+ sequences[i][:8]+ ' (...)')
@@ -378,7 +378,6 @@ def matchpdbfa_ngl(sequence,pdbseq,tablepdb,hexflag,start=1):
 
 	aligner = select_align("local", 100, -1, -10, -10)
 	bestalig=aligner.align(sequence.upper(),pdbseq.upper())[0]  #select the aligment with the best score.
-	print(bestalig)
 	#pairwise2.align.localms(seq1,seq2,score for identical matches, score for mismatches, score for opening a gap, score for extending a gap)
 	#print(bestalig)
 	biglist=list()
@@ -409,7 +408,7 @@ def matchpdbfa_ngl(sequence,pdbseq,tablepdb,hexflag,start=1):
 			minilist=[tablepdb[i],[fastalig[i],newpos]]
 			duos.append(minilist)
 		i=i+1
-		print(minilist)
+		# print(minilist)
 
 	if len(mismatchlist)>0:
 		return ('One or more missmatches were found, this is not allowed. ',mismatchlist)
@@ -656,7 +655,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 	aligner = select_align("local", -5, -1, -5, -5)
 	bestalig=aligner.align(sequence,simplified_sequence)[0]  #select the aligment with the best score.
 
-	print(bestalig)
+	# print(bestalig)
 	'''
 	The resulting alignment should be like:
     ARTNIRRAWLALEKQYL

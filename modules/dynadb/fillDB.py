@@ -571,7 +571,6 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
         recorded_ids['ec50']=[]
         recorded_ids['ic50']=[]
         recorded_ids['ki']=[]
-        print(comple[:-2])
 
         kd=comple[5]
         ec_fifty=comple[6]

@@ -5474,6 +5474,29 @@ $(document).ready(function(){
       }
       google.load("visualization", "1", {packages:["corechart"],'callback': drawCharts_subm});
 
+  function drawCharts_time() {
+
+        var data_pre=$("#stats_time").data("time_data");
+        var datainfo=[['Date', 'GPCRmd community',{ role: 'annotation' }, "Individual", { role: 'annotation' }]];
+        var data_all = datainfo.concat(data_pre);
+        var data = google.visualization.arrayToDataTable(data_all);
+
+
+        var options = {
+          hAxis: {title: 'Date',slantedTextAngle:90},
+          vAxis: {title: "", minValue: 0, maxvalue: 55 , gridlines: {count: 0, color:"#bfbfbf"}},
+          legend: {position:"top"},
+          annotations: {stem:{length:2}},
+          colors: ['#423F3E', '#BF3C1F'],
+          chartArea:{width:370,top:40}
+
+        };
+
+        var chart = new google.visualization.AreaChart(document.getElementById('stats_time'));
+
+        chart.draw(data, options);
+    }
+   google.load("visualization", "1", {packages:["corechart"],'callback': drawCharts_time});
 
 /*      function drawChart_class() {
         var data_pre=$("#stats_class").data("class_data");

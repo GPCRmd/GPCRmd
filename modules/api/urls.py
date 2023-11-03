@@ -29,6 +29,8 @@ urlpatterns = [
    # re_path(r'^', include(router.urls)),
    re_path(r'^search_all_pdbs/$', views.SearchAllPdbs.as_view()),
    re_path(r'^search_all_uniprots/$', views.SearchAllUniprots.as_view()),
+   re_path(r'^search_dyn_class/(?P<classname>.*)$', views.SearchByClass.as_view()),
+   re_path(r'^search_dyn_lig_type/$', views.SearchByLigType.as_view()),
    re_path(r'^search_dyn_pdbs/(?P<pdbid>.*)$', views.SearchByPdbs.as_view()),
    re_path(r'^search_dyn_uniprots/(?P<uniprotid>.*)$', views.SearchByUniprots.as_view()),
    re_path(r'^search_dyn/(?P<dyn_id>.*)$', views.SearchByDyn.as_view()),

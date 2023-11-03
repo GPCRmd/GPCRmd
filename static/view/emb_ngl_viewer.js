@@ -166,7 +166,6 @@ $(document).ready(function(){
     var sel = "";
     var sel_enc = sel;
     var fpsegStr=$("#view_screen").data("seg_li");
-    console.log(fpsegStr);
     var pg_framenum=0;
     var is_network_default=$("#view_screen").data("network_default")
     var is_ligprotint_default=$("#view_screen").data("ligprotint_default")
@@ -4404,7 +4403,6 @@ $("#pocket_plot_button").on("click", function() {
     }
 
     let htmlPocketData = getPocketHTMLdata(); 
-    console.log(htmlPocketData);
     requestPocketPlot(htmlPocketData);
 });
 
@@ -4490,7 +4488,7 @@ function requestPocketPlot(htmlData) {
             Bokeh.embed.embed_item(result["plot"], "pocket_plot");
 
             // Show pockets in viewer
-            $('#embed_mdsrv')[0].contentWindow.triggerEmbededCustomEvent("pocket_trigger",
+            $('#embed_mdsrv')[0].contentWindow.$('body').trigger("pocket_trigger",
                 {
                     "trajID"               : htmlData["trajID"],
                     "pocketIDAndColorList" : JSON.stringify(htmlData["pocketIDAndColorList"]),
@@ -4572,7 +4570,7 @@ $("#reset_pocket_plot").on("click", function() {
     $( "#show_nearby_residues" ).prop( "checked", false );
 
     // Clear the pockets from the viewer
-    $('#embed_mdsrv')[0].contentWindow.triggerEmbededCustomEvent("pocket_trigger",
+    $('#embed_mdsrv')[0].contentWindow.$('body').trigger("pocket_trigger",
         {
             "trajID"               : trajID,
             "pocketIDAndColorList" : JSON.stringify([]), // Empty list = show no pockets
@@ -4599,7 +4597,7 @@ window.update_pocket_table = function() {
         $("#pocket_plot").html("");
 
         // Clear the pockets from the viewer
-        $('#embed_mdsrv')[0].contentWindow.triggerEmbededCustomEvent("pocket_trigger",
+        $('#embed_mdsrv')[0].contentWindow.$('body').trigger("pocket_trigger",
             {
                 "trajID"               : trajID,
                 "pocketIDAndColorList" : JSON.stringify([]), // Empty list = show no pockets
@@ -6340,7 +6338,6 @@ $("#show_nearby_residues").on("change", function() {
 
         //Check if "solution plots" option for 2d-plots is selected
         soluplots = $('input[name="cs_solution"]:checked').val()
-        console.log(soluplots)
 
         frames_start = "all"; frames_end = "all";
         //If active CS analysis type is "single atom" (the one ressembling an RMSD plot)
@@ -6535,7 +6532,7 @@ $("#show_nearby_residues").on("change", function() {
         //if new trajectory is not the same as the old ones 
         if (!($(this).hasClass("tsel"))){
             // if any chemical shift plots have been loaded, update them
-            marker_satom = $("#cs_chart_satom .bk-root")
+            marker_satom = $("#cs_chart_satom .bk-Column")
             marker_comp = $("#cs_chart_comp .bk-root")
             marker_2d = $("#cs_chart_2d .plotly")
             if (marker_satom[0]){

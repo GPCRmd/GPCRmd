@@ -288,6 +288,7 @@ class ProteinGProteinPair(models.Model):
 
 class ProteinPDB(models.Model):
     pdb = models.CharField(max_length=4, unique=True)
+    uniprotkbac = models.CharField(max_length=200)
     state = models.IntegerField()
 
     class Meta():

@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.conf import settings
 from django.views.decorators.cache import cache_page
-from django.db.models import F
+from django.db.models import F, When, Case, FloatField, Sum, Count, Value
+from django.db.models.functions import Coalesce
 from modules.dynadb.models import DyndbDynamics, DyndbFilesDynamics
 from modules.news.models import News
 from modules.common.models import ReleaseNotes, ReleaseStatistics
@@ -13,6 +14,8 @@ import json
 import os
 import pickle
 import copy
+import numpy as np
+import datetime
 
 def search_in_treeData(classifli,myslug):#gpcrclassif_fams,myfam_slug
     namefound=False
@@ -80,17 +83,23 @@ def gpcrmd_home(request):
 
     ################ Precompute & import    
     dynclass=dynall.annotate(subm_date=F('creation_timestamp'))
+    dynclass=dynclass.annotate(frames=F('dyndbfilesdynamics__framenum'))
+    dynclass=dynclass.annotate(type=F('dyndbfilesdynamics__type'))
     dynclass=dynclass.annotate(is_traj=F('dyndbfilesdynamics__id_files__id_file_types__is_trajectory'))
     dynclass=dynclass.annotate(file_id=F('dyndbfilesdynamics__id_files__id'))
     dynclass=dynclass.annotate(fam_slug=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(fam_slug2=F('id_model__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(dyn_id=F('id'))
     dynclass = dynclass.annotate(pdb_namechain=F("id_model__pdbid"))
-    dynall_values=dynclass.values("dyn_id","subm_date","fam_slug","fam_slug2","is_published","is_traj","file_id","pdb_namechain")
+    dynclass = dynclass.annotate(is_gpcrmd_community=F("submission_id__is_gpcrmd_community"))
 
+    dynall_values=dynclass.values("dyn_id","subm_date", "frames", "type", "delta","fam_slug","fam_slug2","is_published","is_traj","file_id","pdb_namechain", "is_gpcrmd_community")
     dyn_dict = {}
     #fam_d={"001":"A","002":"B1","003":"B2","004":"C","005":"F","006":"Taste 2","007":"Others"}
 
+    gpcrmd_com_set = set()
+    frames_set = set()
+    delta_set = set()
     pdb_id_set=set()
     fam_set=set()
     subtype_set=set()
@@ -111,9 +120,15 @@ def gpcrmd_home(request):
             fam_code=fam_slug.split("_")[0]
             #fam=fam_d[fam_code]            
         if dyn_id not in dyn_dict:
-            dyn_dict[dyn_id]={}
+            dyn_dict[dyn_id]={"frames":""}
             dyn_dict[dyn_id]["subm_date"]=dyn["subm_date"]
+            if not (dyn["frames"] is None or dyn["frames"] == 1) and dyn["type"] == 2:
+                dyn_dict[dyn_id]["frames"] = dyn["frames"]
+            else:
+                dyn_dict[dyn_id]["frames"] = 0
+            dyn_dict[dyn_id]["delta"] = dyn["delta"]
             dyn_dict[dyn_id]["fam"]=fam
+            dyn_dict[dyn_id]["is_gpcrmd_community"]=dyn["is_gpcrmd_community"]
             if dyn["is_traj"]:
                 dyn_dict[dyn_id]["trajs"]={dyn["file_id"]}
             else:
@@ -123,14 +138,20 @@ def gpcrmd_home(request):
                 dyn_dict[dyn_id]["fam"]=fam
             if dyn["is_traj"]:
                 dyn_dict[dyn_id]["trajs"].add(dyn["file_id"])
+            if not (dyn["frames"] is None or dyn["frames"] == 1) and dyn["type"] == 2:
+                dyn_dict[dyn_id]["frames"] += dyn["frames"]
+            else:
+                dyn_dict[dyn_id]["frames"] += 0
 
-    # Submisisons by date
+    # Submisisons & accumulated time by date
     date_d={}
     syst_c=0
     traj_c=0
+    sim_com = 0.0
+    sim_ind = 0.0
     for d in sorted(dyn_dict.values(),key=lambda x:x["subm_date"]):
         subm_date_obj=d["subm_date"]
-        subm_date=subm_date_obj.strftime("%b %Y")
+        subm_date=subm_date_obj.strftime("%Y") # %b %Y / %m/%d/%Y        
         syst_c+=1
         traj_c+=len(d["trajs"])
         if not subm_date in date_d:
@@ -138,19 +159,31 @@ def gpcrmd_home(request):
         date_d[subm_date]["Systems"]=syst_c
         date_d[subm_date]["Trajectories"]=traj_c
         #date_d[subm_date]["Dateobj"]=subm_date_obj
+        if d["is_gpcrmd_community"] == True:
+            if not d["frames"] <= 1 or not d["delta"] < 0:
+                sim_com += d["frames"]*d["delta"]
+        elif d["is_gpcrmd_community"] == False:
+            if not d["frames"] <= 1 or not d["delta"] < 0:
+                sim_ind += d["frames"]*d["delta"]
+        date_d[subm_date]["Simulation_time_com"]= sim_com
+        date_d[subm_date]["Simulation_time_ind"] = sim_ind  
 
     st=pd.DataFrame.from_dict(date_d,orient="index")
-    st.index=pd.to_datetime(st.index).to_period('m')
-    st = st.reindex(pd.period_range(st.index.min(), st.index.max(), freq='m'), fill_value=0)
-    st.index= [st.strftime("%b %Y") for st in st.index]
-
+    st.index=pd.to_datetime(st.index).to_period('y')
+    st = st[~st.index.duplicated(keep='last')]
+    st.index= [st.strftime("%Y") for st in st.index] #  %b %Y
+    
     last_s=0
     last_t=0
-    subm_data=[]
+    last_u=0
+    last_v=0
+    
+    switch=0
+    subm_data, time_data = [], []
     for index, row in st.iterrows():
         sys=row["Systems"]
         traj=row["Trajectories"]
-        if sys ==0:
+        if sys == 0:
             sys=last_s
             traj=last_t
             leg_s=""
@@ -158,11 +191,51 @@ def gpcrmd_home(request):
         else:
             last_s=sys
             last_t=traj
-            leg_s=str(sys)
-            leg_t=str(traj)
-        subm_data.append([index,int(sys),leg_s,int(traj),leg_t])
+            leg_s=str(int(sys))
+            leg_t=str(int(traj))
+        subm_data.append([index,int(traj),leg_t,int(sys),leg_s])
+
+        timesim_com = "{:.2f}".format(round(row["Simulation_time_com"]/1000, 2))
+        timesim_ind = "{:.2f}".format(round(row["Simulation_time_ind"]/1000, 2))
+
+        # Avoid repetitive values
+        if last_v == str(timesim_ind) and last_u == str(timesim_com):
+            switch = 0
+        elif last_v == str(timesim_ind) and last_u != str(timesim_com):
+            switch = 1
+        elif last_v != str(timesim_ind) and last_u == timesim_com:
+            switch = 2
+        else:
+            switch = 3
+
+        if int(float(timesim_com)) == 0:
+            timesim_com=last_u
+            leg_u=""         
+        else:   
+            last_u=timesim_com
+            leg_u=str(timesim_com)
+            
+        if int(float(timesim_ind)) == 0:
+            timesim_ind=last_v
+            leg_v=""            
+        else:   
+            last_v=timesim_ind
+            leg_v=str(timesim_ind)
+        # Check dates
+        # Only taking into account two years of data
+        # if int(year) >= (int(c_year)-2):
+        if switch == 0:
+            time_data.append([index,float(timesim_com),"",float(timesim_ind),""])
+        elif switch == 1:
+            time_data.append([index,float(timesim_com),leg_u,float(timesim_ind),""])
+        elif switch == 2:
+            time_data.append([index,float(timesim_com),"",float(timesim_ind),leg_v])
+        else:
+            time_data.append([index,float(timesim_com),leg_u,float(timesim_ind),leg_v])
 
     context["subm_data"] =json.dumps(subm_data)
+    context["time_data"] =json.dumps(time_data)
+    
     ################
     fam_count=0
     subt_count=0
@@ -268,18 +341,23 @@ def gpcrtree(request):
 
     ################ Precompute & import
     dynclass=dynall.annotate(subm_date=F('creation_timestamp'))
+    dynclass=dynclass.annotate(frames=F('dyndbfilesdynamics__framenum'))
+    dynclass=dynclass.annotate(type=F('dyndbfilesdynamics__type'))
     dynclass=dynclass.annotate(is_traj=F('dyndbfilesdynamics__id_files__id_file_types__is_trajectory'))
     dynclass=dynclass.annotate(file_id=F('dyndbfilesdynamics__id_files__id'))
     dynclass=dynclass.annotate(fam_slug=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(fam_slug2=F('id_model__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(dyn_id=F('id'))
     dynclass = dynclass.annotate(pdb_namechain=F("id_model__pdbid"))
-    dynall_values=dynclass.values("dyn_id","subm_date","fam_slug","fam_slug2","is_published","is_traj","file_id","pdb_namechain")
+    dynclass = dynclass.annotate(is_gpcrmd_community=F("submission_id__is_gpcrmd_community"))
 
-
+    dynall_values=dynclass.values("dyn_id","subm_date", "frames", "type", "delta","fam_slug","fam_slug2","is_published","is_traj","file_id","pdb_namechain", "is_gpcrmd_community")
     dyn_dict = {}
     #fam_d={"001":"A","002":"B1","003":"B2","004":"C","005":"F","006":"Taste 2","007":"Others"}
 
+    gpcrmd_com_set = set()
+    frames_set = set()
+    delta_set = set()
     pdb_id_set=set()
     fam_set=set()
     subtype_set=set()
@@ -300,9 +378,15 @@ def gpcrtree(request):
             fam_code=fam_slug.split("_")[0]
             #fam=fam_d[fam_code]            
         if dyn_id not in dyn_dict:
-            dyn_dict[dyn_id]={}
+            dyn_dict[dyn_id]={"frames":""}
             dyn_dict[dyn_id]["subm_date"]=dyn["subm_date"]
+            if not (dyn["frames"] is None or dyn["frames"] == 1) and dyn["type"] == 2:
+                dyn_dict[dyn_id]["frames"] = dyn["frames"]
+            else:
+                dyn_dict[dyn_id]["frames"] = 0
+            dyn_dict[dyn_id]["delta"] = dyn["delta"]
             dyn_dict[dyn_id]["fam"]=fam
+            dyn_dict[dyn_id]["is_gpcrmd_community"]=dyn["is_gpcrmd_community"]
             if dyn["is_traj"]:
                 dyn_dict[dyn_id]["trajs"]={dyn["file_id"]}
             else:
@@ -312,14 +396,20 @@ def gpcrtree(request):
                 dyn_dict[dyn_id]["fam"]=fam
             if dyn["is_traj"]:
                 dyn_dict[dyn_id]["trajs"].add(dyn["file_id"])
+            if not (dyn["frames"] is None or dyn["frames"] == 1) and dyn["type"] == 2:
+                dyn_dict[dyn_id]["frames"] += dyn["frames"]
+            else:
+                dyn_dict[dyn_id]["frames"] += 0
 
-    # Submisisons by date
+    # Submisisons & accumulated time by date
     date_d={}
     syst_c=0
     traj_c=0
+    sim_com = 0.0
+    sim_ind = 0.0
     for d in sorted(dyn_dict.values(),key=lambda x:x["subm_date"]):
         subm_date_obj=d["subm_date"]
-        subm_date=subm_date_obj.strftime("%b %Y")
+        subm_date=subm_date_obj.strftime("%Y") # %b %Y / %m/%d/%Y        
         syst_c+=1
         traj_c+=len(d["trajs"])
         if not subm_date in date_d:
@@ -327,19 +417,31 @@ def gpcrtree(request):
         date_d[subm_date]["Systems"]=syst_c
         date_d[subm_date]["Trajectories"]=traj_c
         #date_d[subm_date]["Dateobj"]=subm_date_obj
+        if d["is_gpcrmd_community"] == True:
+            if not d["frames"] <= 1 or not d["delta"] < 0:
+                sim_com += d["frames"]*d["delta"]
+        elif d["is_gpcrmd_community"] == False:
+            if not d["frames"] <= 1 or not d["delta"] < 0:
+                sim_ind += d["frames"]*d["delta"]
+        date_d[subm_date]["Simulation_time_com"]= sim_com
+        date_d[subm_date]["Simulation_time_ind"] = sim_ind  
 
     st=pd.DataFrame.from_dict(date_d,orient="index")
-    st.index=pd.to_datetime(st.index).to_period('m')
-    st = st.reindex(pd.period_range(st.index.min(), st.index.max(), freq='m'), fill_value=0)
-    st.index= [st.strftime("%b %Y") for st in st.index]
-
+    st.index=pd.to_datetime(st.index).to_period('y')
+    st = st[~st.index.duplicated(keep='last')]
+    st.index= [st.strftime("%Y") for st in st.index] #  %b %Y
+    
     last_s=0
     last_t=0
-    subm_data=[]
+    last_u=0
+    last_v=0
+    
+    switch=0
+    subm_data, time_data = [], []
     for index, row in st.iterrows():
         sys=row["Systems"]
         traj=row["Trajectories"]
-        if sys ==0:
+        if sys == 0:
             sys=last_s
             traj=last_t
             leg_s=""
@@ -347,11 +449,51 @@ def gpcrtree(request):
         else:
             last_s=sys
             last_t=traj
-            leg_s=str(sys)
-            leg_t=str(traj)
-        subm_data.append([index,int(sys),leg_s,int(traj),leg_t])
+            leg_s=str(int(sys))
+            leg_t=str(int(traj))
+        subm_data.append([index,int(traj),leg_t,int(sys),leg_s])
+
+        timesim_com = "{:.2f}".format(round(row["Simulation_time_com"]/1000, 2))
+        timesim_ind = "{:.2f}".format(round(row["Simulation_time_ind"]/1000, 2))
+
+        # Avoid repetitive values
+        if last_v == str(timesim_ind) and last_u == str(timesim_com):
+            switch = 0
+        elif last_v == str(timesim_ind) and last_u != str(timesim_com):
+            switch = 1
+        elif last_v != str(timesim_ind) and last_u == timesim_com:
+            switch = 2
+        else:
+            switch = 3
+
+        if int(float(timesim_com)) == 0:
+            timesim_com=last_u
+            leg_u=""         
+        else:   
+            last_u=timesim_com
+            leg_u=str(timesim_com)
+            
+        if int(float(timesim_ind)) == 0:
+            timesim_ind=last_v
+            leg_v=""            
+        else:   
+            last_v=timesim_ind
+            leg_v=str(timesim_ind)
+        # Check dates
+        # Only taking into account two years of data
+        # if int(year) >= (int(c_year)-2):
+        if switch == 0:
+            time_data.append([index,float(timesim_com),"",float(timesim_ind),""])
+        elif switch == 1:
+            time_data.append([index,float(timesim_com),leg_u,float(timesim_ind),""])
+        elif switch == 2:
+            time_data.append([index,float(timesim_com),"",float(timesim_ind),leg_v])
+        else:
+            time_data.append([index,float(timesim_com),leg_u,float(timesim_ind),leg_v])
 
     context["subm_data"] =json.dumps(subm_data)
+    context["time_data"] =json.dumps(time_data)
+    
     ################
     fam_count=0
     subt_count=0

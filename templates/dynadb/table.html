@@ -31,37 +31,64 @@
     font-size:16px;
     margin:10px 0;
 }
+
+
+#table_id_wrapper {
+    top:100px;
+}
+
+.active {
+    font-weight: bold;
+}
+
+.dt-buttons button{
+    background-color: white;
+    color: #171010;
+    border: 2px solid #BF3C1F;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 4px;
+    padding: 6px 12px;
+}
+
+.dt-buttons button:hover{
+    background-color: #171010;
+}
+
+.dt-buttons button:hover span{
+    color: white;
+}
 </style>
 {% endblock %}
 
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+{% comment %} <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css"> {% endcomment %}
 <base href="your_domain/" target="_PARENT">
 </head>
 
 <body style="padding:0">
 {% block content %}
-<div class="colSelection col-md-12">
+<div class="colSelection col-md-12" style="position: fixed;z-index: 10;background: white;padding-bottom: 10px;">
     <p>Show columns: </p>
-    <a class="searchCols textlink toggle-vis" data-column="1">Receptor</a> - 
-    <a class="searchCols textlink toggle-vis" data-column="2">Uniprot entry name</a> - 
-    <a class="searchCols textlink toggle-vis" data-column="3">Uniprot id</a> - 
-    <a class="searchCols textlink toggle-vis" data-column="4">Family</a> - 
-    <a class="searchCols textlink toggle-vis" data-column="5">Class</a> - 
-    <a class="searchCols textlink toggle-vis" data-column="6">PDB id</a> -
-    <a class="searchCols textlink toggle-vis" data-column="7">State</a> - 
-    <a class="searchCols textlink toggle-vis" data-column="8">Species</a> -
-    <a class="searchCols textlink toggle-vis" data-column="9">Model type</a> -
-    <a class="searchCols textlink toggle-vis" data-column="10">Ligand(s)</a> -
-    <a class="searchCols textlink toggle-vis" data-column="11">Model name</a> -
-    <a class="searchCols textlink toggle-vis" data-column="12">Num. of atoms</a> -
-    <a class="searchCols textlink toggle-vis" data-column="13">Membrane composition</a> -
-    <a class="searchCols textlink toggle-vis" data-column="14">Simulation time</a> -
-    <a class="searchCols textlink toggle-vis" data-column="15">Software</a> -
-    <a class="searchCols textlink toggle-vis" data-column="16">Force field</a> -
-    <a class="searchCols textlink toggle-vis" data-column="17">Submitted by</a>
-    
+    <a class="searchCols textlink toggle-vis active" data-column="1">Receptor</a> - 
+    <a class="searchCols textlink toggle-vis " data-column="2">Uniprot entry name</a> - 
+    <a class="searchCols textlink toggle-vis active" data-column="3">Uniprot id</a> - 
+    <a class="searchCols textlink toggle-vis " data-column="4">Family</a> - 
+    <a class="searchCols textlink toggle-vis active" data-column="5">Class</a> - 
+    <a class="searchCols textlink toggle-vis active" data-column="6">PDB id</a> -
+    <a class="searchCols textlink toggle-vis active" data-column="7">State</a> - 
+    <a class="searchCols textlink toggle-vis " data-column="8">Species</a> -
+    <a class="searchCols textlink toggle-vis active" data-column="9">Model type</a> -
+    <a class="searchCols textlink toggle-vis " data-column="10">Ligand(s)</a> -
+    <a class="searchCols textlink toggle-vis " data-column="11">Model name</a> -
+    <a class="searchCols textlink toggle-vis " data-column="12">Num. of atoms</a> -
+    <a class="searchCols textlink toggle-vis " data-column="13">Membrane composition</a> -
+    <a class="searchCols textlink toggle-vis " data-column="14">Simulation time</a> -
+    <a class="searchCols textlink toggle-vis " data-column="15">Software</a> -
+    <a class="searchCols textlink toggle-vis " data-column="16">Force field</a> -
+    <a class="searchCols textlink toggle-vis " data-column="17">Submitted by</a>
+
 </div>
-<table id="table_id" class="display" >
+<table id="table_id" class="display" style="width:100%">
     <thead>
         <tr>
             <th> </th>
@@ -185,11 +212,17 @@
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 
 <!-- END From base.html -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css"><!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+<link rel="stylesheet" type="text/css" src="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
-<!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
-
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/fixedheader/3.2.3/js/dataTables.fixedHeader.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script type="text/javascript" src="{% static 'dynadb/searchtable.js' %}"></script>
 {% endblock %}
 </body>

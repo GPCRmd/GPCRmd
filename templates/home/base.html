@@ -223,7 +223,9 @@
       });
 
       // Change text of cookie (remove ads autoadverstiment )
-      document.getElementById('cc-nb-text').innerText = "We use cookies and other tracking technologies to improve your browsing experience on our website, to analyze our website traffic, and to understand where our visitors are coming from.";
+      if (document.getElementById('cc-nb-tex')) {
+        document.getElementById('cc-nb-text').innerText = "We use cookies and other tracking technologies to improve your browsing experience on our website, to analyze our website traffic, and to understand where our visitors are coming from.";
+      }      
       document.getElementById('title_targeting').style.display = "none";
 
       //Check if load-of-all-systems-after-update is ongoing. If so show warning

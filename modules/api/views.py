@@ -11,7 +11,48 @@ from rest_framework.response import Response
 
 from modules.api.serializers import *
 from modules.dynadb.models import DyndbDynamics, DyndbModel, DyndbProtein
+from modules.protein.models import ProteinFamily
 
+#search_dyn_class
+class SearchByClass(generics.ListAPIView):
+    """
+    Retrieve a list with all dynamic ids in GPCRmd database using as input one or more classes (e.g. A, B1, B2, T, F,...).
+    """
+    serializer_class = DynsClassSerializer # Get info from DyndbDynamics using ids relationships
+
+    def get_queryset(self, *args, **kwargs):
+        classname = self.kwargs['classname']
+        classname = classname.replace(" ", "").upper()
+        classname = classname.split(",")
+        classname = list(filter(None, classname)) # Remove empty strings in list
+        class_slugs = []
+        for cl in classname: 
+            s_main_id = ProteinFamily.objects.filter(name__contains=f'Class {cl}').values_list("slug", flat = True)
+            f_ids = ProteinFamily.objects.filter(slug__startswith=s_main_id[0]).values_list("id", flat = True)
+            class_slugs.append({"classname":cl, "fam_ids":f_ids})
+
+        return class_slugs
+
+# search_dyn_lig_type    
+class SearchByLigType(generics.ListAPIView):
+    """
+    Retrieve a list with all dynamic ids in GPCRmd database if they have ligand (complex) or not (apoform).
+    """
+    serializer_class = DynsLigTypeSerializer # Get info from DyndbDynamics using ids relationships
+
+    def get_queryset(self, *args, **kwargs):
+        lig_type = [0, 1] 
+        l_model_ids = [] 
+        for lt in lig_type: 
+            type_ids = DyndbModel.objects.filter(is_published=True).filter(type=lt).values_list("id", flat = True)
+            if lt == 0: 
+                ligtypename = "Apoform"
+            else:
+                ligtypename = "Complex"
+            l_model_ids.append({"ligtype":ligtypename, "model_ids":type_ids})
+
+        return l_model_ids
+    
 # search_all_pdbs
 class SearchAllPdbs(generics.ListAPIView):
     """

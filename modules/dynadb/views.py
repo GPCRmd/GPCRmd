@@ -10330,7 +10330,10 @@ def datasets(request):
     data_indv = 0
     for dyn_id,dyndata in dyn_dict.items():
         context={}
-        myclass_slug=dyndata["class_slug"]
+        try:
+            myclass_slug=dyndata["class_slug"]
+        except:
+            continue
         myfam_slug=dyndata["fam_slug"]
         mysubtype_slug=dyndata["subtype_slug"]
         myprot_slug=dyndata["prot_slug"]

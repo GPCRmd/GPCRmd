@@ -38,12 +38,12 @@ class Command(BaseCommand):
             for prot in prot_in_sim:
                 ce_li = ce_li.filter(proteins=prot)
             if len(ce_li)>1:
-                raise Error("More than 1 CE found")
+                raise ValueError("More than 1 CE found")
             ce=ce_li[0]
             #from the CE, obtain the complex molecule (CM)
             cm_l=ce.dyndbcomplexmolecule_set.all()
             if len(cm_l)>1:
-                raise Error("More than 1 CM found")
+                raise ValueError("More than 1 CM found")
             cm=cm_l[0]
             # assign to dyn
             model=d.id_model

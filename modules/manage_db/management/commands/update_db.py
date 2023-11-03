@@ -30,17 +30,20 @@ class Command(BaseCommand):
 
         # SQL options (database dumps)
         sqlparser = parser.add_argument_group("PostgreSQL options", "Manage the GPCRmd database.")
-        sqlparser.add_argument("-r", "--restore", type=str, help="Restore the database from a dump file.", metavar="file")
-        sqlparser.add_argument("-f", "--pathfile", help="Replace the urls of path files with correct ones.", action="store_true")
+        sqlparser.add_argument("-sr", "--restore", type=str, help="Restore the database from a dump file.", metavar="file")
+        sqlparser.add_argument("-sf", "--pathfile", help="Replace the urls of path files with correct ones.", action="store_true")
 
         # Protein tables
         protparser = parser.add_argument_group("Protein tables options", "Options to update the protein tables using data from GPCRdb.")
         protparser.add_argument("-p", "--protein", help="Update all the protein tables in the database. Englobe all the other options list below.", action="store_true")
-        protparser.add_argument("-m", "--protfamily", help="Update the protein family table in the database.", action="store_true")
-        protparser.add_argument("-s", "--protstate", help="Update the protein state table in the database.", action="store_true")
-        protparser.add_argument("-o", "--species", help="Update the species table in the database.", action="store_true")
-        protparser.add_argument("-g", "--gene", help="Update the gene table in the database.", action="store_true")
+        protparser.add_argument("-pf", "--protfamily", help="Update the protein family table in the database.", action="store_true")
+        protparser.add_argument("-ps", "--protstate", help="Update the protein state table in the database.", action="store_true")
+        protparser.add_argument("-pp", "--species", help="Update the species table in the database.", action="store_true")
+        protparser.add_argument("-pg", "--gene", help="Update the gene table in the database.", action="store_true")
 
+        # Dyndb tables
+        dynparser = parser.add_argument_group("Dyndb tables options", "Options to update the dyndb tables.")
+        dynparser.add_argument("-dm", "--dynmodel", help="Update the dyndb model table.", action="store_true")
     
     def handle(self, *args, **kwargs):
         
@@ -150,6 +153,16 @@ class Command(BaseCommand):
                 return os.system(f"python /var/www/GPCRmd/manage.py update_gene --update")
                 
             os.system(f"python /var/www/GPCRmd/manage.py update_gene")
+            
+         # Dyndb functions
+        def update_dyndb_model(*args, **kwargs):
+            """
+            Update dyndb model table of GPCRmd database.
+            """
+
+            print(f"    - Dyndb model table...")
+
+            os.system(f"python /var/www/GPCRmd/manage.py update_dyndb_model")
         
         if len(sys.argv) < 3:
             raise Exception("No arguments given. Use the help option (-h | --help) to check the available options.") 
@@ -172,26 +185,29 @@ class Command(BaseCommand):
             update_species(kwargs)
             # update_gene(kwargs)
             update_prot(kwargs)
-
-        elif not kwargs["protein"]:
-                        
-            # Protein family table
-            if kwargs["protfamily"]:
-                update_prot_family(kwargs)
-                
-            # Protein state table
-            if kwargs["protstate"]:
-                update_prot_state(kwargs)
+            sys.exit("Exiting...")
             
-            # Species table
-            if kwargs["species"]:
-                update_species(kwargs)
+        # Protein family table
+        if kwargs["protfamily"]:
+            update_prot_family(kwargs)
+
+        # Protein state table
+        if kwargs["protstate"]:
+            update_prot_state(kwargs)
+
+        # Species table
+        if kwargs["species"]:
+            update_species(kwargs)
+
+        # Genes table
+        if kwargs["gene"]:
+            update_gene(kwargs)
+
+        # Update dyndb tables
+
+        # Dyndb model table 
+        if kwargs["dynmodel"]:
+            update_dyndb_model(kwargs)
+
+        sys.exit("Exiting...")  
                 
-            # Genes table
-            if kwargs["gene"]:
-                # update_gene(kwargs)
-                print("Developing gene function!")
-                
-             
-        # Exit
-        print("- Exiting...")

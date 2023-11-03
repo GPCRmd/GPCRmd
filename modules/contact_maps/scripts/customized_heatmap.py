@@ -10,6 +10,7 @@ from bokeh.plotting import figure, show, reset_output
 from bokeh.embed import components
 from bokeh.models import Label, HoverTool, TapTool, CustomJS, BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
 from bokeh.transform import transform
+from bokeh.events import Tap
 
 
 # Be careful with this!!! Put here only because some false-positive warnings from pandas
@@ -151,8 +152,8 @@ def define_figure(width, height, dataframe, hover, itype):
 
     #Bokeh figure
     p = figure(
-        plot_width= width,
-        plot_height=height,
+        width= width,
+        height=height,
         #title="Example freq",
         y_range=list(dataframe.shortName.drop_duplicates()),
         x_range=list(dataframe.Position.drop_duplicates()),
@@ -193,7 +194,6 @@ def define_figure(width, height, dataframe, hover, itype):
     foolabel = Label(x=-1,
                      y=y_cord,
                      text='\nA: \nB: \nC: \nF: \n\n\nA: \nB: \nC: \nF: \n',
-                     render_mode='css', 
                      border_line_alpha=1.0,
                      text_font_size = "10pt",
                      background_fill_color = "#FFFFFF")
@@ -205,7 +205,6 @@ def define_figure(width, height, dataframe, hover, itype):
         foolabel = Label(x=x_cord,
                          y=y_cord,
                          text=position,
-                         render_mode='css', 
                          border_line_alpha=1.0,
                          background_fill_color = "#FFFFFF",
                          text_font_size = "10pt")
@@ -227,7 +226,7 @@ def define_figure(width, height, dataframe, hover, itype):
     # Needed later
     return(mysource,p)
 
-def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource):
+def select_tool_callback(p, recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource):
     """
     Prepares the javascript script necessary for the side-window
     """
@@ -241,13 +240,13 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
     gnum_source=ColumnDataSource(df_gnum)
 
     #Select tool and callback: (SIMPLIFIED)
-    mysource.callback = CustomJS(
-        args={"r_info":ri_source,"ro_info":rio_source,"gnum_info":gnum_source,"itype":itype, "typelist" : typelist},
+    CB = CustomJS(
+        args={"mysource" : mysource,"r_info":ri_source,"ro_info":rio_source,"gnum_info":gnum_source,"itype":itype, "typelist" : typelist},
         code="""
-            var sel_ind = cb_obj.selected["1d"].indices;
+            var sel_ind = mysource.selected.indice[0];
             var plot_bclass=$("#retracting_parts").attr("class");
             if (sel_ind.length != 0){
-                var data = cb_obj.data;
+                var data = mysource.data;
                 var ri_data=r_info.data;
                 var rio_data=ro_info.data;
                 var gnum_data=gnum_info.data;
@@ -317,6 +316,8 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 } 
             }           
         """)
+    p.js_on_event(Tap,CB)
+    return(p)
 
 def customized_csv(df_filt,itype):
 

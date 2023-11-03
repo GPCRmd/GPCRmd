@@ -221,7 +221,7 @@ def customized_heatmap(request, foo):
 		hover = create_hovertool(itype, itypes_order, hb_itypes, typelist)
 		mysource,p = define_figure(w, h, df_slided, hover, itype)
 		# Creating javascript for side-window
-		mysource = select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource)
+		p = select_tool_callback(p, recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource)
 		
 		# Extract bokeh plot components and store them in lists
 		script, div = components(p)

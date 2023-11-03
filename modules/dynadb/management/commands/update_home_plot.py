@@ -126,8 +126,8 @@ class Command(BaseCommand):
             fam_slug=myprotd["family"]
             class_slug=fam_slug.split("_")[0]
             myclass=slugtofamdata[class_slug]["name"]
-            if myclass not in ['Class A (Rhodopsin)', 'Class B1 (Secretin)', 'Class C (Glutamate)', 'Class F (Frizzled)']:
-                continue
+            # if myclass not in ['Class A (Rhodopsin)', 'Class B1 (Secretin)', 'Class C (Glutamate)', 'Class F (Frizzled)']:
+            #     continue
             myclass=myclass[:myclass.index("(")-1]
             subtype=slugtofamdata[fam_slug]["name"]
             famname=slugtofamdata[fam_slug]["parent"]["name"]
@@ -167,7 +167,6 @@ class Command(BaseCommand):
                                 break
 
             else:
-                print(pdbid)
                 nclass=search_in_treeData(tree_data["children"],myclass,"name")
                 if nclass is False:
                     print("Class not found in tree_data for dyn %s" %dyn_id)
@@ -202,14 +201,17 @@ class Command(BaseCommand):
                 tree_dyn_fin=appendocreate(tree_dyn_orig,str(dyn_id))
                 pdbdata[apocomp]=tree_dyn_fin
                 pdbdata["Simulated"]="Yes"
-                if apocomp=="Complex":
-                    mylig="+".join(dyn_data["lig_li"])
-                    treelig=pdbdata["Ligand"]
-                    treelig_fin=appendocreate(treelig,mylig)
-                    pdbdata["Ligand"]=treelig_fin
-                    treetransd=pdbdata["Transducer"]
-                    treetransd_fin=appendocreate(treetransd,"-")
-                    pdbdata["Transducer"]=treetransd_fin
+                try:
+                    if apocomp=="Complex":
+                        mylig="+".join(dyn_data["lig_li"])
+                        treelig=pdbdata["Ligand"]
+                        treelig_fin=appendocreate(treelig,mylig)
+                        pdbdata["Ligand"]=treelig_fin
+                        treetransd=pdbdata["Transducer"]
+                        treetransd_fin=appendocreate(treetransd,"-")
+                        pdbdata["Transducer"]=treetransd_fin
+                except:
+                    print("Error dyn %s in pdb %s %s (%s %s %s %s))"%(dyn_id,pdbid,apocomp,nclass,nfam,nsubt,npdb))
 
         gpcrmdtree_path_out=kwargs["gpcrmdtree_path_out"]
         with open(gpcrmdtree_path_out, 'wb') as filehandle:  
