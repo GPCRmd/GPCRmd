@@ -91,11 +91,36 @@ $(document).ready( function () {
     $('#table_id').css("display","table");
     
     // Hide columns: 
-    var l_hide = [2,4,8,10,11,12,13,14,15,16,17];
+    // Python range() function in js
+    function range(start, stop) {
+        // setting up default values for start and stop
+        // calling range(i) is equal to calling range(0, i)
+        if (stop === undefined) {
+            stop = start;
+            start = 0;
+        }
+
+        if (start > stop) 
+            return [];
+
+        return new Array(stop - start).fill(start).map((el, i) => el + i);
+    }
+    var colmenu = document.getElementById("colmenu");
+    var l_col = colmenu.getElementsByClassName("active");
+    var l_vis = [];
+    for (let i = 0; i < l_col.length; i++) {
+        var c = l_col[i];
+        var position = c.getAttribute('data-column');
+        l_vis.push(parseInt(position-1));
+    }
     var table = $('#table_id').DataTable();
+    var table_len = table.columns().nodes().length;
+    var l_hide = Array.from(range(1, table_len));
     for (l in l_hide){
         var column = table.column(l_hide[l]);
-        column.visible(!column.visible());
+        if (!l_vis.includes(parseInt(l))) {
+            column.visible(!column.visible());
+        }
     }
     //toggle visbility of columns
     $('a.toggle-vis').on('click', function (e) {

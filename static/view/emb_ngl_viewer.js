@@ -4552,7 +4552,7 @@ if (lpocketPan) {
 // Update frame line of pocket volume plot whenever there is a frame change
 $("#analysis_pockets").bind('update_pocket_frame', function(e, frame) {
     // if there is a chart loaded
-    if ($("#pocket_plot .bk-canvas")[0]){
+    if ($("#pocket_plot .bk-Column")[0]){
         let pocket_frameslider = Bokeh.documents[0].get_model_by_name("pocket_frameslider");
         pocket_frameslider.value = frame;
     }

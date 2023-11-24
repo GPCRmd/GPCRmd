@@ -10,7 +10,7 @@ FILES_NO_LOGIN = False
 #Determine http or https (ssl)
 SSL=True
 DEV = False
-MAINTENANCE_MODE = 1 # 0 False 1 True
+MAINTENANCE_MODE = 0 # 0 False 1 True
 
 #Settings selection
 if DEV == False:
@@ -266,7 +266,7 @@ SESSION_EXPIRE_SECONDS = 1800 # Expire after 30 minutes
 SESSION_EXPIRE_AFTER_LAST_ACTIVITY = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True #Invalid session
 
-SESSION_TIMEOUT_REDITECT = 'accounts:login'
+SESSION_TIMEOUT_REDITECT = 'home:home'
 
 #CACHE
 CACHES = {

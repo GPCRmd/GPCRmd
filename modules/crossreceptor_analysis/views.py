@@ -136,8 +136,9 @@ def improve_receptor_names(df_t,compl_data):
 
 
 def ligand_receptor_interaction(request,sel_thresh):
-    mdsrv_url=obtain_domain_url(request)
+    request.session.set_expiry(0)
     
+    mdsrv_url=obtain_domain_url(request)
         
     sel_thresh=float(sel_thresh)
     cra_path=settings.MEDIA_ROOT + "Precomputed/crossreceptor_analysis_files"

@@ -17,7 +17,7 @@
       <ul class="dropdown-menu" data-pointto="Analysis_li">
         <li id="contmaps"><a href="/contmaps/?itype=hb&cluster=3&prtn=prt&rev=norev&stnd=cmpl">Receptor meta-analysis</a></li>
         <li ><a class= "toolsLink" onclick="go_to_tools()">Simulation tools</a></li>
-        <li ><a href="/api/"> Web services (dev)</a></li>
+        <li ><a href="/api/"> Web services </a></li>
       </ul> 
     </li>
 
@@ -111,5 +111,13 @@
 <script>
   function go_to_tools() {
     window.location = "/#md_tools";
+    var path_list = window.location.href.split("/");
+    var myTool=path_list.at(-1)//select the last element of the url
+    if (myTool == '#md_tools') {
+      const element = document.getElementById("subtitle");
+      var pos = element.offsetTop;
+      var offset = document.documentElement.scrollHeight * 0.04;
+      window.scrollTo(0, pos + offset);
+    }
   }
 </script>

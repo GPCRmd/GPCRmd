@@ -2960,11 +2960,14 @@ def query_dynamics(request,dynamics_id):
         for match in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=cmol_id):
             molname=match.id_molecule.id_compound.name.capitalize()
             mol_id=match.id_molecule.id
-            num_of_mol=ligmolid_to_nummol[match.id_molecule_id]
-            if num_of_mol==1:
-                num_of_mol_s="%s molecule" % num_of_mol
-            else:
-                num_of_mol_s="%s molecules" % num_of_mol
+            try:
+                num_of_mol=ligmolid_to_nummol[match.id_molecule_id]
+                if num_of_mol==1:
+                    num_of_mol_s="%s molecule" % num_of_mol
+                else:
+                    num_of_mol_s="%s molecules" % num_of_mol
+            except:
+                num_of_mol = "-"
             if {m.type for m in  DyndbModelComponents.objects.filter(id_molecule=mol_id)} == {0}:
                 continue # Do not include ions
             resname=list(set([r.resname for r in DyndbDynamicsComponents.objects.filter(id_molecule=mol_id)]))[0]

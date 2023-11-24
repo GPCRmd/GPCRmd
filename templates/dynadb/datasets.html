@@ -13,9 +13,8 @@
     {% block content %}
 
     {% autoescape off %}
-    <div class="row datasetDiv">
-        <!-- Left panel: GPCRmd dataset -->
-        <div class="col-sm-5 twoPanel">
+    <div class="row datasetDiv" style="display: grid;place-items: center;place-content: center;grid-auto-flow: column;align-content: center;">        <!-- Left panel: GPCRmd dataset -->
+        <div class="twoPanel">
             <div id="gpcrmd_set" class="panel panel-primary ">
                 <h2 class="panel-heading">GPCRmd dataset</h2>
                 <div class="panel-body">
@@ -78,16 +77,17 @@
 
         </div>
 
-        <div class="col-sm-2 twoPanel">
-            <h4 class="extrainfo_title">Contribution in GPCRmd</h4>
-            <div style="overflow-x: hidden;overflow-y: hidden">
-                <div id="stats_dataset" data-stats_dataset='{{stats_dataset}}'>
+        <div class="col-sm-2 twoPanel" style="width: 600px;">
+            {% comment %} <h4 class="extrainfo_title">Contribution in GPCRmd</h4> {% endcomment %}
+            <div style="overflow-x: auto;overflow-y: hidden;display: grid;place-items: center">
+                <div id="stats_dataset" style="position: absolute" data-stats_dataset='{{stats_dataset}}'>
                 </div>
-                <div class="centerLabel" style="left: 145px;top: 160px;position: absolute;width:0px;">{{total_stats_dataset}}</div>
+                <div class="centerLabel" style="left: 0px;">{{total_stats_dataset}}</div>
             </div>
         </div>
+
         <!-- Right panel: contributors dataset -->
-        <div class="col-sm-5 twoPanel">
+        <div class="twoPanel">
             <div id="external_set" class="panel panel-primary">
                 <h2 class="panel-heading" style="background-color: #b4aca9;">Individual contributions</h2>
 
@@ -161,14 +161,12 @@
         });
     </script>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">google.load('visualization', '1.0', {'packages':['corechart']});</script>
 
     <script>
         //-------------------------- Stats chart
       function drawChart_datasetstats() {
 
          var data_all = $("#stats_dataset").data("stats_dataset");
-         console.log(data_all);
          var data = google.visualization.arrayToDataTable(data_all);
          var options = {
             slices: {
@@ -176,13 +174,19 @@
             1: { color: '#837d7b' }
             },
             pieHole: 0.4,
-            chartArea: { left: 30},
-            width:240,
-            height:240,
-            sliceVisibilityThreshold: 0,    
+            chartArea: { width:500, height:200},
+            pieSliceTextStyle:{
+            color:"white", 
+            fontSize:12,
+            position: 'start',
+            },
+            width:400,
+            height:400,
+            legend:{ alignment:"center", position:'none', textStyle: {fontSize: 12}},
             pieSliceText: 'none',
-            legend: 'none',
-         };
+            sliceVisibilityThreshold: 0,             
+            legend: 'labeled',
+        };
 
          var chart = new google.visualization.PieChart(document.getElementById('stats_dataset'));
 

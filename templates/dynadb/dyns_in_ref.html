@@ -23,12 +23,48 @@
   {% load dynadb %}
   {% block addon_css %}
   <style>
-    .container {
-      width: 90%;
+    .container{
+    width: 90%;
+    }
+    .dataTables_wrapper .myfilter .dataTables_filter{
+        float:left;
+        font-size:16px;
+        margin:10px 0;
+    }
+    .dataTables_wrapper .mylength .dataTables_length{
+        float:right;
+        font-size:16px;
+        margin:10px 0;
+    }
+
+    #table_id_wrapper {
+        top:100px;
+    }
+
+    .active {
+        font-weight: bold;
+    }
+
+    .dt-buttons button{
+        background-color: white;
+        color: #171010;
+        border: 2px solid #BF3C1F;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 4px;
+        padding: 6px 12px;
+    }
+
+    .dt-buttons button:hover{
+        background-color: #171010;
+    }
+
+    .dt-buttons button:hover span{
+        color: white;
     }
   </style>
   {% endblock %}
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+  {% comment %} <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css"> {% endcomment %}
   <base href="your_domain/" target="_PARENT">
 </head>
 
@@ -56,10 +92,30 @@
               href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}
               </a>) {%endif%} </p> <hr style="margin:40px 0">
         </div>
+        <div id = "colmenu" class="colSelection col-md-12" style="padding-bottom: 10px;">
+            <p>Show columns: </p>
+            <a class="searchCols textlink toggle-vis active" data-column="1">Receptor</a> - 
+            <a class="searchCols textlink toggle-vis " data-column="2">Uniprot entry name</a> - 
+            <a class="searchCols textlink toggle-vis " data-column="3">Uniprot id</a> - 
+            <a class="searchCols textlink toggle-vis " data-column="4">Family</a> - 
+            <a class="searchCols textlink toggle-vis active" data-column="5">Class</a> - 
+            <a class="searchCols textlink toggle-vis active" data-column="6">PDB id</a> -
+            <a class="searchCols textlink toggle-vis " data-column="7">State</a> - 
+            <a class="searchCols textlink toggle-vis " data-column="8">Species</a> -
+            <a class="searchCols textlink toggle-vis " data-column="9">Model type</a> -
+            <a class="searchCols textlink toggle-vis " data-column="10">Ligand(s)</a> -
+            <a class="searchCols textlink toggle-vis " data-column="11">Model name</a> -
+            <a class="searchCols textlink toggle-vis " data-column="12">Num. of atoms</a> -
+            <a class="searchCols textlink toggle-vis " data-column="13">Membrane composition</a> -
+            <a class="searchCols textlink toggle-vis " data-column="14">Simulation time</a> -
+            <a class="searchCols textlink toggle-vis " data-column="15">Software</a> -
+            <a class="searchCols textlink toggle-vis " data-column="16">Force field</a> -
+            <a class="searchCols textlink toggle-vis active" data-column="17">Submitted by</a>
 
+        </div>
         {% if tabledata %}
         <div style="padding:20px">
-          <table id="table_id" class="display" style="display: none;font-size: 13px;width:100%">
+          <table id="table_id" class="display" style="font-size: 13px;width:100%">
             <thead>
               <tr>
                 <th> </th>
@@ -81,86 +137,92 @@
                 <th>Software</th>
                 <th>Force field</th>
                 <th>Submitted by</th>
+                <th> </th>
               </tr>
             </thead>
             <tbody>
               {% for data in tabledata %}
-              <tr>
-                <td class="links">
-                  {% if data.not_GPCR %}
-                  <a style="width:105px;text-align:left" href="/view/nongpcr/{{data.dyn_id}}/"
-                    class="btn btn-default btn-xs" role="button">Open in MDsrv</a>
+             <tr class="searchTable">
+                  <td class="links">
+                      {% if data.not_GPCR %}
+                          <a style="width:105px;text-align:left" href="/view/nongpcr/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
+                      {% else %}
+                          <a href="/view/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">View</a>
+                      {% endif %}
+                  </td>
+                  <!--<td>
+                      {{data.dyn_id}}
+                  </td>-->
+                  <td class="receptor">
+                      {% if data.not_GPCR %}
+                          {{data.prot_name}}
+                      {% else %}
+                          <a  class='searchLink' title="Check receptor info" href="/dynadb/protein/id/{{data.prot_id}}/">{{data.prot_name}}</a>
+                      {% endif %}
+                  </td>
+                  <td class="uniprotentryname">
+                      {% for up in data.uprot_entry %}
+                          {{up}}
+                      {% endfor %}
+                  </td>
+                  <td class="uniprotid">
+                      {% for up in data.uniprot %}
+                          <a class='searchLink' title="Go to Uniprot page"  target="_blank" href="https://www.uniprot.org/uniprot/{{up}}" alt="Go to Uniprot page">{{up}}</a>
+                      {% endfor %}
+                  </td>
+                  <td  class="family">{{data.fam_name}}</td>
+                  <td  class="gpcrclass">{{data.class_name}}</td>
+                  {% if is_hm %}
+                      <td  class="pdbid">{{data.pdb_namechain}}</td>
                   {% else %}
-                  <a style="width:105px;text-align:left" href="/view/{{data.dyn_id}}/" class="btn btn-default btn-xs"
-                    role="button">Go to Workbench</a>
-                  <a style="width:105px;text-align:left" href="/dynadb/dynamics/id/{{data.dyn_id}}/"
-                    class="btn btn-default btn-xs" role="button">Go to Report</a>
+                  <td class="pdbid"><a class='searchLink' title="Go to PDB page" target="_blank" href="https://www.rcsb.org/structure/{{data.pdbid}}" alt="Go to PDB page">{{data.pdb_namechain}}</a></td>
                   {% endif %}
-                </td>
-                <td class="receptor">
-                  {% if data.not_GPCR %}
-                  {{data.prot_name}}
-                  {% else %}
-                  <a href="/dynadb/protein/id/{{data.prot_id}}/">{{data.prot_name}}</a>
-                  {% endif %}
-                </td>
-                <td class="uniprotentryname">
-                  {% for up in data.uprot_entry %}
-                  {{up}}
-                  {% endfor %}
-                </td>
-                <td class="uniprotid">
-                  {% for up in data.uniprot %}
-                  <a href="https://www.uniprot.org/uniprot/{{up}}">{{up}}</a>
-                  {% endfor %}
-                </td>
-                <td class="family">{{data.fam_name}}</td>
-                <td class="gpcrclass">{{data.class_name}}</td>
-                {% if is_hm %}
-                <td class="pdbid">{{data.pdb_namechain}}</td>
-                {% else %}
-                <td class="pdbid"><a href="https://www.rcsb.org/structure/{{data.pdbid}}">{{data.pdb_namechain}}</a></td>
-                {% endif %}
-                <td class="state">{{data.state}}</td>
-                <td class="species"><i>{{data.species}}</i></td>
-                <td class="modeltype">{{data.modeltype}}</td>
-                <td class="ligands">
-                  {% if data.not_GPCR %}
-                  {% for lig in data.lig_li %}
-                  {% autoescape off %}{{lig | limitlength:60}}{% endautoescape %}
-                  {% endfor %}
-                  {% else %}
-                  {% for lig in data.lig_li %}
-                  {% if lig.2 %}
-                  <!-- Protein ligand -->
-                  <a
-                    href="/dynadb/protein/id/{{lig.1}}/">{% autoescape off %}{{lig.0 | limitlength:60}}{% endautoescape %}</a>
-                  {% else %}
-                  <a
-                    href="/dynadb/molecule/id/{{lig.1}}/">{% autoescape off %}{{lig.0 | limitlength:60}}{% endautoescape %}</a>
-                  {% endif %}
-                  {% endfor %}
-                  {% endif %}
-                </td>
-                <td class="modelname">{% autoescape off %}{{data.modelname | limitlength:60}}{% endautoescape %}</td>
-                <td class="numofatoms">{{data.atom_num}}</td>
-                <td class="membranecomposition">
-                  {% if data.not_GPCR %}
-                  {{data.memb_comp}}
-                  {% else %}
-                  {% for lip in data.memb_comp %}
-                  <a href="/dynadb/molecule/id/{{lip.1}}/">{{lip.0}}</a>
-                  {% endfor %}
-                  {% endif %}
-                </td>
-                <td class="simtime">{{data.simtime}}</td>
-                <td class="software">{{data.software}}</td>
-                <td class="forcefield">{{data.forcefield}}</td>
-                <td class="author">{{data.author}}</td>
+                 <td class="state">{{data.state}}</td>
+                  <td  class="species"><i>{{data.species}}</i></td>
+                  <td class="modeltype">{{data.modeltype}}</td>
+                  <td class="ligands">
+                      {% if data.not_GPCR %}
+                          {% for lig in data.lig_li %}
+                              {% autoescape off %}{{lig | limitlength:60}}{% endautoescape %}
+                          {% endfor %}
+                      {% else %}
+                          {% for lig in data.lig_li %}
+                              {% if lig.2 %} <!-- Protein ligand -->
+                                  <a  class='searchLink' title="Check ligand info" href="/dynadb/protein/id/{{lig.1}}/">{% autoescape off %}{{lig.0 | limitlength:60}}{% endautoescape %}</a>
+                              {% else %}
+                                  <a  class='searchLink' title="Check ligand info" href="/dynadb/molecule/id/{{lig.1}}/">{% autoescape off %}{{lig.0 | limitlength:60}}{% endautoescape %}</a>
+                              {% endif %}
+                          {% endfor %}
+                      {% endif %}
+                  </td>
+                  <td class="modelname">
+                      {% autoescape off %}{{data.modelname | limitlength:60}}{% endautoescape %}
+                  </td>
+                  <td class="numofatoms">{{data.atom_num}}</td>
+                  <td class="membranecomposition">
+                      {% if data.not_GPCR %}
+                          {{data.memb_comp}}
+                      {% else %}
+                          {% for lip in data.memb_comp %}
+                              <a  class='searchLink' href="/dynadb/molecule/id/{{lip.1}}/">{{lip.0}}</a>
+                          {% endfor %}
+                      {% endif %}
+                  </td>
+                  <td class="simtime">{{data.simtime}}</td>
+                  <td class="software">{{data.software}}</td>
+                  <td class="forcefield">{{data.forcefield}}</td>
+                  <td class="author">{{data.author}}</td>
+                  <td class="links1">
+                      {% if data.not_GPCR %}
+                          <a  href="/view/nongpcr/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
+                      {% else %}
+                          <a href="/dynadb/dynamics/id/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Report</a>
+                      {% endif %}
+                  </td>
               </tr>
               {% endfor %}
-            </tbody>
-          </table>
+          </tbody>
+        </table>
         </div>
         {% else %}
         <div class="row">          
@@ -195,11 +257,23 @@
 <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 
 <!-- END From base.html -->
-
+{% comment %} 
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
 <!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js">
-</script>
+</script> {% endcomment %}
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css"><!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+<link rel="stylesheet" type="text/css" src="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/fixedheader/3.2.3/js/dataTables.fixedHeader.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 
 <script type="text/javascript" src="{% static 'dynadb/searchtable.js' %}"></script>
 {% endblock %}

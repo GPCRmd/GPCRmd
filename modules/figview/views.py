@@ -12,6 +12,7 @@ import json, os
 
 @ensure_csrf_cookie
 def figviewer(request,figviewname):
+    request.session.set_expiry(0)
     mdsrv_url=obtain_domain_url(request)
     modelsfile=list(Figview.objects.filter(title=figviewname).values_list('strucfile'))
     

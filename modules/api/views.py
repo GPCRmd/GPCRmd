@@ -10,8 +10,9 @@ from rest_framework import generics
 from rest_framework.response import Response
 
 from modules.api.serializers import *
-from modules.dynadb.models import DyndbDynamics, DyndbModel, DyndbProtein
+from modules.dynadb.models import DyndbDynamics, DyndbModel, DyndbProtein, DyndbSubmissionMolecule
 from modules.protein.models import ProteinFamily
+from modules.interaction.models import StructureLigandInteraction
 
 #search_dyn_class
 class SearchByClass(generics.ListAPIView):
@@ -32,6 +33,58 @@ class SearchByClass(generics.ListAPIView):
             class_slugs.append({"classname":cl, "fam_ids":f_ids})
 
         return class_slugs
+
+# search_comp    
+class SearchCompound(generics.ListAPIView):
+    """
+    Retrieve information about the compounds elements simulated in GPCRmd grouped by type. 
+    
+    Use as input the next ids as a list to select the role of the ligand (e.g. 1, 3, 4): 
+     0 - All
+     1 - Orthosteric ligand
+     2 - Allosteric ligand
+     3 - Crystallographic ions
+     4 - Crystallographic lipids
+     5 - Crystallographic waters
+     6 - Other co-crystalized item
+     7 - Bulk waters
+     8 - Bulk lipids
+     9 - Bulk ions
+    10 - Other bulk component
+    """
+    serializer_class = CompRoleSerializer # Get info from DyndbDynamics using ids relationships
+
+    def get_queryset(self, *args, **kwargs):
+        d_comp_type = {
+            0:'Orthosteric ligand',
+            1:'Allosteric ligand',
+            2:'Crystallographic ions',
+            3:'Crystallographic lipids',
+            4:'Crystallographic waters',
+            5:'Other co-crystalized item',
+            6:'Bulk waters',
+            7:'Bulk lipids',
+            8:'Bulk ions',
+            9:'Other bulk component',
+        }
+
+        ligrole = self.kwargs['ligroleids']
+        ligrole = ligrole.replace(" ", "").upper()
+        ligrole = ligrole.split(",")
+        l_lig_ids = [] 
+        if "0" in ligrole:
+            ligrole = list(DyndbSubmissionMolecule.objects.order_by("type").values_list("type", flat = True).distinct())
+        ligrole = list(filter(None, ligrole)) # Remove empty strings in list
+        for lt in ligrole: 
+            lt_m = int(lt)-1
+            try:
+                mol_ids = list(DyndbSubmissionMolecule.objects.filter(type=lt_m).values_list("molecule_id_id", flat = True))
+                sub_ids = list(DyndbSubmissionMolecule.objects.filter(type=lt_m).values_list("submission_id_id", flat = True))
+            except:
+                continue
+            l_lig_ids.append({"ligrole":d_comp_type[lt_m], "molecule_ids":mol_ids, "submission_ids":sub_ids})
+
+        return l_lig_ids
 
 # search_dyn_lig_type    
 class SearchByLigType(generics.ListAPIView):
@@ -248,6 +301,7 @@ class AllDownloader:
 @login_required
 @csrf_protect
 def download_all(request): 
+    request.session.set_expiry(0)
     l_dyns = AllDownloader(request.GET['dyn_ids'], request.user.id)
     l_dyns.prepare_file()
     data = dict()

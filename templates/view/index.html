@@ -171,7 +171,7 @@
 
                         <!-- view_screen -->
                         <div id="view_screen" class="row str_file" data-struc_file={{structure_file}}
-                          data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}}
+                          data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-pocket_id={{pocket_id}}
                           data-all_chains="{{all_chains}}" data-delta="{{delta}}" data-pdb_muts="{{pdb_muts}}"
                           data-pdb_vars="{{pdb_vars}}" data-seg_li="{{seg_li}}" data-light_sel="{{light_sel}}"
                           data-heavy_comp_sel="{{heavy_comp_sel}}" data-exception_light="{{exception_light}}"
@@ -2777,12 +2777,12 @@
                                             <td style="text-align:left">
                                               <center>
                                                 <div class="slider_volmap"
-                                                  style="max-width:150px;display:inline-block;float:left;margin-left:-30px">
+                                                  style="max-width:150px;display:inline-block;float:left;margin-top:10px">
                                             <input class="slider_volmap" data-valtype="transparency"
                                               data-map="occupancy" value="0.5" min="0" max="1" step="0.1" type="range">
                                                 </div>
                                                 <div class="slider_val" id="slider_val_trans"
-                                                  style="width:20px;display:inline;float:left">1</div>
+                                                  style="margin-left:10px;display:inline;float:left">0.5</div>
                                               </center>
                                             </td>
                                           </tr>
@@ -2793,12 +2793,12 @@
                                             <td style="text-align:left">
                                               <center>
                                                 <div class="slider_volmap"
-                                                  style="max-width:150px;display:inline-block;float:left;margin-left:-30px">
+                                                  style="max-width:150px;display:inline-block;float:left;margin-top:10px">
                                                   <input class="slider_volmap" data-valtype="smoothness" data-map="occupancy"
                                                     value="1" min="0" max="10" step="0.5" type="range">
                                                 </div>
                                                 <div class="slider_val" id="slider_val_smooth"
-                                            style="display:inline;float:left">10</div>
+                                            style="margin-left:10px;display:inline;float:left">1</div>
                                               </center>
                                             </td>
                                           </tr>
@@ -2810,12 +2810,12 @@
                                             <td style="text-align:left">
                                               <center>
                                                 <div class="slider_volmap"
-                                                  style="max-width:150px;display:inline-block;float:left;margin-left:-30px">
+                                                  style="max-width:150px;display:inline-block;float:left;margin-top:10px">
                                                   <input class="slider_volmap" data-valtype="isolevel" data-map="occupancy"
                                                     value="0.3" min="0" max="1" step="0.01" type="range">
                                                 </div>
                                                 <div class="slider_val" id="slider_val_occupancy"
-                                                  style="width:20px;display:inline;float:left">1</div>
+                                                  style="margin-left:10px;display:inline;float:left">0.3</div>
                                               </center>
                                             </td>
                                           </tr>
@@ -4002,7 +4002,8 @@
 
 
                               <!-- ============= Allosteric Paths (ap, Vicente's stuff) =========== -->
-                            {% if ap_data_avail %} 
+                            {% comment %} {% if ap_data_avail %} {% endcomment %}
+                            {% if dyn_id %} 
                               {% else %}
                               <div class="row">
                                 <div id="analysis_ap_pan" class="section_pan" data-toggle="collapse"
@@ -4302,7 +4303,6 @@
     });
   </script>
 
-
   <script src="{% static 'view/emb_ngl_viewer.js' %}"></script>
 
   <!-- Flare plots -->
@@ -4330,14 +4330,16 @@
   <!-- Updated datatable links, with buttons and selection -->
 
 <!-- Silenced because it was creating two sorting arrows on the table -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/1.5.0/css/select.dataTables.min.css"/>
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.3.2/css/buttons.dataTables.min.css"/>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/1.5.0/css/select.dataTables.min.css"/>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.3.2/css/buttons.dataTables.min.css"/>
 
   <script type="text/javascript" src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
   <script type="text/javascript" src="https://cdn.datatables.net/select/1.5.0/js/dataTables.select.min.js"></script>
   <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.2/js/dataTables.buttons.min.js"></script>
 
-  
+  {% if pocket_id %}
+  <script src="{% static 'view/default_pockets.js' %}"></script>
+  {% endif %}
 
   {% endblock %}
 

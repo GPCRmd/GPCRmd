@@ -1,4 +1,4 @@
-from modules.dynadb.models import DyndbDynamics, DyndbModel, DyndbProtein, DyndbDynamicsComponents, DyndbModelComponents 
+from modules.dynadb.models import DyndbDynamics, DyndbModel, DyndbProtein, DyndbDynamicsComponents, DyndbModelComponents, DyndbSubmissionMolecule, DyndbMolecule, DyndbSubmission, DyndbCompound
 from modules.protein.models import ProteinConformation, ProteinState, Protein
 from rest_framework import serializers
 import copy
@@ -31,6 +31,41 @@ class DynsClassSerializer(serializers.ModelSerializer):
         fields = ['classname', 
             'dyn_id']
 
+# search_comp/ 
+class CompRoleSerializer(serializers.ModelSerializer):
+    ligrole = serializers.SerializerMethodField()
+    liginfo = serializers.SerializerMethodField()
+
+    def get_ligrole(self,obj):
+        ligrole = obj["ligrole"] 
+
+        return ligrole
+
+    def get_liginfo(self,obj):
+        lig_info = {}
+        mol_ids = obj["molecule_ids"] 
+        sub_ids = obj["submission_ids"]
+        for i, mol in enumerate(mol_ids):
+            sub_info = DyndbSubmission.objects.filter(id=sub_ids[i]).values()[0]
+            published = sub_info["is_published"]
+            if published: 
+                mol_ind = {}
+                mol_ind_info = DyndbMolecule.objects.filter(id=mol).values()[0]
+                id_comp = mol_ind_info["id_compound_id"]
+                comp_info = DyndbCompound.objects.filter(id=id_comp).values()[0]
+                name = comp_info["name"]
+                smiles = mol_ind_info["smiles"]
+                inchikey = mol_ind_info["inchikey"]
+                mol_ind["smiles"] = smiles
+                mol_ind["inchikey"] = inchikey
+                lig_info[name] = mol_ind
+        return lig_info
+
+    class Meta:
+        model = DyndbSubmissionMolecule
+        fields = ['ligrole', 
+            'liginfo']
+        
 # search_dyn_lig_type/ 
 class DynsLigTypeSerializer(serializers.ModelSerializer):
     ligtype = serializers.SerializerMethodField()

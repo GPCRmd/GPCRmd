@@ -1457,7 +1457,7 @@ def generate_pocket_plot(request, pocket_data) -> json_item:
         for window_end, y in enumerate(y_raw):
             window_start = max(0, window_end - smoothing_window_size)
             # max() used in first volume, to not divide by 0
-            y = sum(y_raw[window_start:window_end+1]) / max(1, window_end - window_start)
+            y = sum(y_raw[window_start:window_end+1]) / max(1, window_end - window_start + 1)
             y_smooth.append(y)
 
         # Plot the pocket line
@@ -2055,7 +2055,7 @@ def sub_id_redirect(request,sub_id):
         return render(request, 'view/sub_id_redirect.html', context )
 
 @ensure_csrf_cookie
-def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, watervol_def=False,pharmacophore_def=False,tunnels_channels_def=False, ligprotint_def=False):
+def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, watervol_def=False,pharmacophore_def=False,tunnels_channels_def=False, ligprotint_def=False, pocket_id=[]):
 #    if request.session.get('dist_data', False):
 #        dist_data=request.session['dist_data']
 #        dist_dict=dist_data["dist_dict"]
@@ -2591,6 +2591,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                     (cs_data_avail, cs_sparta_avail, cs_selection_params, cs_resid_names, resid_to_resname)=load_chemshift_data(dyn_id,traj_list[0][2])
 
                     context={
+                        "pocket_id":pocket_id,
                         "is_debug":False, #Check
                         "test_cs":test_cs,
                         "aa3to1":json.dumps(d),
@@ -2667,6 +2668,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                     return render(request, 'view/index.html', context)
                 else:
                     context={
+                        "pocket_id":pocket_id,
                         "dyn_id":dyn_id,
                         "is_default_page":is_default_page,
                         "network_def":network_def,
@@ -2724,6 +2726,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
                 context={
+                        "pocket_id":pocket_id,
                         "dyn_id":dyn_id,
                         "is_default_page":is_default_page,
                         "network_def":network_def,
@@ -2779,6 +2782,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
             context={
+                    "pocket_id":pocket_id,
                     "dyn_id":dyn_id,
                     "is_default_page":is_default_page,
                     "network_def":network_def,

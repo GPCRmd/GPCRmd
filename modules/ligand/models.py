@@ -124,7 +124,7 @@ class Ligand(models.Model):
             try:
                 wl, created = WebLink.objects.get_or_create(index=web_resource_index, web_resource=web_resource)
             except IntegrityError:
-                wl = Weblink.objects.get(index=web_resource_index, web_resource=web_resource)
+                wl = WebLink.objects.get(index=web_resource_index, web_resource=web_resource)
             lp.web_links.add(wl)
 
         # try saving the properties, catch IntegrityErrors due to concurrent processing
