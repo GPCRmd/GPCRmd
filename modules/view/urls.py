@@ -23,7 +23,7 @@ urlpatterns = [
     re_path(r'^dwl/(?P<dyn_id>[0-9]+)/(?P<rmsd_id>rmsd_[0-9]+)/$', views.download_rmsd, name="download_rmsd"),
     re_path(r'^dwl/(?P<dyn_id>[0-9]+)/(?P<int_id>int_[0-9]+)/$', views.download_int, name="download_int"),
     re_path(r'^dwl/freq/(?P<dyn_id>[0-9]+)/(?P<bond_type>[a-z]+)/(?P<traj_path>.+\.(xtc|dcd))$', views.download_hb_sb, name="download_hb_sb"),
-    re_path(r'^docs/$', views.viewer_docs, name='viewer_docs'),
+    # re_path(r'^docs/$', views.viewer_docs, name='viewer_docs'),
     re_path(r'^hbonds/$', views.hbonds, name='hbonds'),
     re_path(r'^saltbridges/$', views.saltbridges, name='saltbridges'),
     re_path(r'^grid/$', views.sasa, name='sasa'),
@@ -40,6 +40,8 @@ urlpatterns = [
     re_path(r'^ap_update/(?P<dyn_id>[0-9]+)/$', views.ap_load_data, name="ap_load_data"),
     re_path(r'^get_pocket_plot_and_files/$', views.get_pocket_plot_and_files, name="get_pocket_plot_and_files"),
     re_path(r'^get_pocket_and_dyn_data/$', views.get_pocket_and_dyn_data, name="get_pocket_and_dyn_data"),
+    re_path(r'^get_interface_water_dic/$', views.get_interface_water_dic, name="get_interface_water_dic"),
+    re_path(r'^update_bokeh_interface_water/$', views.update_bokeh_interface_water, name="update_bokeh_interface_water"),
 ]
 
 

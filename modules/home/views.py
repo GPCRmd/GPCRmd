@@ -83,6 +83,7 @@ def gpcrmd_home(request):
 
     ################ Precompute & import    
     dynclass=dynall.annotate(subm_date=F('creation_timestamp'))
+    # dynclass=dynclass.annotate(frames=Coalesce()
     dynclass=dynclass.annotate(frames=F('dyndbfilesdynamics__framenum'))
     dynclass=dynclass.annotate(type=F('dyndbfilesdynamics__type'))
     dynclass=dynclass.annotate(is_traj=F('dyndbfilesdynamics__id_files__id_file_types__is_trajectory'))
@@ -96,7 +97,6 @@ def gpcrmd_home(request):
     dynall_values=dynclass.values("dyn_id","subm_date", "frames", "type", "delta","fam_slug","fam_slug2","is_published","is_traj","file_id","pdb_namechain", "is_gpcrmd_community")
     dyn_dict = {}
     #fam_d={"001":"A","002":"B1","003":"B2","004":"C","005":"F","006":"Taste 2","007":"Others"}
-
     gpcrmd_com_set = set()
     frames_set = set()
     delta_set = set()
@@ -129,6 +129,7 @@ def gpcrmd_home(request):
             dyn_dict[dyn_id]["delta"] = dyn["delta"]
             dyn_dict[dyn_id]["fam"]=fam
             dyn_dict[dyn_id]["is_gpcrmd_community"]=dyn["is_gpcrmd_community"]
+
             if dyn["is_traj"]:
                 dyn_dict[dyn_id]["trajs"]={dyn["file_id"]}
             else:
@@ -151,7 +152,7 @@ def gpcrmd_home(request):
     sim_ind = 0.0
     for d in sorted(dyn_dict.values(),key=lambda x:x["subm_date"]):
         subm_date_obj=d["subm_date"]
-        subm_date=subm_date_obj.strftime("%Y") # %b %Y / %m/%d/%Y        
+        subm_date=subm_date_obj.strftime("%Y") #  %b %Y / %m/%d/%Y
         syst_c+=1
         traj_c+=len(d["trajs"])
         if not subm_date in date_d:

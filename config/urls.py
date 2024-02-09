@@ -8,7 +8,7 @@ from modules.dynadb import views as dyn_views
 urlpatterns = [
     re_path(r'^', include('modules.home.urls')),
     re_path(r'^maintenance/', views.error503, name='maintenance'),
-    path(r'admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
     re_path(r'^accounts/', include('modules.accounts.urls')),
     re_path(r'^api/', include('modules.api.urls')),
     re_path(r'^contmaps/', include('modules.contact_maps.urls')),
@@ -17,6 +17,7 @@ urlpatterns = [
     re_path(r'^covid19/', include('modules.covid19.urls')),
     re_path(r'^dynadb/', include('modules.dynadb.urls')),
     re_path(r'^figview/', include('modules.figview.urls')),
+    re_path(r'^gpcr_gprot/', include('modules.gpcr_gprot.urls')),
     re_path(r'^gpcrome/', include('modules.crossreceptor_analysis.urls')),
     re_path(r'^mdsrv/(?P<path>Precomputed/.*)$',dyn_views.mdsrv_redirect,name='mdsrv_redirect'),
     re_path(r'^sc2md/', include('modules.sc2md.urls')),

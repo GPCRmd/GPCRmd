@@ -14,7 +14,6 @@ from django.conf import settings
 from modules.dynadb.models import DyndbFiles, DyndbSubmissionDynamicsFiles
 from modules.covid19.models import CovidFiles
 
-
 class Command(BaseCommand):
     help = "Admin commands to manage the GPCRmd database."
     
@@ -37,7 +36,7 @@ class Command(BaseCommand):
         protparser = parser.add_argument_group("Protein tables options", "Options to update the protein tables using data from GPCRdb.")
         protparser.add_argument("-p", "--protein", help="Update all the protein tables in the database. Englobe all the other options list below.", action="store_true")
         protparser.add_argument("-pf", "--protfamily", help="Update the protein family table in the database.", action="store_true")
-        protparser.add_argument("-ps", "--protstate", help="Update the protein state table in the database.", action="store_true")
+        protparser.add_argument("-ps", "--protstate", help="Update the protein state & pdb tables in the database.", action="store_true")
         protparser.add_argument("-pp", "--species", help="Update the species table in the database.", action="store_true")
         protparser.add_argument("-pg", "--gene", help="Update the gene table in the database.", action="store_true")
 
@@ -46,7 +45,6 @@ class Command(BaseCommand):
         dynparser.add_argument("-dm", "--dynmodel", help="Update the dyndb model table.", action="store_true")
     
     def handle(self, *args, **kwargs):
-        
         # General functions
         def replace_func(field_name, find_str, replace_str):
             return Func(

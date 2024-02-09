@@ -98,7 +98,7 @@
                       <p class="falselist">Middle button click: center camera on atom.</p>
                       <p style="padding-left:15px">Right button hold and move: translate camera in screen plane.</p>
                     </span>
-                    <p>For more information, see the <a class='textlink' href="https://gpcrmd-docs.readthedocs.io/en/latest/workbench.html#simulation-workbench" target="_blank">docs</a>.
+                    <p>For more information, see the <a class='textlink' href="https://gpcrmd-docs.readthedocs.io/en/latest/workbench.html#mouse-controls" target="_blank">docs</a>.
                     </p>
     
                   </div>
@@ -177,6 +177,8 @@
                           data-heavy_comp_sel="{{heavy_comp_sel}}" data-exception_light="{{exception_light}}"
                           data-network_default="{% if network_def %}true{% else %}false{% endif %}"
                           data-watervol_default="{% if watervol_def %}true{% else %}false{% endif %}"
+                          data-waterhap_default="{% if happiness %}true{% else %}false{% endif %}"
+                          data-waterhap_nums="{{num_interface_waters}}"
                           data-tunnels_channels_default="{% if tunnels_channels_def %}true{% else %}false{% endif %}"
                           data-ligprotint_default="{% if ligprotint_def %}true{% else %}false{% endif %}"
                           data-pharmacophore_default="{% if pharmacophore_def %}true{% else %}false{% endif %}"
@@ -186,6 +188,7 @@
                             <div id="legend" style="float:left;min-height:20px"> </div>
                             <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
                           </div>
+                          <span id="waterinterfaceinfo_par"></span>
                           <span id="varinfo_par"></span>
 
                           <div>
@@ -251,7 +254,12 @@
                                   <li id="showdists" style="padding:5px 10px 5px 10px;background-color:#FFF7F7"
                                       title="Click a pair of residues to show the distance betweent them."
                                       class="onclickshow is_active" data-short="dists">Distances</li>
-                                  {% if pdb_vars|length > 2 %}
+                                    {% if  happiness %}
+                                      <li id="showintwhats" style="padding:5px 10px 5px 10px;" data-short="int_waters"
+                                      title="Display interface waters." class="onclickshow">Interface waters
+                                      </li>
+                                    {% endif %}
+                                  {% if  pdb_vars|length > 2%}
                                     <li id="showvars" style="padding:5px 10px 5px 10px;" data-short="vars"
                                     title="Display known variants of the residue clicked." class="onclickshow">Variants
                                   </li>
@@ -555,7 +563,7 @@
                                       href="http://nglviewer.org/ngl/api/manual/usage/selection-language.html"
                                         target="_blank">NGL selection language</a>. Generic GPCR residue numbering can
                                       also be
-                                      used (more info <a class="textlink" href="https://gpcrmd-docs.readthedocs.io/en/latest/workbench.html#custom-selection"
+                                      used (more info <a class="textlink" href="/view/docs/#customsel"
                                         target="_blank">here</a>).</p>
                                   </div>
 
@@ -918,7 +926,7 @@
                                             </select>
                                           </div>
                                             <button class="col-md-4 indexBtnSize btn btn-link pull-right clear_conspos"
-                                            style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
+                                            style="color:#DC143C;margin-bottom:0;padding-bottom:0">Clear</button>
                                         </div>
         
                                           
@@ -1014,7 +1022,7 @@
                                               </select>
                                             </div>
                                               <button class="col-md-4 indexBtnSize btn btn-link pull-right clear_conspos"
-                                              style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
+                                              style="color:#DC143C;margin-bottom:0;padding-bottom:0">Clear</button>
                                           </div>
                                             
                                           </div>
@@ -1114,7 +1122,7 @@
                                               </select>
                                             </div>
                                               <button class="col-md-4 indexBtnSize btn btn-link pull-right clear_conspos"
-                                              style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
+                                              style="color:#DC143C;margin-bottom:0;padding-bottom:0">Clear</button>
                                           </div>
           
                                             
@@ -1394,7 +1402,7 @@
                                               {% endif %}
                                             </div>
                                             <button class="btn btn-link pull-right clear_conspos ed_section"
-                                              style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
+                                              style="color:#DC143C;margin-bottom:0;padding-bottom:0">Clear</button>
                                           </div>
                                         </div>
 
@@ -1478,7 +1486,7 @@
                                                 {% endif %}
                                               </div>
                                               <button class="btn btn-link pull-right clear_conspos ed_section"
-                                                style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
+                                                style="color:#DC143C;margin-bottom:0;padding-bottom:0">Clear</button>
                                             </div>
                                           </div>
                                         {% endfor %}
@@ -1618,13 +1626,13 @@
                                               <td style="text-align:center">
                                                 <label class="checkbox" style="margin:0">
                                                   <input checked type="checkbox" disabled class="EDdisplay" value="2fofc"
-                                                    style="margin-left:-5px;margin-top:0,margin-bottom:0">
+                                                    style="margin-left:-5px;margin-top:0;margin-bottom:0">
                                                 </label>
                                               </td>
                                               <td style="text-align:center">
                                                 <label class="checkbox" style="margin:0">
                                                   <input checked type="checkbox" disabled class="EDdisplay" value="fofc"
-                                                    style="margin-left:-5px;margin-top:0,margin-bottom:0">
+                                                    style="margin-left:-5px;margin-top:0;margin-bottom:0">
                                                 </label>
                                               </td>
                                             </tr>
@@ -2222,7 +2230,7 @@
                                             <button id="ShowAllHbIntra" class="btn btn-default"
                                               style="padding:5px;margin-left:10px;margin-right:15px;margin-bottom:20px;visibility:hidden;">Show
                                               All</button>
-                                            <button style="color:#DC143C;margin-bottom;0;padding-bottom:0"
+                                            <button style="color:#DC143C;margin-bottom:0;padding-bottom:0"
                                               class="btn btn-link pull-right clearAnalysisView" id="clear_showhb">Clear
                                               table</button>
       
@@ -2243,7 +2251,7 @@
                                             <button id="ShowAllHbInter" class="btn btn-default"
                                               style="padding:5px;margin-left:10px;margin-right:15px;visibility:hidden;">Show
                                               All</button>
-                                            <button style="color:#DC143C;margin-bottom;0;padding-bottom:0"
+                                            <button style="color:#DC143C;margin-bottom:0;padding-bottom:0"
                                           class="btn btn-link pull-right clearAnalysisView"
                                           id="clear_showhb_inter">Clear
                                               table</button>
@@ -2438,7 +2446,7 @@
                                             <button id="ShowAllSb" class="btn btn-default"
                                               style="padding:5px;margin-left:10px;margin-right:15px;visibility:hidden">Show
                                               All</button>
-                                            <button style="color:#DC143C;margin-bottom;0;padding-bottom:0"
+                                            <button style="color:#DC143C;margin-bottom:0;padding-bottom:0"
                                               class="btn btn-link pull-right clearAnalysisView" id="clear_showsb">Clear
                                               table</button>
                                             <a role="button"
@@ -2715,15 +2723,33 @@
                               <!-- ============= Water Map Analysis =========== -->
                               {% if watermaps %}      
                                 <div class="row">
-                            <div id="analysis_watermap_pan" class="section_pan" data-toggle="collapse"
-                              data-target="#analysis_watermap"
+                                  <div id="water_analysis_pan" class="section_pan" data-toggle="collapse"
+                                    data-target="#water_analysis"
                                     style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0;">
-                              <span>Water volume distribution </span><span id="analysis_watermap_icon"
+                                    <span>Water distribution</span><span id="water_analysis_icon"
                                 style="float:right;margin-right:5px;"
-                                      class="glyphicon {% if watervol_def %}glyphicon-chevron-up{% else %}glyphicon-chevron-down{% endif %} arrow"></span>
+                                      class="glyphicon {% if watervol_def %}glyphicon-chevron-up{% else %}glyphicon-chevron-down{% endif %} arrow">
+                                    </span>
                                   </div>
                                 </div>
 
+                                <div id="water_analysis" class="collapse {% if ligprotint_def %}in{% endif %}"
+                                style="padding-left:15px;">    
+
+                                <!-- ============= Subsec: volume Analysis =========== -->      
+                                <div class="row">
+                                  <div id="analysis_watermap_pan" class="section_pan" data-toggle="collapse"
+                                    data-target="#analysis_watermap"
+                                      style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b3b3;border-radius:0;">
+                                      <span>
+                                        Volume distribution
+                                      </span>
+                                      <span id="analysis_watermap_icon" style="float:right;margin-right:5px;"
+                                        class="glyphicon glyphicon-chevron-down arrow"></span>
+                                  </div>
+                                </div>
+
+                                <!--Water volume tool-->
                                 <div id="analysis_watermap" class="collapse {% if watervol_def %}in{% endif %}"
                                   data-occupancy_data="{{occupancy}}">
                             <div class="row" style="margin-top:10px;margin-bottom:15px;margin-left:18px">
@@ -2746,7 +2772,7 @@
                                               <label class="checkbox" style="margin:0">
                                           <input {% if watervol_def %}checked{% endif %} type="checkbox"
                                             value="occupancy" class="WaterDisplay"
-                                            style="margin-left:40px;margin-top:0,margin-bottom:0">
+                                            style="margin-left:40px;margin-top:0;margin-bottom:0">
                                               </label>
                                               <span id="loading_display_watermap"
                                                 style="display:none;margin-left:70px;">Loading... <img
@@ -2777,7 +2803,7 @@
                                             <td style="text-align:left">
                                               <center>
                                                 <div class="slider_volmap"
-                                                  style="max-width:150px;display:inline-block;float:left;margin-top:10px">
+                                                  style="max-width:150px;display:inline-block;float:left;margin-left:-30px;margin-top: 10px;">
                                             <input class="slider_volmap" data-valtype="transparency"
                                               data-map="occupancy" value="0.5" min="0" max="1" step="0.1" type="range">
                                                 </div>
@@ -2793,7 +2819,7 @@
                                             <td style="text-align:left">
                                               <center>
                                                 <div class="slider_volmap"
-                                                  style="max-width:150px;display:inline-block;float:left;margin-top:10px">
+                                                  style="max-width:150px;display:inline-block;float:left;margin-left:-30px;margin-top: 10px;">
                                                   <input class="slider_volmap" data-valtype="smoothness" data-map="occupancy"
                                                     value="1" min="0" max="10" step="0.5" type="range">
                                                 </div>
@@ -2810,7 +2836,7 @@
                                             <td style="text-align:left">
                                               <center>
                                                 <div class="slider_volmap"
-                                                  style="max-width:150px;display:inline-block;float:left;margin-top:10px">
+                                                  style="max-width:150px;display:inline-block;float:left;margin-left:-30px;margin-top: 10px;">
                                                   <input class="slider_volmap" data-valtype="isolevel" data-map="occupancy"
                                                     value="0.3" min="0" max="1" step="0.01" type="range">
                                                 </div>
@@ -2860,6 +2886,122 @@
                                   </div>
                                 </div>      
                               {% endif %}
+                                {% if waterhappiness %}
+                                <!-- XXXXXX -->
+                                <!--Water happiness subsection-->
+                                <div class="row">
+                                  <div id="water_happiness_pan" class="section_pan" data-toggle="collapse"
+                                    data-target="#water_happiness"
+                                      style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b3b3;border-radius:0;">
+                                      <span>
+                                        Water happiness
+                                      </span>
+                                      <span id="water_happiness_icon" style="float:right;margin-right:5px;"
+                                        class="glyphicon glyphicon-chevron-down arrow"></span>
+                                  </div>
+                                </div>
+
+                                <!--Water happiness tool-->
+                                <div id="water_happiness" class="collapse {% if waterhap_default %}in{% endif %}"
+                                  data-happiness_data="{{happiness}}">
+                                  <div class="row" style="margin-top:10px;margin-bottom:15px;margin-left:18px">
+                                    <!-- TABLE part -->
+                                    <div id="water_happiness_table" data-allinterwaters="[]" class="table-responsive">
+                                      <table class="table" style="font-size:14px">
+                                        <thead>
+                                          <tr>                                            
+                                            <th style="margin-left:10"> </th>
+                                          </tr>
+                                        </thead>
+        
+                                        <tbody>
+                                          <tr class= "col-md-12">
+                                            <td class="col-md-4 tdToolkit">
+                                              <p>Display interface waters</p>
+                                            </td>
+        
+                                            <td class="col-md-1 tdToolkit">
+                                              <label style="margin:0">
+                                                  <!-- {% if watervol_def %}checked{% endif %}  -->
+                                                  <input type="checkbox"
+                                                    value="happiness" class="WaterInterfaceDisplay biggerCheckbox">                                          
+                                                </label>
+                                                <span id="loading_display_waterhappiness"
+                                                  style="display:none;margin-left:70px;">Loading... <img
+                                                    src="{% static 'view/images/loading-gear.gif' %}"
+                                                    style="width:17px;height:17px;" />
+                                                </span>
+                                            </td>
+
+                                            <td class="col-md-7 tdToolkit">
+                                              <div id="interfaceColor" style="display: none;">
+                                                <span>Color by:</span>
+                                                <select id="water_interface_color_by" class="form-select" autocomplete="off">
+                                                  <option id="defColor" value="interfaceHB" selected="selected">Mean HBs</option>
+                                                  <option id="ocColor" value="interfaceOccupancy">Occupancy</option>
+                                                  <option id="hscColor" value="interfaceHScore">Happiness score</option>
+                                                  <option id="uscColor" value="interfaceUScore">Unhappiness score</option>
+                                                </select>
+                                              </div>
+                                            </td>
+                                          </tr> 
+                                          
+                                          <!-- Number of interface water slider --> 
+                                          <th style="margin-left:10"> </th>                                         
+                                          <tr class= "col-md-12">
+                                            <td id="numOfDisplayedCells" class="non-visible tdToolkit col-md-4" style=" text-align:left">Show top positions:</td>
+                                            <td id="numOfDisplayedCells_slide"  class="non-visible tdToolkit col-md-6" style=" text-align:left">
+                                              <center>
+                                                <div class="slider_interNum"
+                                                  style="max-width:150px;float:left;margin-left:-30px">
+                                                  <input id="intWatersSlider" class="slider_interNum slider_volmap slider_water_input" data-valtype="sele"
+                                                    value="" min="1" max="" step="1" type="range">
+                                                </div>
+                                                <div class="slider_val_interNum" id="slider_val_trans_interNum"
+                                                  style="display:inline;float:left">80</div>
+                                              </center>
+                                            </td>
+                                            
+                                          </tr class= "col-md-12">
+                                          <!-- Title for plot of clicked water interface cell -->   
+                                          <th style="margin-left:10"> </th> 
+                                          <tr id="waterinterfaceinfo_plot" class= "col-md-12"></tr>                          
+                                  
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                    <!-- error block -->
+                                    <div id="error_waterInt" class="error_cs alert alert-danger"
+                                      style="margin:10px 0; display: none;">
+                                      An unexpected error occurred.
+                                    </div>
+                                    <!-- Plots of clicked water interface cell -->  
+                                    <!-- HBs and Occupancy plot-->
+                                    <div id="interf_water_chart" class="col-md-12"></div>
+                                    <!-- Distribution plots -->
+                                    <div id="distr_selector_div" class="non-visible">
+                                      
+                                      <span>Plot:</span>
+                                      <select id="distr_selector" class="form-select" autocomplete="off">
+                                        <option id="plot_hbs" value="plot_hbs_val" selected="selected">HBs</option>
+                                        <option id="plot_occ" value="plot_occ_val">Occupancy</option>
+                                        <option id="plot_hap" value="plot_hap_val">Happiness score</option>
+                                        <option id="plot_unhap" value="plot_unhap_val">Unhappiness score</option>
+                                      </select>
+                                    </div>
+                                     
+                                    <div id="interf_water_score_chart" class="col-md-12"></div>
+                                    
+                                    <button id="clearWterPlots" 
+                                          class="non-visible indexBtnSize btn btn-danger"
+                                          type="button" style="margin-top:15px;"
+                                          title="Clear interface water plots.">
+                                          Clear
+                                        </button>
+                                  </div>
+                                </div> 
+                                {% endif %}
+                              </div>
 
                               <!-- ============= Pharmacophores =========== -->
                               {% if has_pharmacophores %}
@@ -3398,7 +3540,7 @@
                               <!-- ============= Chemical Shift (CS) =========== -->
                               {% comment %} {% if cs_data_avail %} {% endcomment %}
                               {% if dyn_id %} 
-                              {% else %}
+                              {% else %} {% endcomment %}
                                 <div class="row">
                                   <div id="analysis_cs_pan" class="section_pan check_if_cs_struc" data-toggle="collapse"
                                     data-target="#analysis_cs"><span>Chemical Shift (CS)</span><span id="analysis_cs_icon"
@@ -3760,9 +3902,9 @@
                               {% endif %}
       
                               <!-- ============= Allosteric communication (ac) =========== -->
-                              {% comment %} {% if ac_data_avail %}       {% endcomment %}
-                              {% if dyn_id %} 
-                              {% else %} 
+                              {% if ac_data_avail %}      
+                              {% comment %} {% if dyn_id %} 
+                              {% else %}                               {% endcomment %}
                                 <div class="row">
                                   <div id="analysis_ac_pan" class="section_pan" data-toggle="collapse"
                                     data-target="#analysis_ac">
@@ -4002,9 +4144,8 @@
 
 
                               <!-- ============= Allosteric Paths (ap, Vicente's stuff) =========== -->
-                            {% comment %} {% if ap_data_avail %} {% endcomment %}
-                            {% if dyn_id %} 
-                              {% else %}
+                              {% if ap_data_avail %}      
+
                               <div class="row">
                                 <div id="analysis_ap_pan" class="section_pan" data-toggle="collapse"
                                   data-target="#analysis_ap">
@@ -4028,7 +4169,7 @@
                                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             None selected <span class="caret"></span>
                                             {% for optnum in ap_options %}
-                                            <option data-btn="ap_numpaths" {% if optnum == 50 %} selected {% endif %} class="ap_option ap_inoption" value="{{optnum}}">{{optnum}}</option>
+                                            <option data-btn="ap_numpaths" {% if optnum == 1 %} selected {% endif %} class="ap_option ap_inoption" value="{{optnum}}">{{optnum}}</option>
                                             {% endfor %}
                                           </select>
                                         </div>
@@ -4099,6 +4240,7 @@
                               </form>
                             {% endif %}
 
+
                           </div><!-- end all_analysis --->
       
                         {% endif %}
@@ -4128,6 +4270,14 @@
 
   <!-- If tool selected from homepage open corresponding tab and close the others -->
   <script>
+    //Hide footer
+    $(document).ready(function () {
+      console.log('iep')
+      var oooo=document.getElementById("partners_section");
+      console.log(oooo);
+      document.getElementById("partners_section").style.display = 'none';
+    });
+
     function show_tool_icon(id) {
       document.getElementById(id).classList = "arrow_down glyphicon glyphicon-chevron-up arrow";
     }
@@ -4166,7 +4316,7 @@
     $(document).ready(function () {
       var path_list = window.location.href.split("/");
       var myTool = path_list.at(-1); //select the last element of the url
-      console.log(myTool);
+      // console.log(myTool);
       if (myTool.charAt(0) == '#') { //check if is is an 'id'
         switch (myTool) {
         // allosteric network
@@ -4199,7 +4349,7 @@
           break;
         // genetic variants
         case "#analysis_variants_pan":
-            var varData = {{pdb_vars | length}};
+          var varData = "{{pdb_vars | length}}";
             if (varData > 2) {
               scroll_to_tool(myTool.slice(1));
           show_tool_icon("analysis_variants_icon");
@@ -4237,12 +4387,12 @@
           }
           break;
         // water vol distribution
-        case "#analysis_watermap_pan":
+        case "#water_analysis_pan":
             var wData = "{{watermaps}}";
             if (wData != 'False') {
               scroll_to_tool(myTool.slice(1));
-          show_tool_icon("analysis_watermap_icon");
-          show_tool("analysis_watermap");
+          show_tool_icon("water_analysis_icon");
+          show_tool("water_analysis");
           hide_icon("analysis_fplot_icon");
           hide_panel("analysis_fplot");
             } else {
@@ -4251,7 +4401,7 @@
           break;
         // interaction network
         case "#analysis_fplot_pan":
-            scroll_to_tool(myTool.slice(1));
+          scroll_to_tool(myTool.slice(1));
           show_tool_icon("analysis_fplot_icon");
           show_tool("analysis_fplot");
           hide_icon("analysis_ac_icon");
@@ -4259,8 +4409,7 @@
           break;
         // rmsd
         case "#analysis_rmsd_pan":
-            console.log('EI');
-            scroll_to_tool(myTool.slice(1));
+          scroll_to_tool(myTool.slice(1));
           show_tool_icon("analysis_rmsd_icon");
           show_tool("analysis_rmsd");
           hide_icon("analysis_ac_icon");
@@ -4319,6 +4468,9 @@
   <script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-3.0.3.min.js"></script>
   {% if script_cs %}
     {{ script_cs | safe }}
+  {% endif %}
+  {% if script_interf_waters %}
+    {{ script_interf_waters | safe }}
   {% endif %}
   <!-- End Bokeh -->
 

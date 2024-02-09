@@ -3058,7 +3058,7 @@ def query_dynamics(request,dynamics_id):
     dyna_dic["mut_sel"]=mut_sel
 
     for match in DyndbReferencesDynamics.objects.select_related('id_references').filter(id_dynamics=dynamics_id):
-        ref={'id':match.id_references.id, 'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
+        ref={'id':match.id_references.id,'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
         counter=0
         for element in ref:
             if element is None:
@@ -11622,6 +11622,7 @@ def get_uniprot_seq(uniprotkbac):
     """
     Get the fasta sequence corresponding to a certain uniprot code
     """
+    uniprotkbac = uniprotkbac.rstrip()
     URL = 'http://www.uniprot.org/uniprot/'
     response = requests.get(URL+str(uniprotkbac)+'.fasta',stream=True)
     if response.ok:
@@ -11740,15 +11741,16 @@ def find_prots(request,submission_id):
             dps = DyndbProteinSequence.objects.get(id_protein=dp.id)
             prot_synonims = ';'.join(DOPN.values_list('other_names', flat=True)) if len(DOPN) else ''
             # Get Uniprot sequence (if any). Otherwise just take itself as model
-            if dp.uniprotkbac != "-":
-                uniseq = get_uniprot_seq(dp.uniprotkbac) if dp.uniprotkbac else dps.sequence
+            uniprotkbac = dp.uniprotkbac.rstrip() 
+            if uniprotkbac != "-":
+                uniseq = get_uniprot_seq(uniprotkbac) if uniprotkbac else dps.sequence
             else: #Proteins without uniprotkbac
                 uniseq = dps.sequence
             print("HOLITAAA", uniseq)
             # Extract data to send into form
             mydict = {
-                'uniprot': dp.uniprotkbac,
-                'notuniprot' : (not bool(dp.uniprotkbac)),
+                'uniprot': uniprotkbac,
+                'notuniprot' : (not bool(uniprotkbac)),
                 'isoform': dp.isoform,
                 'isIsoform' : (dp.isoform != 1),
                 'name': dp.name,
@@ -11759,7 +11761,7 @@ def find_prots(request,submission_id):
                 'segments' : [],
                 'mutations' : [],
                 'submission_id':submission_id,
-                'noGPCR' : (not bool(dp.receptor_id_protein)),# We asume all receptors in the database are GPCRs
+                'prot_type' : dp.prot_type,
             }
             # Extract segemnts of this protein, and the information on each one
             DMR = DyndbModeledResidues.objects.filter(id_model__dyndbsubmissionmodel__submission_id=submission_id, id_protein=dp.id)
@@ -11848,7 +11850,7 @@ def find_prots(request,submission_id):
                     'segments' : [],
                     'mutations' : [],
                     'submission_id': submission_id,
-                    'noGPCR' : False,
+                    'prot_type' : dp.prot_type,
             }
             # If there are segments in this chain, create a segment entry for every one
             if len(segids):
@@ -11905,8 +11907,8 @@ def get_seq_coordinates(id_model, prot_id, resid_from, resid_to, chain, segid):
     Obtain starting and ending positions of this segment in the reference Uniprot sequence (if any is avalible)
     """
     dp = DyndbProtein.objects.get(pk=prot_id)
-    if dp.uniprotkbac:
-        uniseq = get_uniprot_seq(dp.uniprotkbac) 
+    if dp.uniprotkbac and (dp.uniprotkbac != "-"):
+        uniseq = get_uniprot_seq(dp.uniprotkbac.rstrip()) 
         dm = DyndbModel.objects.get(pk=id_model)
         pdb_path = DyndbFilesDynamics.objects.get(id_dynamics__id_model=id_model, type=0).id_files.filepath
         # Obtain segment sequence of this dynamic
@@ -12028,7 +12030,7 @@ def save_protein_table(dictpost, entry_id, submission_id, mutation_ids, update_f
     if len(P):
         receptor_id = P[0].id
     # Find if there is already a protein entry for this protein in GPCRmd database, return its prot_id
-    uniprotkbac = dictpost['prot_uniprot'+entry_id]
+    uniprotkbac = dictpost['prot_uniprot'+entry_id].rstrip()
     print("UNIPROTKBAC",uniprotkbac)
     name = dictpost['name'+entry_id]
     isoform = dictpost['isoform'+entry_id]
@@ -12037,8 +12039,6 @@ def save_protein_table(dictpost, entry_id, submission_id, mutation_ids, update_f
             DP = DyndbProtein.objects.filter(uniprotkbac=uniprotkbac, isoform=isoform, name=name)
         else: 
             DP = DyndbProtein.objects.filter(uniprotkbac=uniprotkbac, isoform=isoform)
-        if len(DP):
-            return(DP[0].pk)
     # Get mutant sequences by applying our mutations into the GPCRdb sequence of the receptor (or the uniprot one, in case there is none in GPCRdb)
     tomutseq = P[0].sequence if len(P) else dictpost['unisequence'+entry_id] 
     mutseq = apply_mutations(dictpost, mutation_ids, entry_id, tomutseq)
@@ -12051,6 +12051,7 @@ def save_protein_table(dictpost, entry_id, submission_id, mutation_ids, update_f
         'name' : dictpost['name'+entry_id],
         'receptor_id_protein' : receptor_id,
         'id_uniprot_species' : dus.id,
+        'prot_type' : dictpost['prot_type'+entry_id]
     }
     # Check if this protein already exists for this submission. If so, update current entry
     DP = DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id=submission_id, dyndbsubmissionprotein__int_id=entry_id)
@@ -12731,10 +12732,7 @@ def step5_submit(request, submission_id):
     # Check whether the fdbREFF instance of dyndb_ReferenceForm is valid:
     SubmitRef=True
     qRFdoi=DyndbReferences.objects.filter(doi=request.POST['doi'])
-    try:
-        FRpk = FRpk[0] #Only works with a list of values
-    except:
-        pass
+    FRpk = FRpk[0]
     qSubmission=DyndbSubmission.objects.filter(id=submission_id)
     qT=list(qSubmission.filter(dyndbsubmissionprotein__submission_id=submission_id,dyndbsubmissionmolecule__submission_id=submission_id,dyndbsubmissionmodel__submission_id=submission_id,dyndbdynamics__submission_id=submission_id).values('dyndbsubmissionprotein__protein_id','dyndbsubmissionmolecule__molecule_id','dyndbsubmissionmolecule__molecule_id__id_compound','dyndbsubmissionmodel__model_id','dyndbdynamics__id'))
     dictprot={'id_protein':qT[0]['dyndbsubmissionprotein__protein_id'], 'id_references':FRpk}

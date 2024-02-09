@@ -19,7 +19,9 @@ def generate_gpcr_pdb (dyn_id, structure_file, retrieve_rel_dict=False):
     seq_pos_n=1
     all_chains=[]
     all_prot_names=[]
-    for prot_id, prot_name, prot_is_gpcr, prot_seq in dprot_li_all_info: #To classify chains by protein (dprot_chains is a dict:for each protein, has a list of each chain with its matchpdbfa results + the protein seq_pos)
+    #To classify chains by protein (dprot_chains is a dict:
+    # for each protein, has a list of each chain with its matchpdbfa results + the protein seq_pos)
+    for prot_id, prot_name, prot_is_gpcr, prot_seq in dprot_li_all_info: 
         all_prot_names.append(prot_name)
         seq_pos=[]
         dprot_chains[prot_id]=[[],[]]  

@@ -70,6 +70,25 @@ $(document).ready(function(){
     $(".waterswithin").on("change", function(){
         $("#selectionDiv").trigger("click");
     })
+    //show coloring options of interface waters if display is ON
+    $(".WaterInterfaceDisplay").on("click", function(){
+        var interfaceDisplay = $(".WaterInterfaceDisplay").prop("checked");
+        var sl_element = document.getElementById("numOfDisplayedCells");
+        var sl_element_aux = document.getElementById("numOfDisplayedCells_slide");
+        if (interfaceDisplay){
+            $("#interfaceColor").css("display","block");
+            sl_element.classList.remove("non-visible");
+            sl_element_aux.classList.remove("non-visible");
+
+        }else{
+            $("#interfaceColor").css("display","none");
+            sl_element.classList.add("non-visible");
+            sl_element_aux.classList.add("non-visible");
+        }
+    })
+    
+
+    
 
 
 
@@ -1674,6 +1693,96 @@ $(document).ready(function(){
         return(water_box)
     }
 
+/**
+ * Get the csv data of scorings occupancy and mean HBs for each interface water that
+ * is stored in a csv
+ * 
+ * @param {Object} csvPath - Data from the HTML, either user selected or
+ *     simulation specific.
+ */
+    function getHappinessData(callback) {
+        var dyn_id=$("#view_screen").data("dyn_id");
+        var selected_traj=$("#selectedTraj_id").html().match(/[0-9]*/).toString()
+
+
+        // Make post request to create the plot and retrieve the PDB files
+        $.ajax({
+            type: "POST",
+            url: "/view/get_interface_water_dic/", 
+            dataType: "json",
+            data: { 
+                "dyn_id":dyn_id,
+                "selected_traj":selected_traj
+            },                
+            success: function(result) {
+                //store interface water data into json
+                var waterInterface_data = result;
+                callback(waterInterface_data); // Call the callback function with the data
+            },
+            error: function(error){
+                errordiv = $("#error_waterInt");
+                // if (error.statusText=='no_happ_data_file'){ //when file Precomputed/waterHappiness/{str(traj_id)}_water_happiness_data_{str(dyn_id)}.csv exist but cannot be parsed
+                //     errordiv.html(error.responseText)
+                // } else{//no file found?? XXX
+                //     errordiv.html('An unexpected error ocurred')
+                // }
+                //     errordiv.show()
+            },
+            timeout: 600000
+        });
+    }
+    getHappinessData(function (waterInterface_data) {       
+        // get data from precomputed files
+        $("#water_happiness_table").attr('data-allinterwaters', JSON.stringify(waterInterface_data))
+    });
+
+/**
+ * Show the plots for the clicked water from the NGL viewer
+ */ 
+    var show_interface_water_plot= function (res_id,wHBs,waterPlot, plotBoth){//XXX
+        var dyn_id=$("#view_screen").data("dyn_id");
+        var selected_traj=$("#selectedTraj_id").html().match(/[0-9]*/).toString()
+        //Data to submit
+        $.ajax({
+            type: "POST",
+            url: "/view/update_bokeh_interface_water/", 
+            dataType: "json",
+            data: { 
+                "dyn_id":dyn_id,
+                "res_id":res_id,
+                "traj_id":selected_traj,
+                "wHBs":wHBs,
+                "waterPlot":waterPlot,
+                "plotBoth":plotBoth
+            },                
+            success: function(interf_water_result) {
+                if (plotBoth=='true'){
+                    //HBs and Occupancy plot
+                    var interf_water_result_str = interf_water_result['div_interf_waters'] + interf_water_result['script_interf_waters'];
+                    //add plot to html
+                    $("#interf_water_chart").html(interf_water_result_str)
+                }
+                // Scoring distribution
+                var score_result_str = interf_water_result['div_interf_waters_score'] + interf_water_result['script_interf_waters_score'];
+                //add plot to html
+                $("#interf_water_score_chart").html(score_result_str)
+            },
+            error: function(error){
+                errordiv = $("#error_waterInt");
+                if (error.statusText=='no_HBs_per_frame_file'){ 
+                    errordiv.html(error.responseText)
+                }else if (error.statusText=='no_water_happiness_data_file'){
+                    errordiv.html(error.responseText)
+                } else{//no file found
+                    errordiv.html('An unexpected error ocurred')
+                }
+                    errordiv.show()
+            },
+            timeout: 600000
+            
+        });
+    }
+    window.show_interface_water_plot=show_interface_water_plot; 
 
     function activate_row(row,triggerNGL){
         row.find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
@@ -6532,7 +6641,7 @@ $("#show_nearby_residues").on("change", function() {
         //if new trajectory is not the same as the old ones 
         if (!($(this).hasClass("tsel"))){
             // if any chemical shift plots have been loaded, update them
-            marker_satom = $("#cs_chart_satom .bk-Column")
+            marker_satom = $("#cs_chart_satom .bk-root")
             marker_comp = $("#cs_chart_comp .bk-root")
             marker_2d = $("#cs_chart_2d .plotly")
             if (marker_satom[0]){
@@ -6550,7 +6659,7 @@ $("#show_nearby_residues").on("change", function() {
     //Update frame of chemical shift plot whenever there is a frame change
     $("#analysis_cs").bind('update_cs_frame', function(e, frame) {
         // if there is a chart loaded
-        if ($("#cs_chart_satom .bk-root")[0]){
+        if ($("#cs_chart_satom .bk-Column")[0]){
             var cs_frameslider = Bokeh.documents[0].get_model_by_name("frameslider");
             cs_frameslider.value = frame
         }
@@ -6945,6 +7054,13 @@ $("#show_nearby_residues").on("change", function() {
         $(".showWhenNGLLoad").css("visibility","visible");
        // $("#loading").html("");
         $('#embed_mdsrv')[0].contentWindow.$('body').trigger('createNGL', [ cont_w , cont_w_in , cont_h_num ]);
+        setTimeout(function() {// Frame change to 1 and then to 0 to prevent pdb from appearing as first frame
+            // delay needed (1.5s) as the NGL viewer should be loaded before executing this
+            $('#embed_mdsrv')[0].contentWindow.$('body').trigger('changeframeNGL', [ 1 ]); 
+            $('#embed_mdsrv')[0].contentWindow.$('body').trigger('changeframeNGL', [ 0 ]);
+        }, 2000);
+
+        
     });
     
 

@@ -113,7 +113,7 @@ function align_sequences(id) {
 }
 
 class prot_entry { 
-	constructor(id, segid="", chain="", uniprot="", checkIsoform="", isoform="1", name="", aliases="", species_code="", species_name="", checkNoGPCR="", unisequence="", notuniprot=false) {
+	constructor(id, segid="", chain="", uniprot="", checkIsoform="", isoform="1", name="", aliases="", species_code="", species_name="", prot_type="", unisequence="", notuniprot=false) {
 		this.protTemplate = `	
     <div id="prot_entry${id}" data-id=${id} class='col-md-12 panel panel-primary panel_input prot_entry'>
       <div class='row prot_title'>
@@ -227,12 +227,19 @@ class prot_entry {
         <div class='row input_row'>
           <div class='col-md-3 label_div'>
             <p>
-              <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title="" data-original-title="Is this protein not a GPCR?"></span>            
-              Not a GPCR:
+              <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title="" data-original-title="Select the most fitting option for this protien"></span>            
+              Protein type:
             </p>
           </div>
-          <div class='col-md-1'>
-            <input type="checkbox" id='notaGPCR${id}' ${checkNoGPCR} form="mainform" class='readonly_text input_step input_step${id}' name='notaGPCR${id}' >
+          <div class="col-md-2 ">
+            <select form="mainform" required name="prot_type${id}" id="prot_type${id}" class="input_step input_step${id}">
+              <option disabled selected value> ---- </option>            
+              <option value="1">GPCR</option>
+              <option value="2">G protein subunit</option>
+              <option value="3">Beta arrestin</option>
+              <option value="4">Peptide ligand</option>
+              <option value="0">Other</option>
+            </select>
           </div>
         </div>
 
@@ -689,7 +696,7 @@ function create_prot_entries(data, container) {
       data_prot['aliases'],
       data_prot['species_code'],
       data_prot['species_name'],
-      data_prot['noGPCR'] ? 'checked' : '',
+      data_prot['prot_type'],
       data_prot['unisequence'],
       data_prot['notuniprot']
     )
@@ -718,11 +725,15 @@ function create_prot_entries(data, container) {
       add_mut_entry(i, mut['resid'], mut['from'], mut['to'])
     }
 
+    //Set type of protein, if any
+    $('#prot_type'+String(i)+' option[value="'+data_prot['prot_type']+'"]').prop('selected',true);
+    
     // Add 'addsegment' and 'addmutations' button
     add_segmut_buttons(i)
 
     //Listeners of events related to small molecules
     prot_listeners(i)
+
   }
 
   //Update number of entries in the form

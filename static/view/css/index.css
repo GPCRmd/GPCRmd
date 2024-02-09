@@ -2,6 +2,11 @@ a, a:hover, a:focus {
   color: #BF3C1F;
 }
 
+input.biggerCheckbox{
+  width: 25px;
+  height: 25px;
+}
+
 .btn{
   font-size:18px;
 }
@@ -717,4 +722,32 @@ a.cons_nav:hover{
 select.tunForm{
   height: 28px;
   font-size: 18px;
+}
+
+.non-visible{
+  display: none !important;
+}
+
+#interfaceColor{
+  text-align: left;
+}
+.tdToolkit{
+  border-top:none !important;
+}
+.slider_interNum{
+  margin-top:5px;
+}
+.slider_val_interNum{
+  margin-left:10px;
+}
+/* #interf_water_score_chart{ */
+.addMarginTop{
+  margin-top:30px;
+}
+/* #interf_water_chart{ */
+.addMarginBottom{
+  margin-bottom: 30px;
+}
+#distr_selector{
+  margin-left: 5px;
 }

@@ -571,6 +571,7 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
         recorded_ids['ec50']=[]
         recorded_ids['ic50']=[]
         recorded_ids['ki']=[]
+        # print(comple[:-2])
 
         kd=comple[5]
         ec_fifty=comple[6]
@@ -1073,7 +1074,7 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                                 print('can not generate molecule properties from SDF 2D file')
                                 return recorded_ids
                         else:
-                            print('no 2d file for that compound. error.',puchem_id) 
+                            print('no 2d file for that compound. error.',pubchem_id) 
                             return recorded_ids
 
                 try:

@@ -231,6 +231,7 @@ class DyndbDynamics(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     submission_id = models.OneToOneField(DyndbSubmission, models.DO_NOTHING, db_column='submission_id', blank=True, null=True) 
+    # is_published = models.ManyToManyField(DyndbSubmission, models.DO_NOTHING, db_column='is_published', blank=True, null=True) 
     is_published = models.BooleanField(default=False)
     class Meta:
         managed = True
@@ -543,7 +544,7 @@ class DyndbModel(models.Model):
         (1,'NMR'),
         (2,'Docking'),
         (3,'MD'),
-        (4,'Electron microscopy'),
+        (4,'Electron microscopy (CryoEM)'),
         (5,'Other')
     )
 
@@ -663,6 +664,14 @@ class DyndbUniprotSpeciesAliases(models.Model):
       unique_together = ("name", "id_uniprot_species")
 
 class DyndbProtein(models.Model):
+    PROTEIN_TYPE=(
+        (1,'GPCR'),
+        (2,'G protein subunit'),
+        (3,'Beta arrestin'),
+        (4,'Peptide ligand'),
+        (0,'Other')
+    )
+    prot_type = models.SmallIntegerField(choices=PROTEIN_TYPE, default=0) 
     uniprotkbac = models.CharField(max_length=10, blank=True, null=True)
     protein_creation_submission_id = models.ForeignKey('DyndbSubmission',models.DO_NOTHING, db_column='protein_creation_submission_id',  blank=True, null=True) 
     isoform = models.SmallIntegerField()

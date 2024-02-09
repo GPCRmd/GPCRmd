@@ -10,7 +10,7 @@ FILES_NO_LOGIN = False
 #Determine http or https (ssl)
 SSL=True
 DEV = False
-MAINTENANCE_MODE = 0 # 0 False 1 True
+MAINTENANCE_MODE = 1 # 0 False 1 True
 
 #Settings selection
 if DEV == False:
@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'modules.dynadb.apps.DynadbConfig',
     'modules.figview',
     'modules.home',
+    'modules.gpcr_gprot',
     'modules.interaction',
     'modules.ligand',
     'modules.manage_db',
@@ -57,7 +58,7 @@ INSTALLED_APPS = [
     'modules.residue',
     'modules.sc2md',
     'modules.structure',
-    'modules.view.apps.ViewConfig'
+    'modules.view.apps.ViewConfig',
 
 ]
 # INSTALLED_APPS = [
@@ -262,11 +263,11 @@ if DEBUG:
 SESSION_ENGINE="django.contrib.sessions.backends.file"
 
 #session expire
-SESSION_EXPIRE_SECONDS = 1800 # Expire after 30 minutes
+SESSION_EXPIRE_SECONDS = 3600 # Expire after 1h
 SESSION_EXPIRE_AFTER_LAST_ACTIVITY = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True #Invalid session
 
-SESSION_TIMEOUT_REDITECT = 'home:home'
+SESSION_TIMEOUT_REDIRECT = '/'
 
 #CACHE
 CACHES = {

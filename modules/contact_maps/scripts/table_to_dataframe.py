@@ -1,6 +1,5 @@
 from sys import argv,exit
 import pandas as pd
-from  numpy import array
 from json import loads, dump
 from  plotly.figure_factory import create_dendrogram
 import numpy as np
@@ -320,7 +319,7 @@ def frequencies(df):
     freq_table = { tuple(col.split("\n\n")):list(df_t[col].values) for col in df_t }
         
     # Convert previous dictionary to numpy array, and traspose it
-    freq_matrix = (array([freq_table[(r1, r2)] for (r1, r2) in freq_table])).T
+    freq_matrix = (np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])).T
 
     # Reorder according to clustering
     return freq_matrix

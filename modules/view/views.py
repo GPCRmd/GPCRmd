@@ -45,9 +45,11 @@ from collections import OrderedDict
 from bokeh.embed import components,json_item
 import scipy.stats
 from bokeh import palettes
-from bokeh.models import DataRange1d,ColumnDataSource,Label,HoverTool,CustomJS,Range1d, Slider, Span
-from bokeh.layouts import row, column
+from bokeh.models import DataRange1d,ColumnDataSource,Label,HoverTool,CustomJS,Range1d, Slider, Span, LinearAxis, Legend, LegendItem, SingleIntervalTicker, Circle
+from bokeh.layouts import row, column, gridplot
 from bokeh.plotting import figure, output_file, show
+from bokeh.transform import linear_cmap
+from bokeh.palettes import RdYlBu
 
 import plotly.express as px
 import plotly as pt
@@ -214,7 +216,7 @@ ac_options_codes = {
     'it' : 'GPCR_Interhelix',
     'sd' : 'Spatially_distant',
 }
-ap_options = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+ap_options = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 1]
 
 # Sort ac_options in ordered dict
 def tuple_to_ordered(mytuple):
@@ -1648,8 +1650,9 @@ def obtain_ed_align_matrix(dyn_id,traj_list):
     else:
         return False
 
-"""This function takes the dyn_id as argument and returns 2 dictionaries with the traj_id as key and the filepath as value. If the map does not exist, the key gets the value: None (string)"""
 def obtain_volmaps(dyn_id):
+    """This function takes the dyn_id as argument and returns 2 dictionaries with the 
+    traj_id as key and the filepath as value. If the map does not exist, the key gets the value: None (string)"""
 
     root = settings.MEDIA_ROOT
     occupancy_path = os.path.join(root, "Precomputed/WaterMaps")    #change this if the watermaps are in another folder! 
@@ -1673,15 +1676,269 @@ def obtain_volmaps(dyn_id):
                 #occupancy_files[traj_id] = None
                 continue
 
-        # if i['file_id'] not in density_files:
-        #     density_file = os.path.join(density_path, '%s_density_%s.dx' %(traj_id, dyn_id))
-        #     if os.path.isfile(density_file):
-        #         density_files[traj_id] = density_file
-        #     else:
-        #         #density_files[traj_id] = None
-        #         continue
 
     return (occupancy_files)
+
+def obtain_happiness_num(hap_file):
+    """Get the number of atoms in happiness pdb file to be displayed in the slider"""
+    with open(hap_file, 'r') as file:
+        num_lines = len(file.readlines())#last two lines are 'TER' and 'END'
+    return (num_lines-2)
+
+
+def obtain_happiness_paths(dyn_id):
+    """This function takes the dyn_id as argument and returns a list:
+    A dictionary with the possible traj_id as keys 
+    and the list of possible paths of the scoring, occ and HBs pdb files and csvs as value.
+    A dict with the traj_id and value as num of atoms"""
+
+    root = settings.MEDIA_ROOT
+    happiness_path = os.path.join(root, "Precomputed/waterHappiness")
+
+    trajfiles = DyndbFiles.objects.annotate(dynid=F('dyndbfilesdynamics__id_dynamics'))
+    trajfiles = trajfiles.filter(dynid=dyn_id, id_file_types__is_trajectory=True)
+    trajfiles = trajfiles.annotate(file_id=F('dyndbfilesdynamics__id_files_id'))
+    trajfiles = trajfiles.values('file_id')#ex: {'file_id': 10366}, {'file_id': 10367}, {'file_id': 10368}
+
+    happiness_length={}# key as traj_id, value as num of interface waters
+    happiness_lengths=set()
+    happiness_files = {}#dyn_id as key, value as list of path with three pdbs and csv
+    happiness_file_list=[]# list to be assigned as values of the dic
+    files=['HBs', 'happyScore', 'unh_hapScore', 'occupancy']
+
+    for i in trajfiles:#XXX need to be edited for other trajectories
+        traj_id = i['file_id']
+        if traj_id not in happiness_files:            
+            for name in files:
+                happiness_file = os.path.join(happiness_path, '%s_%s_%s.pdb' %(traj_id, name, dyn_id))
+                if os.path.isfile(happiness_file) and happiness_file.count(str(traj_id))==1:
+                    happiness_file_list.append(happiness_file) 
+                    happiness_lengths.add(obtain_happiness_num(happiness_file))
+                else:
+                    continue
+            csv_file = os.path.join(happiness_path, '%s_water_happiness_data_%s.csv' %(traj_id, dyn_id))
+            if os.path.isfile(csv_file):
+                happiness_file_list.append(csv_file)
+            happiness_files[traj_id]=happiness_file_list
+        happiness_file_list=[]
+        if len(happiness_lengths)==1:
+            happiness_length[str(traj_id)]=list(happiness_lengths)[0]
+        elif len(happiness_lengths)==0:
+            happiness_length[str(traj_id)]=0
+        else: 
+            print('More than one lenght in pdbs from interface waters')
+            happiness_length[str(traj_id)]=list(happiness_lengths)[0]
+        happiness_lengths=set()
+    return ([happiness_files, happiness_length])
+
+
+def get_interface_water_dic(request) -> HttpResponse:
+    """
+    From a POST request,  parse the csv file with interface water data and returns them.
+    """
+
+    # Initialize an empty dictionary to store the JSON data
+    json_data = {}
+
+    # Unpack POST request
+    dyn_id= request.POST.get("dyn_id")
+    traj_id= request.POST.get("selected_traj")
+    csv_path=settings.MEDIA_ROOT + f"Precomputed/waterHappiness/{str(traj_id)}_water_happiness_data_{str(dyn_id)}.csv"
+
+    # read the csv file and create a json with keys as residue index (resindex column of the csv)
+    try:
+        df = pd.read_csv(csv_path, index_col='resindex')#avoid first column (index)
+    except Exception:
+        return(HttpResponse('Error: file could not be parsed.', status=500,reason='no_happ_data_file',content_type='view/'+dyn_id))
+    json_data = df.to_dict(orient='index')    
+
+    # Pretty-print the JSON dictionary
+    json_str = json.dumps(json_data, indent=4)
+
+    return HttpResponse(json.dumps(
+        { "water_interface_data"  : json_data,
+        }
+        ), content_type="application/json")
+
+
+def get_column_name(index):
+    """Map the name of the selector to column name of the dataframe"""
+    if index=='plot_hbs_val':
+        return 'HBs'
+    elif index=='plot_occ_val':
+        return 'Occupancy'
+    elif index=='plot_hap_val':
+        return 'HappyScore'
+    else:
+        return 'Unh_HapScore'
+
+
+def show_happ_distribution(df, resid, toPlot):
+    """Plot the distribution of selected option (HB, occupancy, score hap, score unhap)"""
+
+    # Extract the value from the DataFrame
+    value=get_column_name(toPlot)
+    values = df[value].tolist()
+    resid_list = df.loc[df['resindex'] == int(resid), value].values
+    resid_value=resid_list[0]
+
+    # Create histogram
+    hist1, edges1 = np.histogram(values, bins=20)
+
+    # Create Bokeh figure
+    # Edit title
+    if value=='Unh_HapScore':
+        valueLabel = 'Unhappiness score'
+    elif value== 'HappyScore':
+        valueLabel = 'Happiness score'
+    else:
+        valueLabel=value
+    p1 = figure(title=f"Distribution of {valueLabel}", width=600, height=600)
+
+    # Add a vertical line at the specified resid_value 
+    line1 = Span(location=resid_value, dimension='height', line_color='red', line_width=2)
+    p1.add_layout(line1)
+
+    # Create line plots
+    p1.line(x=edges1, y=np.append(hist1, hist1[-1]), line_color="green", line_width=2)
+
+    # Set the x-axis and y-axis range to start at 0 
+    # if value=='Unh_HapScore':
+    #     print('minnnnnnnnn', min(values))
+    #     p1.x_range = Range1d(min(values), max(values))
+    # else:
+    #     p1.x_range = Range1d(0, max(values))
+    # p1.y_range = Range1d(0, max(hist1))
+
+    # Add extra x-axes at the bottom starting at 0 
+    # p1.extra_x_ranges = {"x_axis_bottom": Range1d(start=0, end=max(values))}
+
+    # Customize plot labels
+    p1.xaxis.axis_label = valueLabel
+    p1.yaxis.axis_label = "Counts"
+
+
+    # Add label in the vertical line
+    if resid_value<=max(values)/2:
+        label1 = Label(x=resid_value, y=max(hist1), text=f'Score for resid {resid}:\n {resid_value:.4f}', x_offset=10, y_offset=-30, text_color='red')
+    else:
+        label1 = Label(x=resid_value, y=max(hist1), text=f'Score for resid {resid}:\n {resid_value:.4f}', x_offset=-150, y_offset=-30, text_color='red')
+    p1.add_layout(label1)
+
+    if value=='Unh_HapScore':
+        p1.x_range = Range1d(min(values)-0.05, max(values)+0.05)
+    else:
+        p1.x_range = Range1d(0, max(values)+0.05)
+    p1.y_range = Range1d(0, max(hist1)+30)
+
+    return p1
+
+
+
+def show_HBs_occupancy_per_cell(df, mycell, wHBs, title=None):
+    """Plot the HBs and Occupancy per frame (converted to ns) of the clicked water cell"""
+    p = figure(title='HBs and Occupancy for atom id: ' + (title if title else mycell),
+               x_axis_label='Time(ns)', y_axis_label='HBs', width=900, height=550)
+
+    # Set the y-axis ticker to display only integer values
+    p.yaxis.ticker = SingleIntervalTicker(interval=1)
+
+    # Set the x-axis range
+    max_x_value = df['ns'].max()
+    p.x_range = Range1d(0, max_x_value+10)
+
+    # Create a color map for the 'Occupancy' dots
+    dot_color_mapper = linear_cmap(field_name='Occupancy', palette=[RdYlBu[11][0], RdYlBu[11][-1]], low=0, high=1)
+
+    # Bar plot for 'HBs'
+    p.vbar(x=df['ns'], top=df['HBs'], width=0.5, color='lightblue', legend_label='HBs')#x=df['ns']
+
+    # Create a data source for the 'Occupancy' dots with max value
+    max_occupancy_df = df[df['Occupancy'] == df['Occupancy'].max()]
+    max_occupancy_source = ColumnDataSource(data=dict(x=max_occupancy_df.index, y=max_occupancy_df['Occupancy'], Occupancy=max_occupancy_df['Occupancy']))
+
+    # Plot 'Occupancy' as dots with different colors, only for max values
+    occupancy_dot = p.circle(x='x', y='y', source=max_occupancy_source, size=10, color=dot_color_mapper, legend_label='Occupied')
+
+    # Set the y-axis range for 'HBs'
+    max_hbs = max(df['HBs'])
+    p.y_range = Range1d(start=0, end=max_hbs + 1)  # Add extra space at the top
+
+    #set x-axis interval
+    p.xaxis.ticker = SingleIntervalTicker(interval=100)
+
+    # Set the mean of 'HBs'
+    # hline = Span(location=float(wHBs), dimension="width", line_color="darkblue", line_width=2)
+    # p.add_layout(hline)
+
+    # Configure the legend
+    legend = Legend(items=[
+        LegendItem(label="HBs", renderers=[p.renderers[0],]),
+        LegendItem(label="Occupied", renderers=[occupancy_dot]),
+        # LegendItem(label="Mean HBs", renderers=[hline], index=2)  # Placeholder for the "Mean HBs" line
+    ])
+
+    return p
+
+
+
+def update_bokeh_interface_water(request):
+    """Create a plot for the clicked interface water cell with occupancy and HBs per frame"""
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.POST:
+        res_id= request.POST.get("res_id")
+        dyn_id= request.POST.get("dyn_id")
+        traj_id= request.POST.get("traj_id")
+        wHBs= request.POST.get("wHBs")
+        waterPlot= request.POST.get("waterPlot")
+        plotBoth= request.POST.get("plotBoth")#used to change down plot without removing top one
+        print(res_id, wHBs)
+
+        # Read csv of dyn and traj        
+        try:     
+            input_path=settings.MEDIA_ROOT + f"Precomputed/waterHappiness/{str(traj_id)}_HBs_per_frame_{str(dyn_id)}.csv"
+        except Exception:
+            return(HttpResponse('Error: file could not be parsed.', status=500,reason='no_HBs_per_frame_file',content_type='view/'+dyn_id))
+        df = pd.read_csv(input_path)
+
+        # read csv with all data of each resid
+        try: 
+            input_path_data=settings.MEDIA_ROOT + f"Precomputed/waterHappiness/{str(traj_id)}_water_happiness_data_{str(dyn_id)}.csv"
+        except Exception:
+            return(HttpResponse('Error: file could not be parsed.', status=500,reason='no_water_happiness_data_file',content_type='view/'+dyn_id))
+ 
+        df_data = pd.read_csv(input_path_data)
+
+        # Plots
+        if plotBoth=='true':
+            max_val=df[res_id].max()
+            cell_df = {'HBs': df[res_id].apply(lambda x: 0 if pd.isna(x) else x),
+                    'Occupancy': df[res_id].apply(lambda x: 0 if pd.isna(x) else max_val)}
+            cell_df['ns']=df['ns']
+            df_resid = pd.DataFrame(cell_df)
+
+            # build HBs and occupancy plot
+            p=show_HBs_occupancy_per_cell(df_resid, res_id, wHBs)
+            script_interf_waters, div_interf_waters = components(p)
+
+        #build distribution plot
+        ps= show_happ_distribution(df_data, res_id, waterPlot)
+        script_interf_waters_score, div_interf_waters_score = components(ps)
+
+        if plotBoth=='true':
+            context={        
+                "script_interf_waters":script_interf_waters,
+                "div_interf_waters":div_interf_waters,
+                "script_interf_waters_score":script_interf_waters_score,
+                "div_interf_waters_score":div_interf_waters_score
+            }
+        else:
+            context={        
+            "script_interf_waters_score":script_interf_waters_score,
+            "div_interf_waters_score":div_interf_waters_score
+        }
+
+        return HttpResponse(json.dumps(context), content_type='view/'+dyn_id)  
+
 
 
 def construct_def_ligresint_results(request,dyn_id,thresh, int_traj_p, int_struc_p, dist_scheme, no_rv, strideVal,int_dict):
@@ -2063,21 +2320,25 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
     mdsrv_url=obtain_domain_url(request)
     dyn_data = DyndbDynamics.objects.get(id=dyn_id)
     delta = dyn_data.delta
+    if not request.POST:
+        access = False
+    else:
+        form = AuthenticationFormSub(data=request.POST)
+        if form.is_valid():
+            access = request.POST["access"]
+        else:
+            access = False
+
+    try: 
+        if request.user.is_admin: 
+            admin = True
+        else:
+            admin = False
+    except: #AttributeError: 'AnonymousUser' object has no attribute 'is_admin'
+        admin = False
     
     # Check if simulation is published or not:
-    try:
-        if not request.POST:
-            access = False
-        else:
-            form = AuthenticationFormSub(data=request.POST)
-            if form.is_valid():
-                access = request.POST["access"]
-            else:
-                access = False
-    except: #Some GPCRmd webkit tools need index function, this is to avoid the access method
-        access = False
-        
-    if not dyn_data.is_published and access != "True": 
+    if not dyn_data.is_published and access != "True" and not admin: 
         form = AuthenticationFormSub()
         context = {}
         context["dyn_id"]=dyn_id
@@ -2325,6 +2586,15 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
         occupancy = obtain_volmaps(dyn_id)   #the variables contain dictionaries with the occupancy and density maps filepaths. CHANGE THIS! only occupancy 
         if occupancy:
             watermaps = True 
+#### ---- Water Happiness -------
+# retrieving the filepaths from the database. put traj_id as key and vol/occ map as value. Then pass this variable through context variable.
+        waterhappiness = False # to know i fthere is data of water happiness for any traj of the given dyn id
+        hap_data=obtain_happiness_paths(dyn_id)
+        happiness = hap_data[0]   #dictionary key as traj (available for the dynid), value three pdbs to be ploted (by HB, score, occ) and water_happiness_data csv filepaths.
+        num_interface_waters= hap_data[1] # dic key traj num (str) value num of atoms of pdb (cells) should be the same for all pdbs
+        for key, value in happiness.items(): # check if some traj has data
+            if len(value)>0:
+                waterhappiness = True              
 #### ---- PHarmacophores ------------
         pharma_jsonpath = settings.MEDIA_ROOT + "Precomputed/pharmacophores/dyn" + str(dyn_id) + '/pharmaco_itypes.json'
         if os.path.exists(pharma_jsonpath):
@@ -2344,6 +2614,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
         # Check if Allosteric communication data is avaliable for this entry
         ap_data_avail = os.path.exists(settings.MEDIA_ROOT + "Precomputed/allosteric_path/dyn"+str(dyn_id)) # Example file 
         
+
 #### --------------------------------
 
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
@@ -2659,6 +2930,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         "warning_load":json.dumps(warning_load),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy),
+                        "waterhappiness" :waterhappiness,
+                        "happiness" : json.dumps(happiness),
+                        "num_interface_waters":num_interface_waters,
+                        "script_interf_waters":False,
                         "is_metadyn":is_metadyn,
                         "has_pharmacophores" : has_pharmacophores,
                         "pharma_json" : json.dumps(pharma_json),
@@ -2717,6 +2992,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         "warning_load":json.dumps(warning_load),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy),
+                        "waterhappiness" :waterhappiness,
+                        "happiness" : json.dumps(happiness),
+                        "num_interface_waters":num_interface_waters,
+                        "script_interf_waters":False,
                         "is_metadyn":is_metadyn,
                         "has_pharmacophores" : has_pharmacophores,
                         "pharma_json" : json.dumps(pharma_json),
@@ -2773,6 +3052,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         "warning_load":json.dumps(warning_load),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy),
+                        "waterhappiness" :waterhappiness,
+                        "happiness" : json.dumps(happiness),
+                        "num_interface_waters":num_interface_waters,
+                        "script_interf_waters":False,
                         "is_metadyn":is_metadyn,
                         "has_pharmacophores" : has_pharmacophores,
                         "pharma_json" : json.dumps(pharma_json),
@@ -2827,6 +3110,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                     "warning_load":json.dumps(warning_load),
                     "watermaps" : watermaps,
                     "occupancy" : json.dumps(occupancy),
+                    "waterhappiness" :waterhappiness,
+                    "happiness" : json.dumps(happiness),
+                    "script_interf_waters":False,
+                    "num_interface_waters":num_interface_waters,
                     "is_metadyn":is_metadyn,
                     "has_pharmacophores" : has_pharmacophores,
                     "pharma_json" : json.dumps(pharma_json),
@@ -2834,6 +3121,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                     "google_analytics":False,
                     }
             return render(request, 'view/index.html', context)
+
+
+
+
 
 #########################
 

@@ -2,6 +2,7 @@
 var param_string, search_params, itype, clusters, ligandonly, rev, stnd;
 param_string = window.location.search; 
 search_params = new URLSearchParams(param_string)
+main_url = window.location.href
 if (Boolean(param_string)) {
     itype = search_params.get('itype');
     clusters = search_params.get('cluster');
@@ -33,6 +34,8 @@ $(document).ready(function(){
     var clickEdgeSelectNodes = function(d, plot){
         var name_s=d.source.name;
         var name_t=d.target.name;
+        var name_s = name_s.replace(':','\\:')
+        var name_t = name_t.replace(':','\\:')
         var is_sel_s = fake_hasClass("#node-"+name_s,"toggledNode");// $("#node-"+name_s).attr("class").indexOf("toggledNode") != -1 ;
         var is_sel_t = fake_hasClass("#node-"+name_t,"toggledNode");//$("#node-"+name_t).attr("class").indexOf("toggledNode") != -1;
         if (is_sel_s == is_sel_t ){
@@ -115,7 +118,7 @@ $(document).ready(function(){
             }
         });
         //Trigger click on random position to activate embed_contmaps_bottom set_positions function
-        $(flare_container+" #node-5x42 text").trigger("click");        
+        $(flare_container+" #node-2x50 text").trigger("click");        
     }
 
     function show_in_structure(flare_container, fp_display){
@@ -126,7 +129,7 @@ $(document).ready(function(){
             $(fp_display).addClass("active");            
         }
         //Trigger click on random position to activate embed_contmaps_bottom set_positions function
-        $(flare_container+" #node-5x42 text").trigger("click");
+        $(flare_container+" #node-2x50 text").trigger("click");
     }
 
     function colorsHoverActiveInactive(myselector,activeclass,colorhov,colorNohobAct, colorNohobInact){
@@ -359,10 +362,18 @@ $(document).ready(function(){
             changeContactsInFplot("1", fpdir, plots);
         });
 
+
+        //According to which application is using this file (the receptor meta-analysis or the gpcr-gprot) choose a file or the other      
+        if (main_url.includes('gpcr_gprot')){
+            clustdict_file = "/dynadb/files/Precomputed/gpcr_gprot/web_inputs/"+itype+"/"+stnd+"/flareplots_clusters/"+clusters+"clusters/clustdict.json";
+            compl_data_file = window.location.origin + "/dynadb/files/Precomputed/compl_info.json"; 
+        } else {
+            clustdict_file = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/"+itype+"/"+stnd+"/"+ligandonly+"/flarejsons/"+clusters+"clusters/clustdict.json";
+            compl_data_file = window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json"; //These 2 should be merged at some point
+        }
+
         //Load needed Json files and execute NGL bottom viewers
-        var clustdict_file, compl_data_file;
-        clustdict_file = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/"+itype+"/"+stnd+"/"+ligandonly+"/flarejsons/"+clusters+"clusters/clustdict.json";
-        compl_data_file = window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json"; 
+        var compl_data_file;
         $.getJSON(clustdict_file, function(clustdict){  
             $.getJSON(compl_data_file, function(compl_data){
                 //Trigger the NGL viewers

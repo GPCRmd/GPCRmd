@@ -29,7 +29,9 @@ from .complete import deprecate_current_app
 
 @login_required
 def memberpage(request):
-    context={'username':request.user.username}
+    username = request.user.username
+    username = username.replace(" ","")
+    context={'username':username}    
     if request.user.has_privilege_covid:
         context["user_covid"]=True
     return render(request, 'accounts/memberpage.html',context)
@@ -65,6 +67,7 @@ def login(request):
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             username = request.POST['username']
+            username = username.replace(" ","")
             password = request.POST['password']
             user = authenticate(username=username, password=password)
             if user is not None:

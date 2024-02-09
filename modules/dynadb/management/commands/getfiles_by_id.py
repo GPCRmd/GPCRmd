@@ -2,9 +2,7 @@ import sys
 condapath = ['', '/opt/gpcrmdenv/lib/python3.9', '/opt/gpcrmdenv/lib/python3.9/plat-x86_64-linux-gnu', '/opt/gpcrmdenv/lib/python3.9/lib-dynload', '/opt/gpcrmdenv/lib/python3.9/site-packages']
 sys.path = sys.path + condapath
 import re
-import string
 import os
-import shutil
 import csv
 from django.conf import settings
 from modules.view.obtain_gpcr_numbering import generate_gpcr_pdb
@@ -20,9 +18,9 @@ import json
 import datetime
 from modules.dynadb.models import DyndbModel, DyndbProtein, DyndbFilesDynamics, DyndbSubmissionMolecule, DyndbDynamicsComponents,DyndbModeledResidues, DyndbDynamics
 from modules.protein.models import Protein
-from modules.view.assign_generic_numbers_from_DB import obtain_gen_numbering 
+from modules.dynadb.obtain_generic_numbering import obtain_class,generic_numbering 
 from modules.dynadb.pipe4_6_0 import *
-
+import traceback
 from django.conf import settings
 
 def parse_pdb(pdbfile, chainid_list = [], resname_list = [], resid_list = []):
@@ -97,13 +95,61 @@ def prot_from_model(model):
                 prot=p
     return (prot,total_num_prot)
 
+def uniprots_from_dynid(dyn_id):
+    """Given a db dynamics id, returns the Uniprot Ids of the proteins present associated to it"""
+    DP = DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics__pk=dyn_id)
+    uniprots = [a.uniprotkbac for a in DP ]
+    return(uniprots)
+
+def gprot_within_uniprots(uniprots):
+    """Given a list of uniprot ids, determine if any of its proteins is a G-alpha subunit of a G-protein"""
+    has_gprot = False
+    for uniprot in uniprots:
+        P = Protein.objects.filter(accession=uniprot)
+        if len(P) and (P[0].residue_numbering_scheme.name == 'Common G-alpha numbering scheme'):
+            has_gprot=True
+    return(has_gprot)
+
+def get_gprot(dyn_id):
+    """
+    Obtain G protein alpha subunit, if any
+    """    
+    prot_name = False
+    chain_id = False
+    for dp in DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics=dyn_id):
+        # If protein is a G prot alpha subunit
+        if (dp.prot_type==2) and ('alpha' in dp.name):
+            chain_id= DyndbModeledResidues.objects.filter(id_protein=dp.id)[0].chain.upper()
+            uniprot = dp.uniprotkbac
+            try:
+                prot_name = Protein.objects.get(accession=uniprot).name
+            except Protein.DoesNotExist:
+                prot_name = dp.name
+    return(prot_name, chain_id)
+
+def gpcr_dyn_id(dyn_id):
+    """
+    Given a dyn_id, determine if any of its proteins is a GPCR. 
+    Return corresponding Protein and DyndbProtein objects
+    """
+    gpcr_chain = False
+    dp_gpcr = False
+    p_gpcr = False
+    DP = DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics__pk=dyn_id)
+    for dp in DP:
+        if dp.prot_type==1:
+            gpcr_chain=  DyndbModeledResidues.objects.filter(id_protein=dp.id)[0].chain.upper() 
+            dp_gpcr = dp
+            p_gpcr = dp.receptor_id_protein
+    return(gpcr_chain,dp_gpcr,p_gpcr)
+
 def obtain_dyn_files(dyn_id):
     """Given a dyn id, provides the stricture file name and a list with the trajectory filenames and ids."""
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
     traj_list=[]
     traj_name_list=[]
-    structure_file = None
-    structure_file_name = None
+    structure_file = False
+    structure_file_name = False
     p=re.compile(f"({settings.MEDIA_ROOT})(.*)")
     p2=re.compile("[\.\w]*$")
     for fileobj in dynfiles:
@@ -118,39 +164,63 @@ def obtain_dyn_files(dyn_id):
             traj_name_list.append(myfile_name)
     return (structure_file,structure_file_name,traj_list,traj_name_list)
 
+def obtain_files_from_dyn(dyn_id):
+    """
+    An easier, improved way of obtianing the paths to the files of a Dynamic
+    (for christ's sake, that function above is a fucking nightmare)
+    """
+    # Select all files in this dynamic
+    DFD = DyndbFilesDynamics.objects.filter(id_dynamics=dyn_id)
+    struc_file = False
+    struc_file_name = False
+    traj_files = []
+    traj_files_names = []
+    for df in DFD:
+        file_type = df.type
+        if file_type == 0: # If it is coordinate file
+            struc_file = df.id_files.filepath
+            struc_file_name = df.id_files.filename
+        elif file_type == 2: # If it is trajectory
+            traj_files.append(df.id_files.filepath)
+            traj_files_names.append(df.id_files.filename)
+
+    return (struc_file,struc_file_name,traj_files,traj_files_names)
+
 def get_orthostericlig_resname(dyn_id,change_lig_name):
     """Returns a list with the the resname of the orthosteric ligamd(s) of a dynamics"""
-    ortholig_li=DyndbSubmissionMolecule.objects.filter(submission_id__dyndbdynamics=dyn_id,type=0)
-    if len(ortholig_li) == 0:
+    DSM=DyndbSubmissionMolecule.objects.filter(submission_id__dyndbdynamics=dyn_id,type=0)
+    if not len(DSM):
         return (False,False,False)
-    comp_set_all=set()
-    for ortholig in ortholig_li:
-        comp_li=DyndbDynamicsComponents.objects.filter(id_molecule=ortholig.molecule_id.id)
-        comp_set=set(map(lambda x: x.resname ,comp_li)) 
-        comp_set_all.update(comp_set)
-    comp_obj=ortholig_li[0].molecule_id.id_compound #[!] For now I only consider 1 orthosteric ligand for each dyn!
-    comp_id=comp_obj.id 
-    comp_name=comp_obj.name
+    
+    # For now, we only take one orthosteric ligand per system
+    ddc_id = False
+    lig_resname = False
+    lig_name = False
+    for dsm in DSM:
+        ddc = DyndbDynamicsComponents.objects.get(id_molecule=dsm.molecule_id.id,id_dynamics=dyn_id)
+        ddc_id = ddc.pk
+        lig_resname = ddc.resname
+        leg_name = ddc.id_molecule.id_compound.name
+
+    # There are couple of exceptions (in views/data.py, systems with specific cholesterols as aligands and this stuff)
     if (dyn_id in change_lig_name):
-        comp_name=change_lig_name[dyn_id]["longname"]
-        comp_set_all=[change_lig_name[dyn_id]["resname"]] 
-    return (comp_id,comp_name,list(comp_set_all)[0])# At one point I should prepare this for multiple ligands
+        lig_name=change_lig_name[dyn_id]["longname"]
+        lig_resname=[change_lig_name[dyn_id]["resname"]] 
+    return (ddc_id,lig_name,lig_resname)
         
 def get_peptidelig(dyn_id):
-    model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
-    if model.id_protein:
-        dprot_li_all=[model.id_protein]
-    else:
-        dprot_li_all=DyndbProtein.objects.select_related("receptor_id_protein").filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=model.id_complex_molecule.id)
+    """
+    Obtain peptide ligand, if any
+    """    
     prot_id = False
     name = False
-    sel_s = False
-    for dprot in dprot_li_all:
-        if not dprot.receptor_id_protein:
-            prot_id = dprot.id
-            name=dprot.name
-            sel_s= ":%s" % DyndbModeledResidues.objects.filter(id_protein=dprot.id)[0].chain.upper() 
-    return(prot_id, name, sel_s)
+    peplig_chain = False
+    for dp in DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics=dyn_id):
+        if dp.prot_type==4:
+            prot_id = dp.id
+            name=dp.name
+            peplig_chain= DyndbModeledResidues.objects.filter(id_protein=dp.id)[0].chain.upper() 
+    return(prot_id, name, peplig_chain)
 
 def retrieve_info(self,dyn,data_dict,change_lig_name):
     """
@@ -166,72 +236,72 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
     pdb_id=model.pdbid
     user=dyn.submission_id.user_id.username
     is_ours = dyn.submission_id.is_gpcrmd_community
-
-    #IF no protein assigned
-    if not (model.id_protein or model.id_complex_molecule):
-        self.stdout.write(self.style.NOTICE("Model has no protein or complex assigned. Skipping."))
-        return
-    (prot,total_num_prot)=prot_from_model(model)
-    prot_id=prot.id 
-    uniprot_id=prot.uniprotkbac
-    uniprot_name=Protein.objects.get(accession=uniprot_id).entry_name
-    (structure_file,structure_file_name,traj_list,traj_name_list)=obtain_dyn_files(dyn_id)
-    if not structure_file:
+    (gprot_name, gprot_chain) = get_gprot(dyn_id)
+    (gpcr_chain,dbprot_gpcr,prot_gpcr) = gpcr_dyn_id(dyn_id)
+    dbprot_id = dbprot_gpcr.pk if dbprot_gpcr else False
+    lname = dbprot_gpcr.name if dbprot_gpcr else False
+    # (prot,total_num_prot)=prot_from_model(model)
+    # Obtain uniprot name of GPCR ONLY if we have a GPCR here
+    (struc_file,struc_file_name,traj_files,traj_files_names)=obtain_files_from_dyn(dyn_id) 
+    if not struc_file_name:
         self.stdout.write(self.style.NOTICE("No structure file found. Skipping."))
 
-    # Ligand information
-    peptide_ligand = False
-    (comp_id,comp_name,res_li)=get_orthostericlig_resname(dyn_id,change_lig_name)
+    # Extract Ligand information
+    peplig_chain = False; lig_sel = ''; lig_name = ''
+    (comp_id,lig_name,lig_sel)=get_orthostericlig_resname(dyn_id,change_lig_name)
     if not comp_id:
-        (comp_id,comp_name,res_li) = get_peptidelig(dyn_id)
-        if comp_id:
-            peptide_ligand = True
+        (comp_id,lig_name,peplig_chain) = get_peptidelig(dyn_id)
 
-    # If there's no ligand
-    if not bool(res_li):
-        res_li = ''
-        copm_name = ''
+    #Assign short name for dynamic
+    up_name_gpcr = prot_gpcr.entry_name if prot_gpcr else False
+    shortname = up_name_gpcr
 
-    #Assign short name
-    if dyn.entry:
-        shortname = dyn.entry
-    elif dyn.entry2:
-        shortname = dyn.entry2
-    else:
-        shortname = ""
-
-    if len(traj_list) == 0:
+    # Check if trajectories really exist
+    if len(traj_files) == 0:
         self.stdout.write(self.style.NOTICE("No trajectories found. Skipping."))
         return({"traj_fnames" : False}, data_dict)
     else:
-        traj_files = [ i[0] for i in traj_list ]
-        pdb_name = settings.MEDIA_ROOT + ""+structure_file
-        try: 
-            (gpcr_pdb,classes_dict,current_class)=generate_gpcr_pdb(dyn_id, pdb_name, True)
-        except Exception as e:
-            self.stdout.write(self.style.NOTICE("GPCR residue nomenclature for this structure could not be obtained. Skipping."))
-            return({"traj_fnames" : False}, data_dict)
+        # Find GPCR class
+        gpcr_class = obtain_class(dyn_id)
 
-        pdb_to_gpcr = {v: k for k, v in gpcr_pdb.items()}
+        # Find GPCR numbering and class if any GPCR actually present in model 
+        # Extract it from file if already calculated
+        gennum = {'gpcr' : {}, 'gprot' : {}}
+        for prot in ('gpcr','gprot'):
+            gennum_path = "%s/Precomputed/gennum/dyn%d.json"%(settings.MEDIA_ROOT,dyn_id)
+            if os.path.exists(gennum_path):
+                gennum = json_dict(gennum_path)
+            else:    
+                gennum[prot] = (generic_numbering(dyn_id,prot))
+        # Save gennum in a file, if not existing yet
+        if not os.path.exists(gennum_path):
+            with open(gennum_path,'w') as out:
+                json.dump(gennum, out, indent=4)
+
+        # Put all the information of this dynamic entry into a big dictionary
         delta=DyndbDynamics.objects.get(id=dyn_id).delta
         data_dict[identifier]={
             "dyn_id": dyn_id,
-            "class" : current_class,
-            "prot_id": prot_id, 
+            "class" : gpcr_class, 
+            "prot_id": dbprot_id, 
             "comp_id": comp_id,
-            "lig_lname": comp_name,
-            "lig_sname":res_li,
-            "prot_lname":prot.name,
+            "lig_lname": lig_name,
+            "lig_sname":lig_sel,
+            "prot_lname":lname,
+            "gprot_name":gprot_name,
             "prot_sname":shortname,
-            "peplig":peptide_ligand,
-            "up_name":uniprot_name,
+            "peplig":peplig_chain,
+            "gprot_chain":gprot_chain,
+            "gpcr_chain":gpcr_chain,
+            "up_name":up_name_gpcr,
             "pdb_id":pdb_id,
-            "struc_f":structure_file,
-            "struc_fname":structure_file_name,
+            "struc_f":struc_file,
+            "struc_fname":struc_file_name,
             "traj_f":traj_files,
-            "traj_fnames":traj_name_list,
+            "traj_fnames":traj_files_names,
             "delta":delta,
-            "gpcr_pdb":gpcr_pdb,
+            "gpcr_pdb":gennum['gpcr'], 
+            "gprot_pdb":gennum['gprot'],
             "user":user,
             "is_gpcrmd_community" : is_ours,
             }
@@ -328,7 +398,7 @@ class Command(BaseCommand):
         commands_path = settings.MEDIA_ROOT + "Precomputed/get_contacts_files/dyn_freq_commands.sh"
 
         #Prepare compl_data json file and the "last time modified" upd file
-        cra_path=settings.MEDIA_ROOT + "Precomputed/get_contacts_files"
+        cra_path=settings.MEDIA_ROOT + "Precomputed/"
         dyncounter = 1
         if not os.path.isdir(cra_path):
             os.makedirs(cra_path)
@@ -346,115 +416,27 @@ class Command(BaseCommand):
         else:
             dynobjs = DyndbDynamics.objects.filter(id__in=dynid, is_published=True)
 
-        #Annotate shortname alternatives
-        dynobjs=dynobjs.annotate(entry=F('id_model__id_protein__receptor_id_protein__entry_name'))
-        dynobjs=dynobjs.annotate(entry2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__entry_name'))
-
-        # Open one of the input files of Contact Maps to use it as reference to know which Simulations are already present
-        dyns_in_contactmaps = cra_path+"/contmaps_inputs/all/cmpl/prt_lg/name_to_dyn_dict.json"
-        if os.path.isfile(dyns_in_contactmaps):
-            dynsnames_list = json_dict(dyns_in_contactmaps)
-            dyn_set = { identifier for (identifier, name) in dynsnames_list }
-        else:
-            dyn_set = set()
-
         ##################
         ###Begin iteration
         ##################
 
         commands_line = ""
         for dyn in dynobjs:
-
-            #Take dynamic identifiers (both dynX and X)
-            dyn_id=dyn.id
-            identifier="dyn"+str(dyn_id)
-
-            #Unless user want to overwrite, omit already done dynids
-            if (identifier in dyn_set) and not (options['overwrite']):
-                self.stdout.write("%s has already been done. Skippping..." % dyn_id)
-                continue
-            else:
-                dyn_set.add(identifier)
-
-            #Compute compl_data file
             try:
-                self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn_id, dyncounter, len(dynobjs))))
+
+                self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn.id, dyncounter, len(dynobjs))))
                 dyncounter += 1
                 dyn_dict,compl_data = retrieve_info(self,dyn,compl_data,change_lig_name)
-            except FileNotFoundError:
-                self.stdout.write(self.style.NOTICE("Files for dynamics with id %d are not avalible. Skipping" % (dyn_id)))
-                continue
 
-            # Skip if no trajectory
-            if not dyn_dict['traj_fnames']:
-                self.stdout.write("%s has no trajectory file. Skippping..." % dyn_id)
-                continue
-            structure_file = dyn_dict['struc_f']
-            structure_file_name = dyn_dict['struc_fname']
+            except Exception as e:
+                self.stdout.write(self.style.NOTICE("Could not process %s because of %s" % (dyn.id,e)))
+                print(traceback.format_exc())
 
-            #Create directory for dynamic simulation id if it doesn't exists yet
-            directory = os.path.join(settings.MEDIA_ROOT,"Precomputed/get_contacts_files/dynamic_symlinks/dyn" + str(dyn_id))
-            if not os.path.exists(directory):
-                os.makedirs(directory,exist_ok=True)
-
-            #Inside this folder, create symbolic links to desired files (and delete any previous with same name)
-            basepath = settings.MEDIA_ROOT[:-1]
-            pdbpath = os.path.join(basepath,structure_file)
-            
-            #TO DO: idenfity structure files with an "struc" suffix, not only by extension
-            #TO DO: add id_files number to the filename
-            mypdbpath =  os.path.join(directory, identifier + os.path.splitext(structure_file)[1])
-            if not os.path.lexists(mypdbpath):
-                os.symlink(pdbpath, mypdbpath)
-            
-            #Links for trajectories
-            for traj_name,traj_file in zip(dyn_dict['traj_fnames'],dyn_dict['traj_f']):
-                #Create symbolic links also for trajectory file list
-                traj_id = traj_name.split("_")[0]
-                trajpath = os.path.join(basepath,traj_file)
-                mytrajpath = os.path.join(directory,identifier + "_" + str(traj_id) + os.path.splitext(trajpath)[1])
-                if not os.path.lexists(mytrajpath):
-                    os.symlink(trajpath, mytrajpath)
-
-            #Ligand files
-            try:
-                ligfile_name = get_ligand_file(dyn_id, identifier, directory, mypdbpath)
-            except Exception:
-                 self.stdout.write(self.style.WARNING("Error while processing dynamics "+str(dyn_id)+". Skipping and cleaning up."))
-                 shutil.rmtree(directory)
-                 continue
-
-            ###########################################
-            ## Compute frequencies and dynamic contacts
-            ###########################################
-
-            # for each trajectory file, write a run-in-ORI command
-            numtraj = len(dyn_dict['traj_fnames'])
-            traj_counter = 0
-            for traj_name,traj_file in zip(dyn_dict['traj_fnames'],dyn_dict['traj_f']):
-
-                trajpath = os.path.join(basepath,traj_file)
-                traj_id = traj_name.split("_")[0]
-                mytrajpath = os.path.join(directory,identifier + "_" + traj_id + os.path.splitext(trajpath)[1])
-                traj_counter += 1
-
-                if numtraj == traj_counter:
-                    tail_comand = "--merge_dynamics \n"
-                else:
-                    tail_comand = "\n"
-
-                commands_line += str("/opt/gpcrmdenv/bin/activate;python "+ settings.MODULES_ROOT + "/contact_maps/scripts/get_contacts_dynfreq.py \
-                    --dynid %s \
-                    --traj %s \
-                    --topology %s \
-                    --ligandfile %s \
-                    --cores 4 %s\n" % (dyn_id, mytrajpath, mypdbpath, ligfile_name, tail_comand))
+        # Save compl_data.json
+        with open(compl_file_path, 'w') as outfile:
+            json.dump(compl_data, outfile, indent=2)
 
         # Save commands in commands file
         with open(commands_path,"w") as commands_file:
             commands_file.write(commands_line)
 
-        # Save compl_data.json
-        with open(compl_file_path, 'w') as outfile:
-            json.dump(compl_data, outfile, indent=2)
-            

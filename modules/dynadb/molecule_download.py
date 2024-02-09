@@ -13,6 +13,12 @@ from io import BytesIO
 from .molecule_properties_tools import open_molecule_file
 from html.parser import HTMLParser
 
+# SDF to PNG
+from rdkit import Chem
+from rdkit.Chem import Draw
+from rdkit.Chem.Draw import rdMolDraw2D
+from rdkit.Chem import AllChem
+
 from PIL import Image
 import warnings
 warnings.simplefilter('error', Image.DecompressionBombWarning)
@@ -331,6 +337,7 @@ def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,wid
             if replace_background_color is not None:
                 data = replace_png_background_color(data,input_type='bytes')
             return data
+
     except HTTPError:
       errdata['Error'] = True
       errdata['ErrorType'] = 'HTTPError'
@@ -371,7 +378,16 @@ def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,wid
         response.close()
       except:
         pass
-      try:
+      try: #Generate png from sdf file
+        sdfname = outputfile[:-8] + '.sdf'
+        suppl = Chem.SDMolSupplier(sdfname)
+        mols = [x for x in suppl]
+        AllChem.Compute2DCoords(mols[0])
+        mol_id = mols[0].GetProp('_Name')
+        d = rdMolDraw2D.MolDraw2DCairo(*(width,height))
+        d.DrawMolecule(mols[0])
+        d.FinishDrawing()
+        d.WriteDrawingText(outputfile)
         fileh.close()
       except:
         pass
