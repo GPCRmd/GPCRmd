@@ -10,7 +10,7 @@ FILES_NO_LOGIN = False
 #Determine http or https (ssl)
 SSL=True
 DEV = False
-MAINTENANCE_MODE = 1 # 0 False 1 True
+MAINTENANCE_MODE = 0 # 0 False 1 True
 
 #Settings selection
 if DEV == False:
@@ -98,6 +98,7 @@ MIDDLEWARE= DEBUG_TOOLBAR_MIDDLEWARE+\
     'config.custom_middlewares.MaintenanceModeMiddleware',
 ]
 
+CSRF_COOKIE_AGE = 604800 # 1 week in seconds
 ROOT_URLCONF = 'config.urls'
 
 WSGI_APPLICATION = 'config.wsgi.application'
@@ -132,6 +133,7 @@ SENDFILE_BACKEND = 'sendfile.backends.xsendfile'
 
 MAIN_ROOT = '/var/www/GPCRmd'
 TEMP_ROOT = '/var/www/GPCRmd/templates'
+
 #MODULES DIR
 MODULES_ROOT = "/var/www/GPCRmd/modules"
 DOWNLOAD_FILES = "/GPCRmd/media/tmp/GPCRmd_downloads"
@@ -190,7 +192,7 @@ TEMPLATES = [
 DEFAULT_AUTO_FIELD="django.db.models.AutoField"
 
 #File settings
-MAX_UPLOAD_SIZE=2147483648
+MAX_UPLOAD_SIZE=4294967296
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520
 NO_FILE_MAX_POST_SIZE = 52428800
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240 
@@ -263,8 +265,8 @@ if DEBUG:
 SESSION_ENGINE="django.contrib.sessions.backends.file"
 
 #session expire
-SESSION_EXPIRE_SECONDS = 3600 # Expire after 1h
-SESSION_EXPIRE_AFTER_LAST_ACTIVITY = True
+SESSION_EXPIRE_SECONDS = 86400 # Expire after 1day
+SESSION_EXPIRE_AFTER_LAST_ACTIVITY = False
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True #Invalid session
 
 SESSION_TIMEOUT_REDIRECT = '/'

@@ -2,6 +2,7 @@
 var param_string, search_params, itype, clusters, ligandonly, rev, stnd, dyn_list;
 param_string = window.location.search; 
 search_params = new URLSearchParams(param_string)
+main_url = window.location.href
 if (Boolean(param_string)) {
     itype = search_params.get('itype');
     clusters = search_params.get('cluster');
@@ -115,7 +116,7 @@ $(document).ready(function(){
             }
         });
         //Trigger click on random position to activate embed_contmaps_bottom set_positions function
-        $(flare_container+" #node-5x42 text").trigger("click");        
+        $(flare_container+" #node-2x50 text").trigger("click");        
     }
 
     function show_in_structure(flare_container, fp_display){
@@ -370,9 +371,14 @@ $(document).ready(function(){
             'custom_cluster' : eval($('#flare_col').data('dyn_list')),
         }
 
-        //Load needed Json files and execute NGL bottom viewers
-        var clustdict_file, compl_data_file;
-        compl_data_file = window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json"; 
+        //According to which application is using this file (the receptor meta-analysis or the gpcr-gprot) choose a file or the other      
+        var compl_data_file;
+        if (main_url.includes('gpcr_gprot')){
+            compl_data_file = window.location.origin + "/dynadb/files/Precomputed/compl_info.json"; 
+        } else {
+            compl_data_file = window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json"; //These 2 should be merged at some point
+        }
+
         $.getJSON(compl_data_file, function(compl_data){
             //Trigger the NGL viewers
             $('#ngl_iframe0')[0].contentWindow.$('body').trigger('createNGL0', [clustdict, compl_data]);

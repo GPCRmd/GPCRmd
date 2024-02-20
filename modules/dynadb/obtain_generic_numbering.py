@@ -1,6 +1,6 @@
 from Bio import Align
 from Bio.Seq import Seq
-from modules.dynadb.models import DyndbDynamics,DyndbProtein,DyndbModeledResidues,DyndbFilesDynamics
+from modules.dynadb.models import DyndbDynamics,DyndbProtein,DyndbModeledResidues,DyndbFilesDynamics,DyndbModel
 from modules.protein.models import Protein,ProteinFamily
 import MDAnalysis as mda
 import re
@@ -46,6 +46,7 @@ def extract_chain_sequence(pdb_file, chain_id):
 
     # Select atoms belonging to the specified chain
     chain_atoms = u.select_atoms(f"chainid {chain_id}")
+    
 
     # Extract resname sequence of specified chain. In one-letter code
     seq = []
@@ -98,7 +99,8 @@ def generic_numbering(dyn_id, prot = 'gpcr'):
                 return {}
 
         # Extract chainID from the first ModeledResidues entry associated to this protein  
-        prot_chain =  DyndbModeledResidues.objects.filter(id_protein=dp.id)[0].chain.upper() 
+        dm = DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id__dyndbdynamics__id=dyn_id)[0] 
+        prot_chain =  DyndbModeledResidues.objects.filter(id_protein=dp.id,id_model=dm.pk)[0].chain.upper() 
 
         # Load coordinates file of this dynamic using biopythin, and extract
         strucfile = settings.MEDIA_ROOT+DyndbFilesDynamics.objects.get(id_dynamics=dyn_id,type=0).id_files.filepath

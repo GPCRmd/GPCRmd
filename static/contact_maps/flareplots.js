@@ -364,6 +364,7 @@ $(document).ready(function(){
 
 
         //According to which application is using this file (the receptor meta-analysis or the gpcr-gprot) choose a file or the other      
+        var compl_data_file, compl_data_file;
         if (main_url.includes('gpcr_gprot')){
             clustdict_file = "/dynadb/files/Precomputed/gpcr_gprot/web_inputs/"+itype+"/"+stnd+"/flareplots_clusters/"+clusters+"clusters/clustdict.json";
             compl_data_file = window.location.origin + "/dynadb/files/Precomputed/compl_info.json"; 
@@ -373,7 +374,6 @@ $(document).ready(function(){
         }
 
         //Load needed Json files and execute NGL bottom viewers
-        var compl_data_file;
         $.getJSON(clustdict_file, function(clustdict){  
             $.getJSON(compl_data_file, function(compl_data){
                 //Trigger the NGL viewers

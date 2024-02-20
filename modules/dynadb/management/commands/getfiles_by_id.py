@@ -116,10 +116,11 @@ def get_gprot(dyn_id):
     """    
     prot_name = False
     chain_id = False
+    dm = DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id__dyndbdynamics__id=dyn_id)[0]
     for dp in DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics=dyn_id):
         # If protein is a G prot alpha subunit
         if (dp.prot_type==2) and ('alpha' in dp.name):
-            chain_id= DyndbModeledResidues.objects.filter(id_protein=dp.id)[0].chain.upper()
+            chain_id= DyndbModeledResidues.objects.filter(id_protein=dp.id,id_model=dm.pk)[0].chain.upper()
             uniprot = dp.uniprotkbac
             try:
                 prot_name = Protein.objects.get(accession=uniprot).name
@@ -136,9 +137,10 @@ def gpcr_dyn_id(dyn_id):
     dp_gpcr = False
     p_gpcr = False
     DP = DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics__pk=dyn_id)
+    dm = DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id__dyndbdynamics__id=dyn_id)[0]
     for dp in DP:
         if dp.prot_type==1:
-            gpcr_chain=  DyndbModeledResidues.objects.filter(id_protein=dp.id)[0].chain.upper() 
+            gpcr_chain=  DyndbModeledResidues.objects.filter(id_protein=dp.id,id_model=dm.pk)[0].chain.upper() 
             dp_gpcr = dp
             p_gpcr = dp.receptor_id_protein
     return(gpcr_chain,dp_gpcr,p_gpcr)
@@ -215,11 +217,12 @@ def get_peptidelig(dyn_id):
     prot_id = False
     name = False
     peplig_chain = False
+    dm = DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id__dyndbdynamics__id=dyn_id)[0]
     for dp in DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics=dyn_id):
         if dp.prot_type==4:
             prot_id = dp.id
             name=dp.name
-            peplig_chain= DyndbModeledResidues.objects.filter(id_protein=dp.id)[0].chain.upper() 
+            peplig_chain= DyndbModeledResidues.objects.filter(id_protein=dp.id,id_model=dm.pk)[0].chain.upper() 
     return(prot_id, name, peplig_chain)
 
 def retrieve_info(self,dyn,data_dict,change_lig_name):

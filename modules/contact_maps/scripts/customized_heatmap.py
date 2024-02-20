@@ -8,7 +8,7 @@ import re
 from math import ceil,pi
 from bokeh.plotting import figure, show, reset_output
 from bokeh.embed import components
-from bokeh.models import Label, HoverTool, TapTool, CustomJS, BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
+from bokeh.models import HTMLLabel,Label, HoverTool, TapTool, CustomJS, BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
 from bokeh.transform import transform
 from bokeh.events import Tap
 
@@ -151,9 +151,10 @@ def define_figure(width, height, dataframe, hover, itype):
     mapper = LinearColorMapper(palette=colors, low=0, high=100)
 
     #Bokeh figure
+    legend_margin = 180#leave some space for x-axis artificial labels
     p = figure(
         width= width,
-        height=height,
+        height=height+legend_margin,
         #title="Example freq",
         y_range=list(dataframe.shortName.drop_duplicates()),
         x_range=list(dataframe.Position.drop_duplicates()),
@@ -162,7 +163,7 @@ def define_figure(width, height, dataframe, hover, itype):
         active_drag=None,
         toolbar_location="right",
         toolbar_sticky = False,
-        min_border_top = 200,#leave some space for x-axis artificial labels
+        min_border_top = legend_margin,
         min_border_bottom = 0,
     )
 
@@ -190,8 +191,8 @@ def define_figure(width, height, dataframe, hover, itype):
 
     #Very poor way of creating X-axis labels. Necessary for having linejumps inside the axis labels
     x_cord = 0
-    y_cord = len(list(dataframe.Id.drop_duplicates()))+11#Position: 11 spaces above the plot's top border
-    foolabel = Label(x=-1,
+    y_cord = len(list(dataframe.Id.drop_duplicates()))#Position: 11 spaces above the plot's top border
+    foolabel = HTMLLabel(x=-1,
                      y=y_cord,
                      text='\nA: \nB: \nC: \nF: \n\n\nA: \nB: \nC: \nF: \n',
                      border_line_alpha=1.0,
@@ -202,7 +203,7 @@ def define_figure(width, height, dataframe, hover, itype):
     #Fore every unique position in the set, add a label in axis
     for position in list(dataframe.Position.drop_duplicates()):
         position = position.replace("Ligand","Lig\n\n\n\n\n")
-        foolabel = Label(x=x_cord,
+        foolabel = HTMLLabel(x=x_cord,
                          y=y_cord,
                          text=position,
                          border_line_alpha=1.0,
@@ -241,9 +242,9 @@ def select_tool_callback(p, recept_info, recept_info_order, dyn_gpcr_pdb, itype,
 
     #Select tool and callback: (SIMPLIFIED)
     CB = CustomJS(
-        args={"mysource" : mysource,"r_info":ri_source,"ro_info":rio_source,"gnum_info":gnum_source,"itype":itype, "typelist" : typelist},
+        args={"mysource" : mysource, "r_info":ri_source,"ro_info":rio_source,"gnum_info":gnum_source,"itype":itype, "typelist" : typelist},
         code="""
-            var sel_ind = mysource.selected.indice[0];
+            var sel_ind = mysource.selected.indices[0];
             var plot_bclass=$("#retracting_parts").attr("class");
             if (sel_ind.length != 0){
                 var data = mysource.data;

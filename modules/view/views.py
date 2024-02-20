@@ -2323,10 +2323,13 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
     if not request.POST:
         access = False
     else:
-        form = AuthenticationFormSub(data=request.POST)
-        if form.is_valid():
-            access = request.POST["access"]
-        else:
+        try:
+            form = AuthenticationFormSub(data=request.POST)
+            if form.is_valid():
+                access = request.POST["access"]
+            else:
+                access = False
+        except:
             access = False
 
     try: 

@@ -658,6 +658,7 @@ function prot_listeners(id){
         $("#species_name"+id+"_label").html(prot_data['Organism'])
         $("#unisequence"+id).val(prot_data['Sequence'])
         $("#prot_uniprot"+id).val(uniprotkbac)
+        $('#prot_type'+id+' option[value="'+prot_data['prot_type']+'"]').prop('selected',true);
         //We assume that the only receptors here are GPCRs
         not_gpcr =  !(prot_data['Protein families'].includes('receptor')) && !(prot_data['Protein families'].includes('Receptor'))
         $("#notaGPCR"+id).prop('checked', not_gpcr)
@@ -726,7 +727,9 @@ function create_prot_entries(data, container) {
     }
 
     //Set type of protein, if any
+    if (data['prot_type'] != ''){
     $('#prot_type'+String(i)+' option[value="'+data_prot['prot_type']+'"]').prop('selected',true);
+    }
     
     // Add 'addsegment' and 'addmutations' button
     add_segmut_buttons(i)

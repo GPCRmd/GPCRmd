@@ -335,14 +335,18 @@ def dyn_flareplots(df_o, folderpath, flare_template = False):
         for leter in ['', 'A', 'B', 'C', 'F']:
             df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
             df_dict['name1'] = df[leter+'Pos'] if leter else df['APos'] # Class A comes as the default one
-            df_dict['name2'] = df['GprotPos']
+            df_dict['name2'] = df['GprotPos'].str.replace('\n','_')
             df_dict['frames'] = [[1]]*len(df_dict)
             df_dict['color'] = df['color']
             df_dict['value'] = df[dyn]
             leter_edges = df_dict.to_dict(orient="records")
 
             #Appending edges
-            jsondict[leter+'edges'] = leter_edges 
+            if flare_template:
+                flare_template[leter+'edges'] = leter_edges
+                jsondict = flare_template
+            else:
+                jsondict = { leter+'edges' : leter_edges }
 
         #Writing json
         jsonpath = folderpath + dyn + "_top.json"
@@ -656,8 +660,8 @@ def cluster_flareplot(df, clustdict, folderpath, flare_template = False):
     Create json entries for significative positions (top10 mean frequency) of each cluster produced
     """
     os.makedirs(folderpath,  exist_ok = True)
-    colors_grorrd = ['#800026', '#850026', '#8a0026', '#8f0026', '#940026', '#990026', '#9e0026', '#a30026', '#a80026', '#ad0026', '#b20026', '#b70026', '#bd0026', '#c00225', '#c30424', '#c60623', '#c90822', '#cc0a21', '#d00d21', '#d30f20', '#d6111f', '#d9131e', '#dc151d', '#df171c', '#e31a1c', '#e51e1d', '#e7221e', '#e9271f', '#eb2b20', '#ed2f21', '#ef3423', '#f13824', '#f33c25', '#f54126', '#f74527', '#f94928', '#fc4e2a', '#fc532b', '#fc582d', '#fc5d2e', '#fc6330', '#fc6831', '#fc6d33', '#fc7234', '#fc7836', '#fc7d37', '#fc8239', '#fc873a', '#fd8d3c', '#fd903d', '#fd933e', '#fd9640', '#fd9941', '#fd9c42', '#fd9f44', '#fda245', '#fda546', '#fda848', '#fdab49', '#fdae4a', '#feb24c', '#feb54f', '#feb853', '#febb56', '#febf5a', '#fec25d', '#fec561', '#fec864', '#fecc68', '#fecf6b', '#fed26f', '#fed572', '#fed976', '#feda79', '#fedc7d', '#fede80', '#fedf84', '#fee187', '#fee38b', '#fee48e', '#fee692', '#fee895', '#fee999', '#feeb9c', '#ffeda0', '#fbeaa4', '#f7e8a8', '#f4e6ac', '#f0e4b1', '#ece2b5', '#e9e0b9', '#e5ddbd', '#e1dbc2', '#ded9c6', '#dad7ca', '#d6d5ce', '#d3d3d3']
-    colors = colors_grorrd
+    colors_grlgrdgr = ['#0d2b17', '#0e2d17', '#0f2f17', '#103118', '#123318', '#133618', '#143819', '#153a19', '#173c1a', '#183e1a', '#19411a', '#1a431b', '#1c451b', '#1d471b', '#1e4a1c', '#1f4c1c', '#214e1d', '#22501d', '#23521d', '#24551e', '#26571e', '#27591e', '#285b1f', '#295e1f', '#2b6020', '#2c6220', '#2d6420', '#2f6621', '#306921', '#316b22', '#326d22', '#346f22', '#357223', '#367423', '#377623', '#397824', '#3a7a24', '#3b7d25', '#3c7f25', '#3e8125', '#3f8326', '#408626', '#418826', '#438a27', '#448c27', '#458e28', '#469128', '#489328', '#499529', '#4a9729', '#4c9a2a', '#4e9b2d', '#519c30', '#549d34', '#569e37', '#599f3a', '#5ca03e', '#5ea141', '#61a345', '#64a448', '#67a54b', '#69a64f', '#6ca752', '#6fa855', '#71a959', '#74ab5c', '#77ac60', '#79ad63', '#7cae66', '#7faf6a', '#82b06d', '#84b170', '#87b374', '#8ab477', '#8cb57b', '#8fb67e', '#92b781', '#94b885', '#97b988', '#9abb8c', '#9dbc8f', '#9fbd92', '#a2be96', '#a5bf99', '#a7c09c', '#aac1a0', '#adc3a3', '#afc4a7', '#b2c5aa', '#b5c6ad', '#b8c7b1', '#bac8b4', '#bdc9b7', '#c0cbbb', '#c2ccbe', '#c5cdc2', '#c8cec5', '#cacfc8', '#cdd0cc', '#d0d1cf', '#d3d3d3']
+    colors = colors_grlgrdgr
     color_len = len(colors) -1
     
     # Split the interacting-residues-pairs in the index into different columns
@@ -795,7 +799,7 @@ def find_itype_freqs(df_ts,typelist):
         
     return(df_ts)
 
-def create_hovertool(itype, itypes_order, hb_itypes, typelist):
+def create_hovertool(itype, itypes_order, hb_itypes, typelist, width=400):
     """
     Creates a list in hovertool format from the two dictionaries above
     """
@@ -835,9 +839,10 @@ def define_figure(width, height, dataframe, hover, itype):
     mapper = LinearColorMapper(palette=colors, low=0, high=100)
 
     #Bokeh figure
+    legend_margin = 0#leave some space for x-axis artificial labels
     p = figure(
-        plot_width= width,
-        plot_height=height,
+        plot_width=width,
+        plot_height=height+legend_margin,
         #title="Example freq",
         y_range=list(dataframe.Id.drop_duplicates()),
         x_range=list(dataframe.Residue.drop_duplicates()),
@@ -846,7 +851,7 @@ def define_figure(width, height, dataframe, hover, itype):
         active_drag=None,
         toolbar_location="right",
         toolbar_sticky = False,
-        # min_border_top = 250,#leave some space for x-axis artificial labels
+        min_border_top = legend_margin,#leave some space for x-axis artificial labels
         min_border_bottom = 0,
     )
 
@@ -1139,7 +1144,7 @@ cores = 5
 #######
 
 # typelist =  {"all" : 'all types'}
-# typelist =  {"wb" : 'water bridge'}
+typelist =  {"hb" : 'water bridge'}
 for itype in typelist.keys():
 
     #####################
@@ -1234,7 +1239,8 @@ for itype in typelist.keys():
                 df_slided = df_ts[prev_slicepoint:]
             else:
                 df_slided = df_ts[prev_slicepoint:slicepoint]
-            w = int(df_slided.shape[0]/inter_per_pair*20+40)
+            num_respairs = len(df_slided['Residue'].unique())
+            w = int(num_respairs*20+40)
             prev_slicepoint = slicepoint
             h=dend_height
             

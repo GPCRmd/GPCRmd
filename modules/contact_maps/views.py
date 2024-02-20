@@ -85,7 +85,6 @@ def get_contacts_plots(request):
 	# Loading heatmap script 
 	script_list = []
 	for filename in filenames_list:
-		filename = filename.replace("/protwis/sites", "/GPCRmd/media")
 		with open(filename, 'r') as scriptfile:
 			script = scriptfile.read()
 		script_list.append(script)
@@ -181,7 +180,7 @@ def customized_heatmap(request, foo):
 	name_list = [ recept_info[dyn][index]  for dyn in dyn_list ]
 
 	#Calculate heatmap height from the number of simulations present
-	h = int( len(df_filt.Id.unique()) * 16 + 200)
+	h = int( len(df_filt.Id.unique()) * 18 )
 
 	#Taking some variables for dataframe slicing
 	max_columns = 50
@@ -215,8 +214,8 @@ def customized_heatmap(request, foo):
 			df_slided = df_filt[prev_slicepoint:]
 		else:
 			df_slided = df_filt[prev_slicepoint:slicepoint]
-		w = int(df_slided.shape[0]/inter_per_pair*21+300)
-		dend_width = 450
+		num_respairs = len(df_slided['Position'].unique())
+		w = int(num_respairs*20+40+248)
 		prev_slicepoint = slicepoint
 		
 		# Define bokeh figure and hovertool

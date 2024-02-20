@@ -4621,7 +4621,9 @@ def DYNAMICSreuseview(request, submission_id, model_id ):
                     print("Errores en el form Simulation Components ", ii, " ", Scom_inst[ii][iii].errors.as_data()) 
             #Create storage directory: Every Simulation # has its own directory labeled as "dyn"+dyn_obj[ii].pk
             #Maybe we have to label the directory with submissionID?????
-            direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(submission_id) 
+            # dyn_id = DyndbDynamics.objects.filter(submission_id=submission_id)[0].pk
+            # direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(dyn_id) 
+            direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(submission_id)
             print("\nDirectorio a crear ", direct)
             if not os.path.exists(direct):
                 os.makedirs(direct)
@@ -7092,7 +7094,9 @@ def DYNAMICSview(request, submission_id, model_id=None):
                                 print("errors in the form Dynamics Components", Scom_inst.errors.as_text())                                   
                                 response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
                                 return response                                                                                                         
-            direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(submission_id) 
+            # dyn_id = DyndbDynamics.objects.filter(submission_id=submission_id)[0].pk
+            # direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(dyn_id) 
+            direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(submission_id)
             print("\nDirectorio a crear ", direct)
             if not os.path.exists(direct):
                 os.makedirs(direct)
@@ -8124,6 +8128,7 @@ def get_file_url_root():
 def get_file_paths(objecttype,url=False,submission_id=None,return_main_submission_dict=False,):
     ''' Function that defines file paths and URLs for served files.
     Edit to change file path and URLs.'''
+    # dyn_id = DyndbDynamics.objects.filter(submission_id=submission_id)[0].pk
     filepathdict = dict()
     #define objects
     filepathdict['molecule'] = dict()
@@ -8152,6 +8157,7 @@ def get_file_paths(objecttype,url=False,submission_id=None,return_main_submissio
         # root = "/"
     path = join_path(root,filepathdict[objecttype]['main'],relative=False,url=url)
     if submission_id is not None:
+        # submission_folder = filepathdict[objecttype]['submission']+str(dyn_id)
         submission_folder = filepathdict[objecttype]['submission']+str(submission_id)
         path = join_path(path,submission_folder,relative=False,url=url)
     if url:
@@ -10957,6 +10963,7 @@ def step1_submit(request, submission_id):
     # Create DyndbFile entry for this file
     (up_filename, ext) = pdbname.split('.', 1)
     file_id = save_dyndbfile(pdbname, ext, pdbfilepath, pdbfileurl, creation_fields, update_fields)
+
     # Save DyndbFilesDynamics table
     def save_dyndbfiles_intertables(dyn_id, submission_id, file_id, pdbname, pdbfileurl, pdbfilepath, file_type=0):
         """
@@ -11007,6 +11014,7 @@ def step1_submit(request, submission_id):
         else:
             Dfm = dyndb_Files_Model(filemod_data)
             Dfm.save()
+
     # Save DyndbFile intermediate tables
     save_dyndbfiles_intertables(dyn_id, submission_id, file_id, pdbname, pdbfileurl, pdbfilepath, file_type=0)
     # Count and save number of atoms in DyndbDynamics table using MDtraj
@@ -11718,6 +11726,20 @@ def prot_info(request):
     isoform = request.GET['isoform']
     submission_id = request.GET['submission_id']
     (data,errdata) = retreive_data_uniprot(uniprotkbac,isoform=isoform, columns="id,accession,organism_id,protein_name,organism_name,sequence,protein_families")
+
+    # Find protein type in a quite crappy way
+    uniname = data['Protein names']
+    # Determine protein type of this chain
+    if (('ceptor' in uniname) or ('rhodopsin' in uniname) or ('frizzled' in uniname)):
+        prot_type = 1 # GPCR
+    elif ('Guanine nucleotide-binding protein' in uniname):
+        prot_type = 2 # G-protein subunit
+    elif ('Beta-arrestin' in uniname):
+        prot_type = 3 # Beta arrestin
+    else:
+        prot_type = 4 # We'lll assume any other protein as a peptide ligand 
+    data['prot_type'] = prot_type
+    
     return HttpResponse(json.dumps(data),content_type='step3/'+submission_id)    
 
 def find_prots(request,submission_id):
@@ -11746,7 +11768,6 @@ def find_prots(request,submission_id):
                 uniseq = get_uniprot_seq(uniprotkbac) if uniprotkbac else dps.sequence
             else: #Proteins without uniprotkbac
                 uniseq = dps.sequence
-            print("HOLITAAA", uniseq)
             # Extract data to send into form
             mydict = {
                 'uniprot': uniprotkbac,
@@ -11850,7 +11871,7 @@ def find_prots(request,submission_id):
                     'segments' : [],
                     'mutations' : [],
                     'submission_id': submission_id,
-                    'prot_type' : dp.prot_type,
+                    'prot_type' : '',
             }
             # If there are segments in this chain, create a segment entry for every one
             if len(segids):
@@ -12461,7 +12482,7 @@ def step4_submit(request, submission_id):
                 }
                 files_dict.update(creation_fields)
                 Df = dyndb_Files(files_dict)
-                print(Df.errors, placeholder)
+                # print(Df.errors, placeholder)
                 df = Df.save()
                 file_id = df.id
                 # Now that we have the file_id, create filenames, paths and urls accordingly
@@ -12549,6 +12570,7 @@ def doitobib(doi):
     """
     #IMPORTS
     from requests.exceptions import HTTPError,ConnectionError,Timeout,TooManyRedirects
+    from unidecode import unidecode
 
     #OUTDATA
     data = dict()
@@ -12557,6 +12579,7 @@ def doitobib(doi):
     #URL
     url = "https://doi.org/" + doi
     headers = {"accept": "application/x-bibtex"}
+
     try: 
         r = requests.get(url, headers = headers)
         info_r = r.text
@@ -12564,54 +12587,78 @@ def doitobib(doi):
         # Clean the data
         info = info_r.replace("\n", "").replace("\t", "").split(",") 
         # Extract info and store it on different variables
+        data["doi"] = doi
+
+        auth_switch = 0
+        authors = ""
+        
         for dt in info: 
-            if "doi =" in dt: #DOI
-                l_doi = dt.split("{")
-                doi_in = l_doi[-1].replace("}","")
-                data["doi"] = doi_in
-            elif "author =" in dt: #Author
-                l_auth = dt.split("=")
-                auth = l_auth[-1].replace("{","").replace("\\", "").replace("'","").replace("}","")
-                auth = re.sub("[^A-Z0-9_\s-]", "", auth,0,re.IGNORECASE).replace("and", ",").replace(" ,",",")[1:]
-                data["auth"] = auth
-            elif "title =" in dt: #Title
+            # if "doi" in dt: #DOI
+            #     l_doi = dt.split("{")
+            #     doi_in = l_doi[-1].replace("}","")
+            #     data["doi"] = doi_in
+            if "title" in dt: #Title
+                auth_switch = 0
                 l_title = dt.split("=")
-                title = l_title[-1].replace("{","").replace("}","")[1:]
+                title = l_title[-1].replace("{","").replace("}","").rstrip().lstrip()
                 data["title"] = title
-            elif "journal =" in dt: #Journal or Press
+            elif "journal" in dt: #Journal or Press
+                auth_switch = 0
                 l_journal = dt.split("=")
-                journal = l_journal[-1].replace("{","").replace("}","")[1:]
+                journal = l_journal[-1].replace("{","").replace("}","").rstrip().lstrip()
                 data["journal"] = journal
-            elif "year =" in dt: #Publication year::
+            elif "year" in dt: #Publication year:
+                auth_switch = 0
                 l_year = dt.split("=")
-                year = l_year[-1][1:]
+                year = l_year[-1].replace("{","").replace("}","").rstrip().lstrip()
                 data["year"] = int(year)
-            elif "number =" in dt: #Issue:
+            elif "number" in dt: #Issue:
+                auth_switch = 0
                 l_number= dt.split("=")
-                number = l_number[-1].replace("{","").replace("}","")[1:]
+                number = l_number[-1].replace("{","").replace("}","").rstrip().lstrip()
                 data["issue"] = int(number)
-            elif "volume =" in dt: #Volume:
+            elif "volume" in dt: #Volume:
+                auth_switch = 0
                 l_volume = dt.split("=")
-                volume = l_volume[-1].replace("{","").replace("}","")[1:]
+                volume = l_volume[-1].replace("{","").replace("}","").rstrip().lstrip()
                 data["volume"] = int(volume)
-            elif "pages =" in dt: #Pages:
+            elif "pages" in dt: #Pages:
+                auth_switch = 0
                 l_pages = dt.split("=")
-                pages = l_pages[-1].replace("{","").replace("}","")[1:]
+                pages = l_pages[-1].replace("{","").replace("}","").rstrip().lstrip()
                 if "--" in pages:
                     data["pages"] = pages.replace("--","-")
+                elif "â€“" in pages:
+                    data["pages"] = pages.replace("â€“","-")
                 else:
                     data["pages"] = pages
-            elif "url =" in dt: #URL:
+            elif "url" in dt: #URL:
+                auth_switch = 0
                 l_url = dt.split("=")
-                url = l_url[-1].replace("{","").replace("}","")[1:]
-                data["url"] = url
+                ref_url = l_url[-1].replace("{","").replace("}","").rstrip().lstrip()
+                data["url"] = ref_url
+            elif "editor" in data: 
+                auth_switch = 0
+            elif "author" in dt or auth_switch == 1: #Author
+                auth_switch = 1
+                if "=" in data:
+                    l_auth = data.split("=")
+                    auth = l_auth[-1].replace("{","").replace("\\", "").replace("'","").replace("}","")
+                else:
+                    auth = data
+                # auth =re.sub("[^A-Z0-9_\s-]", "", auth,0,re.IGNORECASE)
+                if authors == "":#First author 
+                    authors = unidecode(auth).replace(" ,",",").replace("}","").rstrip().lstrip()
+                else:
+                    authors = authors + ", " + unidecode(auth).replace(" ,",",").replace("}","").rstrip().lstrip()
+                data["auth"] = authors
         
         # Extract PMID
         try: 
             data["pmid"] = doitopmid(doi)
         except Exception as e: 
             print(e)
-            data["pmid"] = doitopmid(doi_in)
+            data["pmid"] = "Not found!"
     except HTTPError:
         errdata['Error'] = True
         errdata['ErrorType'] = 'HTTPError'
