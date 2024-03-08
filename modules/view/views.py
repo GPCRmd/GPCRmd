@@ -639,6 +639,68 @@ def str_len_limit(mystr):
         mystr=mystr[:47]+"..."
     return mystr
 
+def get_gprot(dyn_id):
+    """
+    Obtain G protein alpha subunit name, and chain IDs of all G protein subunits (if any)
+    """    
+    prot_name = False
+    chain_alpha = False
+    chain_beta = False
+    chain_gamma = False
+    dm = DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id__dyndbdynamics__id=dyn_id)[0]
+    for dp in DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics=dyn_id):
+        # If protein is a G prot alpha subunit
+        if (dp.prot_type==2):
+            DMR = DyndbModeledResidues.objects.filter(id_protein=dp.pk,id_model=dm.pk)
+            if len(DMR): # Check if the user actually put modeled residues...
+                chain_id= DMR[0].chain.upper()
+                uniprot = dp.uniprotkbac
+                try:
+                    prot_name = Protein.objects.get(accession=uniprot).name.lower()
+                except Protein.DoesNotExist:
+                    prot_name = dp.name.lower()
+                if 'alpha' in prot_name:
+                    name_alpha = prot_name
+                    chain_alpha = chain_id
+                elif 'beta' in prot_name:
+                    chain_beta = chain_id
+                elif 'gamma' in prot_name:
+                    chain_gamma = chain_id
+
+    return(prot_name, chain_alpha, chain_beta, chain_gamma)
+
+def get_gpcr(dyn_id):
+    """
+    Given a dyn_id, determine if any of its proteins is a GPCR. 
+    Return corresponding Protein and DyndbProtein objects
+    """
+    gpcr_chain = False
+    dp_gpcr = False
+    p_gpcr = False
+    DP = DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics__pk=dyn_id)
+    dm = DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id__dyndbdynamics__id=dyn_id)[0]
+    for dp in DP:
+        if dp.prot_type==1:
+            gpcr_chain=  DyndbModeledResidues.objects.filter(id_protein=dp.id,id_model=dm.pk)[0].chain.upper() 
+            dp_gpcr = dp
+            p_gpcr = dp.receptor_id_protein
+    return(gpcr_chain,dp_gpcr,p_gpcr)
+
+def get_peptidelig(dyn_id):
+    """
+    Obtain peptide ligand, if any
+    """    
+    prot_id = False
+    name = False
+    peplig_chain = False
+    dm = DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id__dyndbdynamics__id=dyn_id)[0]
+    for dp in DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics=dyn_id):
+        if dp.prot_type==4:
+            prot_id = dp.id
+            name=dp.name
+            peplig_chain= DyndbModeledResidues.objects.filter(id_protein=dp.id,id_model=dm.pk)[0].chain.upper() 
+    return(prot_id, name, peplig_chain)
+
 def obtain_prot_lig(dyn_id):
     model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
     if model.id_protein:
@@ -1891,7 +1953,7 @@ def update_bokeh_interface_water(request):
         wHBs= request.POST.get("wHBs")
         waterPlot= request.POST.get("waterPlot")
         plotBoth= request.POST.get("plotBoth")#used to change down plot without removing top one
-        print(res_id, wHBs)
+        # print(res_id, wHBs)
 
         # Read csv of dyn and traj        
         try:     
@@ -2319,9 +2381,13 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
     request.session.set_expiry(0) 
     mdsrv_url=obtain_domain_url(request)
     dyn_data = DyndbDynamics.objects.get(id=dyn_id)
+    subm_data = DyndbSubmission.objects.get(id=dyn_data.submission_id.id)
+    userid = dyn_data.created_by
     delta = dyn_data.delta
     if not request.POST:
         access = False
+    if str(userid) == str(request.user.id or ''):#User owner of the submission 
+        access = True
     else:
         try:
             form = AuthenticationFormSub(data=request.POST)
@@ -2339,12 +2405,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
             admin = False
     except: #AttributeError: 'AnonymousUser' object has no attribute 'is_admin'
         admin = False
-    
     # Check if simulation is published or not:
-    if not dyn_data.is_published and access != "True" and not admin: 
+    if not subm_data.is_published and not access and not admin: 
         form = AuthenticationFormSub()
         context = {}
-        context["dyn_id"]=dyn_id
+        context["url"]=f"/view/{dyn_id}/"
         context["form"] = form
         return render(request, 'accounts/login_sub.html', context)
        
@@ -2583,12 +2648,14 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
             warning_load=request.session["warning_load"]
         else:
             warning_load={"trajload":True,"heavy":True}
+
 ##### ---- NATHALIE CODE HERE -------
 # retrieving the filepaths from the database. put traj_id as key and vol/occ map as value. Then pass this variable through context variable.
         watermaps = False
         occupancy = obtain_volmaps(dyn_id)   #the variables contain dictionaries with the occupancy and density maps filepaths. CHANGE THIS! only occupancy 
         if occupancy:
             watermaps = True 
+
 #### ---- Water Happiness -------
 # retrieving the filepaths from the database. put traj_id as key and vol/occ map as value. Then pass this variable through context variable.
         waterhappiness = False # to know i fthere is data of water happiness for any traj of the given dyn id
@@ -2598,6 +2665,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
         for key, value in happiness.items(): # check if some traj has data
             if len(value)>0:
                 waterhappiness = True              
+
 #### ---- PHarmacophores ------------
         pharma_jsonpath = settings.MEDIA_ROOT + "Precomputed/pharmacophores/dyn" + str(dyn_id) + '/pharmaco_itypes.json'
         if os.path.exists(pharma_jsonpath):
@@ -2617,6 +2685,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
         # Check if Allosteric communication data is avaliable for this entry
         ap_data_avail = os.path.exists(settings.MEDIA_ROOT + "Precomputed/allosteric_path/dyn"+str(dyn_id)) # Example file 
         
+        #### ------Getting GPCR and Gprot chains---
+        (gprot_name_alpha, gprot_chain_a, gprot_chain_b, gprot_chain_g) = get_gprot(dyn_id)
+        (gpcr_chain,dbprot_gpcr,prot_gpcr) = get_gpcr(dyn_id)
 
 #### --------------------------------
 
@@ -2636,6 +2707,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
             structure_file="Dynamics/11661_metadyn_176.pdb"
             structure_name="11661_metadyn_176.pdb"
         first_strideval=trajidToFramenum[traj_list[0][2]][1]
+
+        #### -----Chemical shift (CS)---
+        test_cs=True #If true the CS tool is open by defaut
+        (cs_data_avail, cs_sparta_avail, cs_selection_params, cs_resid_names, resid_to_resname)=load_chemshift_data(dyn_id,traj_list[0][2])
 
         #structure_file="Dynamics/with_prot_lig_multchains_gpcrs.pdb"########################### [!] REMOVE
         #structure_name="with_prot_lig_multchains_gpcrs.pdb" ################################### [!] REMOVE
@@ -4516,7 +4591,7 @@ def ac_load_data(request,dyn_id):
     )
 
     # Get a color for each weight value
-    print(min_w, max_w)
+    # print(min_w, max_w)
     df_top['cyldiam'] = df_top['weight'].apply(
         lambda x: get_cyldiam(x, max_w, min_w)
     )
@@ -4691,8 +4766,6 @@ def basicview(request,dyn_id):
         framenum=trajfile.dyndbfilesdynamics_set.all()[0].framenum
         file_info=(trim_path_for_mdsrv(trajfile.filepath),trajfile.filename,trajfile.id,framenum)
         traj_filepath_li.append(file_info)
-
-
 
     model_filepath=trim_path_for_mdsrv(modelfile.filepath)
     #traj_filepath=trim_path_for_mdsrv(trajfile.filepath)

@@ -4,7 +4,6 @@ from rest_framework import serializers
 import copy
 from collections import OrderedDict
 
-
 # search_dyn_class/ 
 class DynsClassSerializer(serializers.ModelSerializer):
     classname = serializers.SerializerMethodField()
@@ -149,6 +148,7 @@ class ProteinConformationSerializer(serializers.ModelSerializer):
         model = ProteinConformation
         fields = ['name']
 class DynsSearchSerializer(serializers.ModelSerializer):
+    dyn_id = serializers.IntegerField(source='id') 
     pdb_namechain = serializers.CharField(source = "id_model.pdbid", allow_null=True)
     uniprot = serializers.CharField(source = 'id_model.id_protein.uniprotkbac', allow_null=True)
     protname = serializers.CharField(source = 'id_model.id_protein.name', allow_null=True)
@@ -191,7 +191,9 @@ class DynsSearchSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = DyndbDynamics
-        fields = ['pdb_namechain', 
+        fields = [
+            'dyn_id',
+            'pdb_namechain', 
             'uniprot', 
             'protname',
             'state', 
@@ -207,6 +209,14 @@ class DynsSearchSerializer(serializers.ModelSerializer):
             'forcefield', 
             'forcefield_version', 
             ] 
+
+class SubsSearchSerializer(serializers.ModelSerializer):
+    dyn_id = serializers.IntegerField(source='id') 
+    class Meta:
+        model = DyndbDynamics
+        fields = [ 
+                  'submission_id', 'dyn_id'
+                  ] 
 
 # search_list_dyn      
 class ListDynsSearchSerializer(serializers.ListField):

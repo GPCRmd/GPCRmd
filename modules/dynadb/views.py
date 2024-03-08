@@ -15,6 +15,8 @@ from django.core.files.storage import FileSystemStorage
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth.decorators import login_required
 from modules.accounts.user_functions import user_passes_test_args, is_submission_owner, is_published_or_submission_owner
+from modules.accounts.forms import AuthenticationFormSub
+
 from collections import OrderedDict
 from sendfile import sendfile
 from pathlib import Path
@@ -2280,7 +2282,10 @@ def search_protein(protein_id):
     fiva['Uniprot_id']=protein_record.uniprotkbac    
     fiva['Protein_name']=protein_record.name
     fiva['is_mutated']=protein_record.is_mutated
-    fiva['cannonical']=DyndbProteinCannonicalProtein.objects.select_related("id_cannonical_proteins").filter(id_protein=protein_id).values_list('id_cannonical_proteins__id_protein__id')[0]#.id_cannonical_proteins.id_protein.id #2 hits
+    try:
+        fiva['cannonical']=DyndbProteinCannonicalProtein.objects.select_related("id_cannonical_proteins").filter(id_protein=protein_id).values_list('id_cannonical_proteins__id_protein__id')[0]#.id_cannonical_proteins.id_protein.id #2 hits
+    except:
+        fiva['cannonical']=""
     fiva['scientific_name'] = DyndbProtein.objects.select_related("id_uniprot_species").get(pk=protein_id).id_uniprot_species.scientific_name #1hit
     for match in DyndbProteinMutations.objects.filter(id_protein=protein_id):
         fiva['mutations'].append( (match.resid,match.resletter_from, match.resletter_to) )
@@ -2880,10 +2885,43 @@ def extract_mutations(mutation_li,seq_pdb):
             prot_mut_li.append(element)
     return prot_mut_li
     
-@user_passes_test_args(is_published_or_submission_owner)
+#  @user_passes_test_args(is_published_or_submission_owner)
 def query_dynamics(request,dynamics_id):
     '''Returns information about the given dynamics_id.Returns an Http Response '''
+    request.session.set_expiry(0) 
     mdsrv_url=obtain_domain_url(request)
+    dyn_data = DyndbDynamics.objects.get(id=dynamics_id)
+    subm_data = DyndbSubmission.objects.get(id=dyn_data.submission_id.id) #Use the is_published of Dyndbsubmission instead of DyndbDynamics
+    userid = dyn_data.created_by
+    if not request.POST:
+        access = False
+    if str(userid) == str(request.user.id or ''):#User owner of the submission 
+        access = True
+    else:
+        try:
+            form = AuthenticationFormSub(data=request.POST)
+            if form.is_valid():
+                access = request.POST["access"]
+            else:
+                access = False
+        except:
+            access = False
+    
+    try: 
+        if request.user.is_admin: 
+            admin = True
+        else:
+            admin = False
+    except: #AttributeError: 'AnonymousUser' object has no attribute 'is_admin'
+        admin = False
+    # Check if simulation is published or not:
+    if not subm_data.is_published and not access and not admin: 
+        form = AuthenticationFormSub()
+        context = {}
+        context["url"]=f"/dynadb/dynamics/id/{dynamics_id}/"
+        context["form"] = form
+        return render(request, 'accounts/login_sub.html', context)
+    
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dynamics_id)
     paths_dict={}
     for e in dynfiles:
@@ -4624,6 +4662,7 @@ def DYNAMICSreuseview(request, submission_id, model_id ):
             # dyn_id = DyndbDynamics.objects.filter(submission_id=submission_id)[0].pk
             # direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(dyn_id) 
             direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(submission_id)
+
             print("\nDirectorio a crear ", direct)
             if not os.path.exists(direct):
                 os.makedirs(direct)
@@ -7097,6 +7136,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
             # dyn_id = DyndbDynamics.objects.filter(submission_id=submission_id)[0].pk
             # direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(dyn_id) 
             direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(submission_id)
+
             print("\nDirectorio a crear ", direct)
             if not os.path.exists(direct):
                 os.makedirs(direct)

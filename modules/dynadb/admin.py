@@ -60,17 +60,23 @@ def close_submission(modeladmin, request, queryset):
 def open_submission(modeladmin, request, queryset):
     queryset.update(is_closed=False)
 
+@admin.action(description="Ready for precomputing selected submissions")
+def ready_submission(modeladmin, request, queryset):
+    query = DyndbDynamics.objects.filter(submission_id=queryset.values_list('id', flat=True)[0])
+    query.update(is_published = True)
+
+@admin.action(description="Unready for precomputing selected submissions")
+def unready_submission(modeladmin, request, queryset):
+    query = DyndbDynamics.objects.filter(submission_id=queryset.values_list('id', flat=True)[0])
+    query.update(is_published = False)
+
 @admin.action(description="Publish selected submissions")
 def published_submission(modeladmin, request, queryset):
     queryset.update(is_published=True)
-    query = DyndbDynamics.objects.filter(submission_id=queryset.values_list('id', flat=True)[0])
-    query.update(is_published = True)
 
 @admin.action(description="Unpublish selected submissions")
 def unpublished_submission(modeladmin, request, queryset):
     queryset.update(is_published=False)
-    query = DyndbDynamics.objects.filter(submission_id=queryset.values_list('id', flat=True)[0])
-    query.update(is_published = False)
 @admin.register(DyndbSubmission)
 class DyndbSubmissionAdmin(admin.ModelAdmin):
     

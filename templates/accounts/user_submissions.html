@@ -34,12 +34,13 @@
       width: 105px;
     }
   </style>
+  
 </head>
 {% extends "home/base.html" %}
 {% load static %}
 
-
 {% block content %}
+
 <div class="row regForm">
   <!-- description column -->
   <div class="col-md-3 col-md-offset-1">
@@ -85,9 +86,16 @@
 
           </p>
 
+          <div class="row">
+            <div class="col-md-8 firstBtn">
+              <a href="/dynadb/db_inputform/" class="submitBtn btn btn-block" style="margin-left: 17vh;">New submission</a>
+            </div>
+          </div>
+
           <form action="{% url 'dynadb:db_inputform' submission_id=sub.submission_id %}" method="post">
             {% csrf_token %}
-            <table class="simTable table table-responsive">
+            <table id="tb_submission" class="simTable table table-responsive">
+              <thead>
               <tr>
                 {% if superuser %}
                 <th>Username</th>
@@ -98,7 +106,10 @@
                 <th>State</th>
                 <th></th>
                 <th></th>
+                  <th></th>
               </tr>
+              </thead>
+              <tbody>
               {% for sub in submission_table %}
               <tr id="row_sub{{sub.submission_id}}">
                 {% if superuser %}
@@ -147,17 +158,13 @@
                 {% else %}<p>
                 <a href="{% url 'dynadb:submission_summary' submission_id=sub.submission_id %}">See summary</a></p></td>
                 <td></td>
+                  <td></td>
                 {% endif %}
               </tr>
               {% endfor %}
+              </tbody> 
             </table>
           </form>
-
-          <div class="row">
-            <div class="col-md-8 firstBtn">
-              <a href="/dynadb/db_inputform/" class="submitBtn btn btn-block">New submission</a>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -227,4 +234,33 @@
     return false
   };
 </script>
+
+<link href="https://cdn.datatables.net/2.0.0/css/dataTables.dataTables.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css"><!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
+<link rel="stylesheet" type="text/css" src="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://cdn.datatables.net/2.0.0/js/dataTables.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/fixedheader/3.2.3/js/dataTables.fixedHeader.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
+<script>
+  table.dataTable tbody tr td {
+      word-wrap: break-word;
+      word-break: break-all;
+  }
+</script>
+{% if superuser %}
+  <script src="{% static 'accounts/js/table_admin.js' %}"></script>
+{% else %}
+  <script src="{% static 'accounts/js/table.js' %}"></script>
+{% endif %}
+
+
 {% endblock %}

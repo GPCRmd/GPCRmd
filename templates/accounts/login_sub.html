@@ -13,7 +13,7 @@
 <div class="logIncontent row">
   <div class="col-sm-12">
 
-    <form action="/view/{{dyn_id}}/" method="post">
+    <form action="{{url}}" method="post">
       {% csrf_token %}
       <input type="hidden" name="access" value=True> 
 

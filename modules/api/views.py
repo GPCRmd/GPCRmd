@@ -164,7 +164,7 @@ class SearchByUniprots(generics.ListAPIView):
 # search_dyn
 class SearchByDyn(generics.ListAPIView):
     """
-    Retrieve information related with the dynamic id in GPCRmd database. Same information displayed in the Search tool: https://www.gpcrmd.org/dynadb/search/ (e.g. 11 or 17 or 21)
+    Retrieve information related with the dynamic id in GPCRmd database. Same information displayed in the Search tool: https://devel.gpcrmd.org/dynadb/search/. The input could be one or more dynamic ids (e.g. 11 or 17, 21)
     """
     serializer_class = DynsSearchSerializer # Get info from DyndbDynamics using ids relationships
     
@@ -177,15 +177,32 @@ class SearchByDyn(generics.ListAPIView):
         queryset = DyndbDynamics.objects.filter(id__in=dyn_id)
         return queryset
 
+# search_sub
+class SearchBySub(generics.ListAPIView):
+    """
+    Return the dynamic/s id related with the submission/s id indicated. The input could be one or more submission ids (e.g. 200,1427).
+    """
+    serializer_class = SubsSearchSerializer # Get info from DyndbDynamics using ids relationships
+    
+    def get_queryset(self, *args, **kwargs):
+        sub_id = self.kwargs['sub_id']
+        sub_id = sub_id.replace(" ", "")
+        sub_id = sub_id.split(",")
+        sub_id = list(filter(None, sub_id)) # Remove empty strings in list
+        sub_id = [ int(x) for x in sub_id ] # Convert to int
+        queryset = DyndbDynamics.objects.filter(submission_id__in=sub_id)
+        return queryset
+
 # NOT API TOOLS ###############################################################################################################################################################
 import os
 from os.path import join
 import shutil
-import mimetypes
+import time
 import json
 
 from wsgiref.util import FileWrapper
 
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.http import StreamingHttpResponse, HttpResponse
@@ -229,7 +246,7 @@ class AllDownloader:
 
         # Seach the files
         self.dic_files = {}
-        for dyn in self.l_dyns[0:5]:#Limit to 5 dyns 
+        for dyn in self.l_dyns[0:5]:#Limit to first 5 dyns 
             self.dic_files[f"dyn_{dyn}"] = list(DyndbFilesDynamics.objects.filter(id_dynamics = dyn).values_list("id_files", flat=True)) #[10394, 10395, 10396, 10397, 10398, 10399, 10400]     10395_dyn_36.psf  |  NOT 10398_trj_36_xtc_bonds 
         
         # Check list 

@@ -7,7 +7,7 @@ import csv
 from django.conf import settings
 from modules.view.obtain_gpcr_numbering import generate_gpcr_pdb
 from modules.view.data import change_lig_name
-from modules.view.views import obtain_compounds, sort_by_myorderlist, obtain_prot_chains, obtain_DyndbProtein_id_list, obtain_rel_dicts, obtain_seq_pos_info, compute_interaction, obtain_all_chains, relate_atomSerial_mdtrajIndex
+from modules.view.views import obtain_compounds, sort_by_myorderlist, obtain_prot_chains, obtain_DyndbProtein_id_list, obtain_rel_dicts, obtain_seq_pos_info, compute_interaction, obtain_all_chains, relate_atomSerial_mdtrajIndex, get_gpcr, get_gprot, get_peptidelig
 from django.db import models
 from django.forms import ModelForm, Textarea
 from django.core.management.base import BaseCommand, CommandError
@@ -71,7 +71,7 @@ def json_dict(path):
     json_data = json.loads(json_str)
     return json_data
 
-def prot_from_model(model):
+def prot_from_model(self, model):
     """Given a db model obj, gets the GPCR protein object"""
     model_prot=model.id_protein
     if model_prot:
@@ -109,24 +109,6 @@ def gprot_within_uniprots(uniprots):
         if len(P) and (P[0].residue_numbering_scheme.name == 'Common G-alpha numbering scheme'):
             has_gprot=True
     return(has_gprot)
-
-def get_gprot(dyn_id):
-    """
-    Obtain G protein alpha subunit, if any
-    """    
-    prot_name = False
-    chain_id = False
-    dm = DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id__dyndbdynamics__id=dyn_id)[0]
-    for dp in DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics=dyn_id):
-        # If protein is a G prot alpha subunit
-        if (dp.prot_type==2) and ('alpha' in dp.name):
-            chain_id= DyndbModeledResidues.objects.filter(id_protein=dp.id,id_model=dm.pk)[0].chain.upper()
-            uniprot = dp.uniprotkbac
-            try:
-                prot_name = Protein.objects.get(accession=uniprot).name
-            except Protein.DoesNotExist:
-                prot_name = dp.name
-    return(prot_name, chain_id)
 
 def gpcr_dyn_id(dyn_id):
     """
@@ -177,16 +159,18 @@ def obtain_files_from_dyn(dyn_id):
     struc_file_name = False
     traj_files = []
     traj_files_names = []
-    for df in DFD:
-        file_type = df.type
+    framenums = []
+    for dfd in DFD:
+        file_type = dfd.type
         if file_type == 0: # If it is coordinate file
-            struc_file = df.id_files.filepath
-            struc_file_name = df.id_files.filename
+            struc_file = dfd.id_files.filepath
+            struc_file_name = dfd.id_files.filename
         elif file_type == 2: # If it is trajectory
-            traj_files.append(df.id_files.filepath)
-            traj_files_names.append(df.id_files.filename)
+            traj_files.append(dfd.id_files.filepath)
+            traj_files_names.append(dfd.id_files.filename)
+            framenums.append(dfd.framenum)
 
-    return (struc_file,struc_file_name,traj_files,traj_files_names)
+    return (struc_file,struc_file_name,traj_files,traj_files_names,framenums)
 
 def get_orthostericlig_resname(dyn_id,change_lig_name):
     """Returns a list with the the resname of the orthosteric ligamd(s) of a dynamics"""
@@ -210,21 +194,6 @@ def get_orthostericlig_resname(dyn_id,change_lig_name):
         lig_resname=[change_lig_name[dyn_id]["resname"]] 
     return (ddc_id,lig_name,lig_resname)
         
-def get_peptidelig(dyn_id):
-    """
-    Obtain peptide ligand, if any
-    """    
-    prot_id = False
-    name = False
-    peplig_chain = False
-    dm = DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id__dyndbdynamics__id=dyn_id)[0]
-    for dp in DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics=dyn_id):
-        if dp.prot_type==4:
-            prot_id = dp.id
-            name=dp.name
-            peplig_chain= DyndbModeledResidues.objects.filter(id_protein=dp.id,id_model=dm.pk)[0].chain.upper() 
-    return(prot_id, name, peplig_chain)
-
 def retrieve_info(self,dyn,data_dict,change_lig_name):
     """
     Retrieves all the necessary info of the dyn obj for the analysis and computes it.
@@ -239,13 +208,13 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
     pdb_id=model.pdbid
     user=dyn.submission_id.user_id.username
     is_ours = dyn.submission_id.is_gpcrmd_community
-    (gprot_name, gprot_chain) = get_gprot(dyn_id)
-    (gpcr_chain,dbprot_gpcr,prot_gpcr) = gpcr_dyn_id(dyn_id)
+    (gprot_name_alpha, gprot_chain_a, gprot_chain_b, gprot_chain_g) = get_gprot(dyn_id)
+    (gpcr_chain,dbprot_gpcr,prot_gpcr) = get_gpcr(dyn_id)
     dbprot_id = dbprot_gpcr.pk if dbprot_gpcr else False
     lname = dbprot_gpcr.name if dbprot_gpcr else False
     # (prot,total_num_prot)=prot_from_model(model)
     # Obtain uniprot name of GPCR ONLY if we have a GPCR here
-    (struc_file,struc_file_name,traj_files,traj_files_names)=obtain_files_from_dyn(dyn_id) 
+    (struc_file,struc_file_name,traj_files,traj_files_names,framenums)=obtain_files_from_dyn(dyn_id) 
     if not struc_file_name:
         self.stdout.write(self.style.NOTICE("No structure file found. Skipping."))
 
@@ -291,10 +260,12 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
             "lig_lname": lig_name,
             "lig_sname":lig_sel,
             "prot_lname":lname,
-            "gprot_name":gprot_name,
+            "gprot_name":gprot_name_alpha,
             "prot_sname":shortname,
             "peplig":peplig_chain,
-            "gprot_chain":gprot_chain,
+            "gprot_chain_a":gprot_chain_a,
+            "gprot_chain_b":gprot_chain_b,
+            "gprot_chain_g":gprot_chain_g,
             "gpcr_chain":gpcr_chain,
             "up_name":up_name_gpcr,
             "pdb_id":pdb_id,
@@ -302,6 +273,7 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
             "struc_fname":struc_file_name,
             "traj_f":traj_files,
             "traj_fnames":traj_files_names,
+            "framenums" : framenums,
             "delta":delta,
             "gpcr_pdb":gennum['gpcr'], 
             "gprot_pdb":gennum['gprot'],
@@ -417,7 +389,7 @@ class Command(BaseCommand):
         if alldyn:
             dynobjs = DyndbDynamics.objects.filter(is_published=True)
         else:
-            dynobjs = DyndbDynamics.objects.filter(id__in=dynid, is_published=True)
+            dynobjs = DyndbDynamics.objects.filter(id__in=dynid)
 
         ##################
         ###Begin iteration

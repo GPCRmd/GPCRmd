@@ -32,7 +32,6 @@
     margin:10px 0;
 }
 
-
 #table_id_wrapper {
     top:100px;
 }
@@ -58,10 +57,12 @@
 .dt-buttons button:hover span{
     color: white;
 }
+
 </style>
 {% endblock %}
 
 {% comment %} <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css"> {% endcomment %}
+
 <base href="your_domain/" target="_PARENT">
 </head>
 
@@ -88,6 +89,8 @@
     <a class="searchCols textlink toggle-vis " data-column="17">Submitted by</a>
 
 </div>
+<br>
+<p >Search boxes accept regular expressions to filter (e.g. State box: "^active" returns words that startwith active only, "Active") </p>
 <table id="table_id" class="display" style="width:100%">
     <thead>
         <tr>
@@ -168,7 +171,9 @@
                     {% endfor %}
                 {% endif %}
             </td>
-            <td class="modelname">{% autoescape off %}{{data.modelname | limitlength:60}}{% endautoescape %}</td>
+            <td class="modelname">
+                {% autoescape off %}{{data.modelname | limitlength:60}}{% endautoescape %}
+            </td>
             <td class="numofatoms">{{data.atom_num}}</td>
             <td class="membranecomposition">
                 {% if data.not_GPCR %}
@@ -212,6 +217,7 @@
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 
 <!-- END From base.html -->
+
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css"><!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
 <link rel="stylesheet" type="text/css" src="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 
@@ -223,6 +229,9 @@
 <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
+
 <script type="text/javascript" src="{% static 'dynadb/searchtable.js' %}"></script>
+
 {% endblock %}
 </body>

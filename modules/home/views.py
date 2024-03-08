@@ -215,7 +215,6 @@ def gpcrmd_home(request):
         else:   
             last_u=timesim_com
             leg_u=str(timesim_com)
-            
         if int(float(timesim_ind)) == 0:
             timesim_ind=last_v
             leg_v=""            
@@ -355,7 +354,6 @@ def gpcrtree(request):
     dynall_values=dynclass.values("dyn_id","subm_date", "frames", "type", "delta","fam_slug","fam_slug2","is_published","is_traj","file_id","pdb_namechain", "is_gpcrmd_community")
     dyn_dict = {}
     #fam_d={"001":"A","002":"B1","003":"B2","004":"C","005":"F","006":"Taste 2","007":"Others"}
-
     gpcrmd_com_set = set()
     frames_set = set()
     delta_set = set()
@@ -388,6 +386,7 @@ def gpcrtree(request):
             dyn_dict[dyn_id]["delta"] = dyn["delta"]
             dyn_dict[dyn_id]["fam"]=fam
             dyn_dict[dyn_id]["is_gpcrmd_community"]=dyn["is_gpcrmd_community"]
+
             if dyn["is_traj"]:
                 dyn_dict[dyn_id]["trajs"]={dyn["file_id"]}
             else:
@@ -442,6 +441,7 @@ def gpcrtree(request):
     for index, row in st.iterrows():
         sys=row["Systems"]
         traj=row["Trajectories"]
+
         if sys == 0:
             sys=last_s
             traj=last_t
@@ -473,7 +473,6 @@ def gpcrtree(request):
         else:   
             last_u=timesim_com
             leg_u=str(timesim_com)
-            
         if int(float(timesim_ind)) == 0:
             timesim_ind=last_v
             leg_v=""            
@@ -572,16 +571,16 @@ def is_updating(request):
     """
     Check out if a load-all-simulations-after-updating thing is going on
     """
-    print(os.path.exists(settings.MAIN_ROOT + "/config/isloading.txt"))
-    isloading = os.path.exists(settings.MAIN_ROOT + "/config/isloading.txt")
+    print(os.path.exists(settings.MEDIA_ROOT + "config/isloading.txt"))
+    isloading = os.path.exists(settings.MEDIA_ROOT + "config/isloading.txt")
     return(HttpResponse(isloading))
 
 def remove_marker(request): 
     """
     Delete the load-all-simulations-after-updating once quickloading is done
     """
-    if os.path.exists(settings.MAIN_ROOT + "/config/isloading.txt"):
-        os.remove(settings.MAIN_ROOT + "/config/isloading.txt")
+    if os.path.exists(settings.MEDIA_ROOT + "config/isloading.txt"):
+        os.remove(settings.MEDIA_ROOT + "config/isloading.txt")
     return(HttpResponse())
 
 def quickloadall_both(request):
@@ -591,7 +590,7 @@ def quickloadall_both(request):
     """
 
     # Create uploading file
-    f = open(settings.MAIN_ROOT + '/config/isloading.txt','w')
+    f = open(settings.MEDIA_ROOT + 'config/isloading.txt','w')
     f.close()
 
     #DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_trajectory=True)

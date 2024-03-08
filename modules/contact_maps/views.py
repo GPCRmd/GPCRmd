@@ -85,6 +85,8 @@ def get_contacts_plots(request):
 	# Loading heatmap script 
 	script_list = []
 	for filename in filenames_list:
+		if "protwis" in filename:
+			filename = filename.replace("/protwis/sites/files", settings.MEDIA_ROOT)#Clean protwis old path from   "/protwis/sites/files" to '/GPCRmd/media/files/'
 		with open(filename, 'r') as scriptfile:
 			script = scriptfile.read()
 		script_list.append(script)

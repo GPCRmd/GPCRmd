@@ -371,6 +371,10 @@ $(document).ready(function(){
     var all_chains_raw_s=all_chains_raw.toString();
     var all_chains = all_chains_raw_s.split(",");
 
+    // Structure chains
+    var viewscreen = $("#view_screen");
+    var gpcr_chain = viewscreen.data('gpcr_chain');
+
     var gpcr_pdb_dict = $(".gpcr_pdb").data("gpcr_pdb");
     var bw_dict,gpcrdb_dict,pdb_gpcrdb,gpcr_id_name,all_gpcr_dicts,num_gpcrs;
     if (gpcr_pdb_dict !="no"){
