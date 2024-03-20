@@ -120,7 +120,7 @@ $(document).ready(function(){
             }
         });
         //Trigger click on random position to activate embed_contmaps_bottom set_positions function
-        $(flare_container+" #node-2x50 text").trigger("click");        
+        $(flare_container+" .node text").first().trigger("click");        
     }
 
     function show_in_structure(flare_container, fp_display){
@@ -131,7 +131,7 @@ $(document).ready(function(){
             $(fp_display).addClass("active");            
         }
         //Trigger click on random position to activate embed_contmaps_bottom set_positions function
-        $(flare_container+" #node-2x50 text").trigger("click");
+        $(flare_container+" .node text").first().trigger("click");
     }
 
     function colorsHoverActiveInactive(myselector,activeclass,colorhov,colorNohobAct, colorNohobInact){
@@ -377,6 +377,7 @@ $(document).ready(function(){
             clustdict_file = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/"+itype+"/"+stnd+"/"+ligandonly+"/flarejsons/"+clusters+"clusters/clustdict.json";
             compl_data_file = window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json"; //These 2 should be merged at some point
         }
+        compl_data_file = window.location.origin + "/dynadb/files/Precomputed/compl_info.json"; //These 2 should be merged at some point
 
         //Load needed Json files and execute NGL bottom viewers
         $.getJSON(clustdict_file, function(clustdict){  

@@ -69,9 +69,11 @@ $(document).ready(function(){
         fpjson['edges'] = fpjson['edges'].slice(0, top_number);
 
         plot=createFlareplot(fpsize, fpjson, fpdiv);
+        numfr = plot.getNumFrames();
+        plot.framesSum(0, numfr);        
 
         //Wider lines
-        $("path.link").css('stroke-width', 6); 
+        // $("path.link").css('stroke-width', 6); 
         //Thicker lines
         $("path.link").css('stroke-opacity', 0.5);         
 
@@ -209,7 +211,8 @@ $(document).ready(function(){
             flare_container = "#flare-container" + id;
             fpdiv = "#fpdiv" + id;            
             $(flare_container).html("");
-            var fpsize=setFpNglSize(true, flare_container); // Or just use the size used before?
+            // var fpsize=setFpNglSize(true, flare_container); // Or just use the size used before?
+            fpsize = 500
             plots[id] = createFlareplotCustom(fpsize, jsonData, flare_container, class_numbering);
             numfr = plots[id].getNumFrames();
             
@@ -290,7 +293,8 @@ $(document).ready(function(){
         dyn1 = $('#fpdiv1 .fp_display_element.is_active').data('tag');
         fpdir = $("#flare_col").data("fpdir");
     	if (fpdir) {
-            fpsize=setFpNglSize(true, "#flare-container0");
+            // fpsize=setFpNglSize(true, "#flare-container0");
+            fpsize = 500
 
             d3.json(fpdir+dyn0+"_top.json", function(jsonData){
     	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "A");

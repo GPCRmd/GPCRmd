@@ -4,7 +4,7 @@ from django.views.decorators.cache import cache_page
 from django.db.models import F, When, Case, FloatField, Sum, Count, Value
 from django.db.models.functions import Coalesce
 from modules.dynadb.models import DyndbDynamics, DyndbFilesDynamics
-from modules.news.models import News
+from modules.news.models import News, Article
 from modules.common.models import ReleaseNotes, ReleaseStatistics
 from modules.dynadb.views import obtain_domain_url
 from django.http import HttpResponse
@@ -303,6 +303,10 @@ def gpcrmd_home(request):
 
     mdsrv_url=obtain_domain_url(request)
     context["mdsrv_url"]=mdsrv_url
+
+    ### News
+    article_table = Article.objects.order_by('-id')[:3]
+    context["article_table"] = article_table
 
     return render(request, 'home/index_gpcrmd.html', context)
 

@@ -57,7 +57,7 @@
               //I know it is a bad practice to put javascript intermixed with html, but it was the only way to get it correctly executed
               var dend_elements = $('.infolayer, .cartesianlayer');
               dend_elements.css('transform-origin', 'bottom');
-              dend_elements.css('transform', 'scale(1.0, 1.05)');
+              dend_elements.css('transform', 'scale(1, 1.0516)');
             </script>
             <div id="loading_div">
               <img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}" />
@@ -357,8 +357,13 @@
   <!-- Bokeh -->
   <link href="https://cdn.pydata.org/bokeh/release/bokeh-1.4.0.min.css" rel="stylesheet" type="text/css">
   <link href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.4.0.min.css" rel="stylesheet" type="text/css">
-  <script src="https://cdn.pydata.org/bokeh/release/bokeh-1.4.0.min.js"></script>
-  <script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.4.0.min.js"></script>
+
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.3.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.3.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.3.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.3.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.3.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-api-2.4.3.min.js"></script>
   {% endblock %}
 
 </body>

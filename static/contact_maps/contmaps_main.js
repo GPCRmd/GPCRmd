@@ -116,13 +116,14 @@ $(document).ready(function(){
       var  scrollPos = 0, container, anots, anots_height, top_window, new_top, checkbutton;
       //Elements to scroll
       container = $("#main_plot_body"); 
-      anots =  $(".bk-annotation");
+      // anots = $("div.bk-root div.bk div.bk div.bk div.bk");
+      anots = $(".nanaanan")
       anots_height = anots.outerHeight();
       checkbutton = document.getElementById('xbutton');
       container.scroll(function(){
         if (checkbutton.checked){          
           top_window = container.scrollTop();
-          new_top = scrollPos - anots_height - 60;
+          new_top = scrollPos - anots_height - 100;
           anots.each(function(index, anot){
             //Now move the axis annotations
             //If scroll would result in annotations going higher than original position, set them in original position again
@@ -175,7 +176,6 @@ $(document).ready(function(){
           dynrect = $(this)
           dyntext = $(this).next()
           //Avoid taking cluster label in process
-            console.log(dynrect,dyntext)
           if (!dyntext.attr('data-unformatted').startsWith('cluster')){
             dynid = dyntext.attr('data-unformatted').match(re)[0];
             checkbox = $("#"+dynid+"_checkbox");

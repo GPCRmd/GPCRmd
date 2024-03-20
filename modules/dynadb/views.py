@@ -6504,8 +6504,8 @@ def delete_uploaded_dynamic_files(submission_id,dbtype):
     dyndb_submission_dynamics_files = dyndb_submission_dynamics_files.values('filepath')
     for row in dyndb_submission_dynamics_files:
         filepath2 = row['filepath']
-        if os.path.exists(filepath2):
-            os.remove(filepath2)
+        if os.path.exists(settings.MEDIA_ROOT + filepath2):
+            os.remove(settings.MEDIA_ROOT + filepath2)
             dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
             dyndb_submission_dynamics_files.delete()
 
@@ -10649,7 +10649,10 @@ def delete_submission(request, submission_id):
     # Return if the to-delete submission id was not created by this user
     def_user_dbengine=settings.DATABASES['default']['USER']
     def_user=request.user.id
-    DS = DyndbSubmission.objects.filter(id=submission_id, user_id=def_user)
+    if request.user.is_admin:
+        DS = DyndbSubmission.objects.filter(id=submission_id)
+    else:
+        DS = DyndbSubmission.objects.filter(id=submission_id, user_id=def_user)
     # Take all of the tables that we plan to eliminate
     # If this submission actually exists, start taking tables
     if len(DS):
@@ -11095,9 +11098,9 @@ def smalmol_info(inchikey):
         description = dmol.description
         # Ensure that we actually have files for this molecule
         DFM_sdf = DyndbFilesMolecule.objects.filter(id_molecule=dmol.id, type=0)
-        inGPCRmd = bool(len(DFM_sdf) and os.path.exists(DFM_sdf[0].id_files.filepath))
+        inGPCRmd = bool(len(DFM_sdf) and os.path.exists(settings.MEDIA_ROOT + DFM_sdf[0].id_files.filepath))
         DFM_image = DyndbFilesMolecule.objects.filter(id_molecule=dmol.id, type=2)
-        if (len(DFM_image) and os.path.exists(DFM_image[0].id_files.filepath)):
+        if (len(DFM_image) and os.path.exists(settings.MEDIA_ROOT + DFM_image[0].id_files.filepath)):
             imagepath = DFM_image[0].id_files.url  
         else:
             imagepath = ''
@@ -11268,6 +11271,7 @@ def find_smalmols(request, submission_id):
                 smalmols_data[mymol_num].update(smalmol_data)
                 smalmols_data[mymol_num]['mol_type'] = common_mols[resname][1]
             mol_num+=1
+    
     return HttpResponse(json.dumps(smalmols_data), content_type='step2/'+submission_id)
 
 def save_compound(dictpost, initfiles, molnum, DCom=None, mode='create'):
@@ -11501,7 +11505,7 @@ def save_molfile(dictfiles, inchikey, molnum, id_mol, creation_fields, update_fi
     submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
     # Ensure there is an SDF file to work with before advancing
     # If there isn't and we need it, send an error message
-    if ('sdfmol'+molnum in dictfiles.keys()) and (not len(DFM_sdf) or (submission_id == creation_submid) or (len(DFM_sdf) and not os.path.exists(DFM_sdf[0].id_files.filepath))):
+    if ('sdfmol'+molnum in dictfiles.keys()) and (not len(DFM_sdf) or (submission_id == creation_submid) or (len(DFM_sdf) and not os.path.exists(settings.MEDIA_ROOT + DFM_sdf[0].id_files.filepath))):
         # Base path and URL for our files to be in
         uploadfile = dictfiles['sdfmol'+molnum] 
         os.makedirs(submission_path,exist_ok=True)
@@ -11510,7 +11514,7 @@ def save_molfile(dictfiles, inchikey, molnum, id_mol, creation_fields, update_fi
         sdfname = get_file_name_submission("molecule",submission_id,molnum,ref=False,ext="sdf",forceext=False,subtype="molecule")
         logfile = open(os.path.join(submission_path,logname),'w')
         # IF there are no files OR we are updating previously submited molecule OR the current entry's associated file does not exist
-        if not len(DFM_sdf) or (submission_id == creation_submid) or (len(DFM_sdf) and not os.path.exists(DFM_sdf[0].id_files.filepath)):
+        if not len(DFM_sdf) or (submission_id == creation_submid) or (len(DFM_sdf) and not os.path.exists(settings.MEDIA_ROOT + DFM_sdf[0].id_files.filepath)):
             # Save file
             save_sdf(uploadfile, sdfname, submission_path, logfile)
             # Save tables
@@ -11520,7 +11524,7 @@ def save_molfile(dictfiles, inchikey, molnum, id_mol, creation_fields, update_fi
         logfile.close()
     # Save for images
     # Do you love a laddie with curyly, brown haair...?? Still, I love him, I can't deny it
-    if not len(DFM_image) or (submission_id == creation_submid) or (len(DFM_image) and not os.path.exists(DFM_image[0].id_files.filepath)):
+    if not len(DFM_image) or (submission_id == creation_submid) or (len(DFM_image) and not os.path.exists(settings.MEDIA_ROOT + DFM_image[0].id_files.filepath)):
         # Base path and URL for our files to be in
         os.makedirs(submission_path,exist_ok=True)
         # Get some filenames

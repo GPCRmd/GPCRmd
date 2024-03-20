@@ -5,9 +5,9 @@ from django.shortcuts import render
 from importlib.machinery import SourceFileLoader
 from django.http import HttpResponse
 from modules.view.views import obtain_domain_url
-from json import loads, dumps
+import json
 from wsgiref.util import FileWrapper
-from modules.contact_maps.scripts.customized_heatmap import *
+from modules.gpcr_gprot.scripts.customized_heatmap import *
 from django.views.decorators.csrf import csrf_protect
 import csv
 
@@ -17,7 +17,7 @@ def json_dict(path):
 	"""Converts json file to pyhton dict."""
 	json_file=open(path)
 	json_str = json_file.read()
-	json_data = loads(json_str)
+	json_data = json.loads(json_str)
 	return json_data
 
 def get_contacts_plots(request):
@@ -96,9 +96,7 @@ def get_contacts_plots(request):
 
 	# Loading dendrogram
 	dendfile = ("%sdendrograms/%sclusters_dendrogram.html" % (basedir, cluster))
-	dendr_figure = open(dendfile, 'r').read()
-
-	first_sim = clustdict['cluster1'][0]
+	dendr_figure = open(dendfile, 'r',encoding='utf-8').read()
 
 	# Send request 
 	context.update({
@@ -112,7 +110,7 @@ def get_contacts_plots(request):
 		'clusrange': list(range(1,int(cluster)+1)),
 		'mdsrv_url':mdsrv_url,
 		'dyn_to_names' : dyn_to_names,
-		'csvfile' : dumps(csv_data),
+		'csvfile' : json.dumps(csv_data),
 		'flarerange' : list(range(1,21))		
 	})
 	return render(request, 'contact_maps/index_h.html', context)
@@ -157,46 +155,46 @@ def customized_heatmap(request, foo):
 	stnd = request.GET.get('stnd')
 	code = request.GET.get('code')
 
+	# Colors
+	colors_grorrd = ['#800026', '#850026', '#8a0026', '#8f0026', '#940026', '#990026', '#9e0026', '#a30026', '#a80026', '#ad0026', '#b20026', '#b70026', '#bd0026', '#c00225', '#c30424', '#c60623', '#c90822', '#cc0a21', '#d00d21', '#d30f20', '#d6111f', '#d9131e', '#dc151d', '#df171c', '#e31a1c', '#e51e1d', '#e7221e', '#e9271f', '#eb2b20', '#ed2f21', '#ef3423', '#f13824', '#f33c25', '#f54126', '#f74527', '#f94928', '#fc4e2a', '#fc532b', '#fc582d', '#fc5d2e', '#fc6330', '#fc6831', '#fc6d33', '#fc7234', '#fc7836', '#fc7d37', '#fc8239', '#fc873a', '#fd8d3c', '#fd903d', '#fd933e', '#fd9640', '#fd9941', '#fd9c42', '#fd9f44', '#fda245', '#fda546', '#fda848', '#fdab49', '#fdae4a', '#feb24c', '#feb54f', '#feb853', '#febb56', '#febf5a', '#fec25d', '#fec561', '#fec864', '#fecc68', '#fecf6b', '#fed26f', '#fed572', '#fed976', '#feda79', '#fedc7d', '#fede80', '#fedf84', '#fee187', '#fee38b', '#fee48e', '#fee692', '#fee895', '#fee999', '#feeb9c', '#ffeda0', '#fbeaa4', '#f7e8a8', '#f4e6ac', '#f0e4b1', '#ece2b5', '#e9e0b9', '#e5ddbd', '#e1dbc2', '#ded9c6', '#dad7ca', '#d6d5ce', '#d3d3d3']
+
 	#Paths
-	basepath = settings.MEDIA_ROOT + "Precomputed/get_contacts_files/"
-	options_path = "%scontmaps_inputs/%s/%s/%s/" %(basepath, itype, stnd, ligandonly)
-	heatmap_path_jupyter = settings.MEDIA_ROOT + "Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/heatmaps/%s/" % (itype,stnd,ligandonly,rev)
-	heatmap_path = "%sheatmaps/%s/" % (options_path,rev)
-	custom_path = "%scustom_heatmaps_temp/" % (basepath)
+	precompath = settings.MEDIA_ROOT + "Precomputed/"
+	app_path = precompath+"get_contacts_files/"
+	mydata_path = "%scontmaps_inputs/%s/%s/%s/" %(app_path, itype, stnd, ligandonly)
+	heatmap_path = "%sheatmaps/%s/" % (mydata_path,rev)
+	custom_path = "%scustom_heatmaps_temp/" % (precompath)
 
 	print(str("Processing heatmap and dendrograms for %s-%s") % (itype, ligandonly))
 
 	#Loading files
-	compl_data = json_dict(str(basepath + "compl_info.json"))
-	df_ts = pd.read_pickle("%sheatmaps/%s/dataframe_for_customized.pkl" % (options_path, rev))
-	flare_template = json_dict(basepath + "template.json")
+	db_dict = json_dict(precompath + "compl_info.json")
+	df_ts = pd.read_pickle(heatmap_path+"dataframe_for_customized.pkl")
 
 	#Getting GPCR long-names (improved names)
-	(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
+	(partial_db_dict,df_ts,gennum)=improve_receptor_names(df_ts,db_dict)
+
+	# Create new column with both residue names and generic numbering of both residues interacting
+	df_ts = df_ts.apply(lambda x: find_resnames_resids(x, db_dict, three_to_one),axis=1)
+        
+	#Get long names of simulations
+	name_list = [ partial_db_dict[dyn]['recept_name_dynid']  for dyn in dyn_list ]
 
 	#Remove non-listed simulations from the dataframe
 	df_filt = df_ts[df_ts['Id'].isin(dyn_list)]
-
-	#Get long names of simulations
-	index = recept_info_order['receptor_unique_name']
-	name_list = [ recept_info[dyn][index]  for dyn in dyn_list ]
 
 	#Calculate heatmap height from the number of simulations present
 	h = int( len(df_filt.Id.unique()) * 18 )
 
 	#Taking some variables for dataframe slicing
 	max_columns = 50
-	pairs_number = len(df_filt.Position.unique())
+	pairs_number = len(df_filt.Residue.unique())
 	inter_number = df_filt.shape[0]
 	inter_per_pair = inter_number/pairs_number 
 	number_heatmaps = ceil((inter_number/inter_per_pair)/max_columns)
 
 	#Create custom heatmaps folder if not yet exists
 	os.makedirs(custom_path, exist_ok=True)
-
-	#Add PDB id column
-	pdb_id = recept_info_order['pdb_id']
-	df_filt['pdb_id'] = df_filt['Id'].apply(lambda x: recept_info[x][pdb_id])
 
 	#Make a CSV donwlodable file for this customized heatmap
 	csv_data = customized_csv(df_filt,itype)
@@ -216,31 +214,29 @@ def customized_heatmap(request, foo):
 			df_slided = df_filt[prev_slicepoint:]
 		else:
 			df_slided = df_filt[prev_slicepoint:slicepoint]
-		num_respairs = len(df_slided['Position'].unique())
+		num_respairs = len(df_slided['Residue'].unique())
 		w = int(num_respairs*20+40+248)
 		prev_slicepoint = slicepoint
 		
 		# Define bokeh figure and hovertool
-		hover = create_hovertool(itype, itypes_order, hb_itypes, typelist)
-		mysource,p = define_figure(w, h, df_slided, hover, itype)
+		hover = create_hovertool(itype, typelist, nogprot=True)
+		mysource,p = define_figure(w, h, df_slided, hover, colors_grorrd)
 		# Creating javascript for side-window
-		p = select_tool_callback(p, recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource)
+		p = select_tool_callback(p, partial_db_dict, gennum, itype, typelist, mysource)
 		
 		# Extract bokeh plot components and store them in lists
 		script, div = components(p)
 		div_list.append(div.lstrip())
 		script_list.append(script)
-
 	#==================================
 
 	mdsrv_url=obtain_domain_url(request)
 	
-		
 	basepath = settings.MEDIA_ROOT + "Precomputed/get_contacts_files/"
 	basedir = "%scontmaps_inputs/%s/%s/%s/" % (basepath,itype,stnd,ligandonly)
 
 	#Path to json
-	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/simulation_jsons/%s/" %  (itype, ligandonly)
+	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/flareplot_sims/%s/" %  (itype, ligandonly)
 	
 	#First batch of context variables
 	context = {
@@ -261,9 +257,8 @@ def customized_heatmap(request, foo):
 		'numbered_divs' : zip(number_heatmaps_list, div_list),
 		'sim_list' : list(zip(dyn_list, name_list)),
 		'mdsrv_url':mdsrv_url,
-		'csvfile' : dumps(csv_data),
+		'csvfile' : json.dumps(csv_data),
 		'flarerange' : list(range(1,21))
 	}
-	print('returning')
 
 	return render(request, 'contact_maps/customized.html', context)

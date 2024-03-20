@@ -47,7 +47,8 @@ def improve_receptor_names(df_ts,compl_data):
         dyn_data['recept_name_dynid'] = recept_name_dynid
         for k in ["up_name","lig_sname","dyn_id","prot_id","comp_id",
         "prot_lname","pdb_id","lig_lname","struc_fname","struc_f",
-        "traj_fnames","traj_f","delta",'class','peplig','gprot_name','gprot_chain','gpcr_chain']:
+        "traj_fnames","traj_f","delta",'class','peplig','gprot_name',
+        'gprot_chain_a','gprot_chain_b','gprot_chain_g','gpcr_chain']:
             dyn_data[k] = compl_data[dyn_id][k]
 
         # Dictionary for generic numberings       
@@ -79,6 +80,15 @@ def set_new_axis(df):
     pattern_pos2 = re.compile(r"\n\n(\d+)\n")
     df['Residue'] = df['Residue'].apply(new_cell)
     return df
+
+def filter_lowfreq(df):
+    """
+    Filter out interaction pairs with no system reaching at least 30%
+    """
+    # Filter lowfrequency
+    above_30perc = ((df > 0.30).sum(1)>1)
+    df = df[above_30perc]
+    return(df)
 
 def prepare_table(df,compl_data):
     """
@@ -113,7 +123,56 @@ def flareplot_template_gpcrgprot(df, jsonpath):
     Create a pseudoflareplot input json with no interactions, but with all avalible Residues.
     It will be used later as a template to create the top interactions flareplots.  
     """
-    #'track' entry for json file: each track is a node (Residue) in the flareplot
+
+    # G-protein numbering for each of its loops and helices
+    gprot_ind = {
+        'HN': (17),
+        'hns1': 18,
+        'S1': 19,
+        's1h1': 20,
+        'H1': 21,
+        'h1ha': 22,
+        'HA': 23,
+        'hahb': 24,
+        'HB': 25,
+        'hbhc': 26,
+        'HC': 27,
+        'hchd': 28,
+        'HD': 29,
+        'hdhe': 30,
+        'HE': 31,
+        'hehf': 32,
+        'HF': 33,
+        'hfs2': 34,
+        'S2': 35,
+        's2s3': 36,
+        'S3': 37,
+        's3h2': 38,
+        'H2': 39,
+        'h2s4': 40,
+        'S4': 41,
+        's4h3': 42,
+        'H3': 43,
+        'h3s5': 44,
+        'S5': 45,
+        's5hg': 46,
+        'HG': 47,
+        'hgh4': 48,
+        'H4': 49,
+        'h4s6': 50,
+        'S6': 51,
+        's6h5': 52,
+        'H5': 53}
+
+    # Color patterns for G protein 2ndary structures
+    gprot_colors = {
+    's' : "#f7b0b5",# FOr loops
+    'h' : "#f7b0b5",# FOr loops 
+    'H' : "#cf0617",# FOr helices
+    'S' : "#cf0617"# FOr sheets
+    }
+
+    # Colors for every helix in GPCR
     helix_colors = {'1':"#78C5D5",'12':"#5FB0BF",
                     '2':"#459BA8",'23':"#5FAF88",
                     '3':"#79C268",'34':"#9FCD58",
@@ -121,9 +180,9 @@ def flareplot_template_gpcrgprot(df, jsonpath):
                     '5':"#F5D63D",'56':"#F3B138",
                     '6':"#F18C32",'67':"#ED7A6A",
                     '7':"#E868A1",'78':"#D466A4",
-                    '8':"#BF63A6",'G':'#0D2B17',
-                    'Ligand--1':'#FF5050', 'Ligand': '#FF5050'}
-    allgennums = set(item for sublist in df_raw.index for item in sublist)
+                    '8':"#BF63A6"}
+    allgennums = set(item for sublist in df.index for item in sublist)
+    #'track' entry for json file: each track is a node (Residue) in the flareplot
     tracks = [{
         'trackLabel': 'Degree centrality',
         "trackProperties": []
@@ -133,13 +192,13 @@ def flareplot_template_gpcrgprot(df, jsonpath):
         'treePaths': []
     }]
     
-    #Add ligand
-    tracks[0]['trackProperties'].append({
-        'color' : "#FF5050",
-        'size' : 1.0,
-        'nodeName': 'Ligand'
-    })
-    trees[0]['treePaths'].append([1, 'Ligand'])
+    # #Add ligand
+    # tracks[0]['trackProperties'].append({
+    #     'color' : "#FF5050",
+    #     'size' : 1.0,
+    #     'nodeName': 'Ligand'
+    # })
+    # trees[0]['treePaths'].append([1, 'Ligand'])
     unsorted_trees = []
     unsorted_tracks = []
     
@@ -153,13 +212,19 @@ def flareplot_template_gpcrgprot(df, jsonpath):
         # If this is generic numbering of G protein, append tracks after those of GPCR
         elif (gennum.startswith('G') or gennum.startswith('H')) and (gennum not in added_gennums):
             
+            gennum_split = gennum.split('_')
+            helix = gennum_split[1]
+            helix_id = gprot_ind[helix]
+            gennum_noGH = '_'.join(gennum_split[1:3])
+            color_gprot = gprot_colors[gennum_noGH[0]]
             # gennum = gennum.replace('_',':')  
             trackprop = {
-                'color' : helix_colors['G'],
+                'color' : color_gprot,
                 'size' : 1.0,
-                'nodeName': gennum
+                'nodeName': gennum_noGH
             }
-            trees[0]['treePaths'].append([17, gennum])
+
+            trees[0]['treePaths'].append([helix_id, gennum_noGH])
             tracks[0]['trackProperties'].append(trackprop)
                        
         # If this is generic numbering multi-class of GPCR
@@ -195,7 +260,7 @@ def flareplot_template_gpcrgprot(df, jsonpath):
     trees[0]['treePaths'] = treePaths_sorted
     
     #Output jsondict to store
-    jsondict = { 'trees' : trees, 'tracks' : tracks }
+    jsondict = { 'trees' : trees, 'tracks' : tracks, "defaults": {"edgeColor": "rgba(50,50,50,100)", "edgeWidth": 2}}
     
     # Store json file
     with open(jsonpath, 'w') as jsonfile:
@@ -335,7 +400,7 @@ def dyn_flareplots(df_o, folderpath, flare_template = False):
         for leter in ['', 'A', 'B', 'C', 'F']:
             df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
             df_dict['name1'] = df[leter+'Pos'] if leter else df['APos'] # Class A comes as the default one
-            df_dict['name2'] = df['GprotPos'].str.replace('\n','_')
+            df_dict['name2'] = df['GprotPos'].str.replace('\n','_').str.replace('G_','')
             df_dict['frames'] = [[1]]*len(df_dict)
             df_dict['color'] = df['color']
             df_dict['value'] = df[dyn]
@@ -673,16 +738,18 @@ def cluster_flareplot(df, clustdict, folderpath, flare_template = False):
         df_clust['mean'] = df_clust.mean(axis = 1, numeric_only = True)
         mean_threshold = min(df_clust['mean'].nlargest(20).tolist())
         df_clust['color'] = df_clust['mean'].apply(lambda x: colors[color_len-round(x*color_len/100)]) #There are 101 colors avalible in list
+        df_clust['frames'] = df_clust['mean'].apply(lambda x: [str(i) for i in list(range(0,int(x)))])
 
         #Filter top 20 in df_clust
         df_clust = df_clust.nlargest(20,'mean')
 
         #'Edge' multi-entries, based on the 4 GPCR nomenclatures
-        for leter in ['A', 'B', 'C', 'F']:
+        for leter in ['', 'A', 'B', 'C', 'F']:
             df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
-            df_dict['name1'] = df_clust[leter+'Pos'] 
-            df_dict['name2'] = df_clust['GprotPos'].str.replace('\n','_')
-            df_dict['frames'] = [[1]]*len(df_dict)
+            df_dict['name1'] = df[leter+'Pos'] if leter else df['APos'] # Class A comes as the default one
+            df_dict['name2'] = df_clust['GprotPos'].str.replace('\n','_').str.replace('G_','')
+            df_dict['width'] = (df_clust['mean']).astype(int)
+            df_dict['frames'] = df_clust['frames']
             df_dict['color'] = df_clust['color']
             df_dict['value'] = df_clust['mean']
             leter_edges = df_dict.to_dict(orient="records")
@@ -693,6 +760,7 @@ def cluster_flareplot(df, clustdict, folderpath, flare_template = False):
                 jsondict = flare_template
             else:
                 jsondict = { leter+'edges' : leter_edges }
+
         #Writing json
         jsonpath = folderpath + clust + ".json"
         with open(jsonpath, 'w') as jsonfile:
@@ -966,7 +1034,9 @@ def select_tool_callback(partial_db_dict, gennum, itype, typelist, mysource):
                 var pdb_id=db_dyn['pdb_id'];
                 var pdb_id_nochain = pdb_id.split(".")[0];
                 var gpcr_chain=db_dyn['gpcr_chain'];
-                var gprot_chain=db_dyn['gprot_chain'];
+                var gprot_chain_a=db_dyn['gprot_chain_a'];
+                var gprot_chain_b=db_dyn['gprot_chain_b'];
+                var gprot_chain_g=db_dyn['gprot_chain_g'];
                 var delta=db_dyn['delta'];
              
                 if (plot_bclass != "col-xs-9"){
@@ -1012,9 +1082,9 @@ def select_tool_callback(partial_db_dict, gennum, itype, typelist, mysource):
                 $("#viewer_link").attr("href","../../../view/"+dId+"/"+pos_string);
                 $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
                 
-                console.log(gpcr_chain,gprot_chain)
                 $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', 
-                [struc_file, traj_fnames, traj_f ,lig, delta, pos, nglsel_pos_array, gpcr_chain, gprot_chain]);
+                [struc_file, traj_fnames, traj_f ,lig, delta, pos, nglsel_pos_array,
+                 gpcr_chain, gprot_chain_a, gprot_chain_b, gprot_chain_g]);
 
             } else {
                 if (plot_bclass != "col-xs-12"){
@@ -1077,8 +1147,9 @@ db_dict = json_dict(precompath + "compl_info.json")
 # Load flareplot template
 df_path = "%sall.tsv"%interta_path
 df_raw = pd.read_csv(df_path, sep="\s+")
+df_lowfreq = filter_lowfreq(df_raw)
 template_path = gpcrgprot_path + "template.json" 
-flareplot_template_gpcrgprot(df_raw, template_path)
+flareplot_template_gpcrgprot(df_lowfreq, template_path)
 flare_template = json_dict(template_path)
 
 # Interaction types and corresponding names

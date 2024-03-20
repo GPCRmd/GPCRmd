@@ -142,6 +142,9 @@ def customized_heatmap(request, foo):
 	stnd = request.GET.get('stnd')
 	code = request.GET.get('code')
 
+	# COlor scale
+	colors_grlgrdgr = ['#0d2b17', '#0e2d17', '#0f2f17', '#103118', '#123318', '#133618', '#143819', '#153a19', '#173c1a', '#183e1a', '#19411a', '#1a431b', '#1c451b', '#1d471b', '#1e4a1c', '#1f4c1c', '#214e1d', '#22501d', '#23521d', '#24551e', '#26571e', '#27591e', '#285b1f', '#295e1f', '#2b6020', '#2c6220', '#2d6420', '#2f6621', '#306921', '#316b22', '#326d22', '#346f22', '#357223', '#367423', '#377623', '#397824', '#3a7a24', '#3b7d25', '#3c7f25', '#3e8125', '#3f8326', '#408626', '#418826', '#438a27', '#448c27', '#458e28', '#469128', '#489328', '#499529', '#4a9729', '#4c9a2a', '#4e9b2d', '#519c30', '#549d34', '#569e37', '#599f3a', '#5ca03e', '#5ea141', '#61a345', '#64a448', '#67a54b', '#69a64f', '#6ca752', '#6fa855', '#71a959', '#74ab5c', '#77ac60', '#79ad63', '#7cae66', '#7faf6a', '#82b06d', '#84b170', '#87b374', '#8ab477', '#8cb57b', '#8fb67e', '#92b781', '#94b885', '#97b988', '#9abb8c', '#9dbc8f', '#9fbd92', '#a2be96', '#a5bf99', '#a7c09c', '#aac1a0', '#adc3a3', '#afc4a7', '#b2c5aa', '#b5c6ad', '#b8c7b1', '#bac8b4', '#bdc9b7', '#c0cbbb', '#c2ccbe', '#c5cdc2', '#c8cec5', '#cacfc8', '#cdd0cc', '#d0d1cf', '#d3d3d3']
+
 	#Paths
 	precompath = settings.MEDIA_ROOT + "Precomputed/"
 	app_path = precompath+"gpcr_gprot/"
@@ -154,7 +157,6 @@ def customized_heatmap(request, foo):
 	#Loading files
 	db_dict = json_dict(precompath + "compl_info.json")
 	df_ts = pd.read_pickle(heatmap_path+"dataframe_for_customized.pkl")
-	flare_template = json_dict(app_path + "template.json")
 
 	#Getting GPCR long-names (improved names)
 	(partial_db_dict,df_ts,gennum)=improve_receptor_names(df_ts,db_dict)
@@ -204,8 +206,8 @@ def customized_heatmap(request, foo):
 		prev_slicepoint = slicepoint
 		
 		# Define bokeh figure and hovertool
-		hover = create_hovertool(itype, itypes_order, hb_itypes, typelist)
-		mysource,p = define_figure(w, h, df_slided, hover, itype)
+		hover = create_hovertool(itype, typelist)
+		mysource,p = define_figure(w, h, df_slided, hover, colors_grlgrdgr)
 		# Creating javascript for side-window
 		p = select_tool_callback(p, partial_db_dict, gennum, itype, typelist, mysource)
 		

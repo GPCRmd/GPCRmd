@@ -3,19 +3,12 @@ condapath = ['', '/opt/gpcrmdenv/lib/python3.9', '/opt/gpcrmdenv/lib/python3.9/p
 sys.path = sys.path + condapath
 import re
 import os
-import csv
 from django.conf import settings
-from modules.view.obtain_gpcr_numbering import generate_gpcr_pdb
 from modules.view.data import change_lig_name
-from modules.view.views import obtain_compounds, sort_by_myorderlist, obtain_prot_chains, obtain_DyndbProtein_id_list, obtain_rel_dicts, obtain_seq_pos_info, compute_interaction, obtain_all_chains, relate_atomSerial_mdtrajIndex, get_gpcr, get_gprot, get_peptidelig
-from django.db import models
-from django.forms import ModelForm, Textarea
+from modules.view.views import obtain_compounds,  get_gpcr, get_gprot, get_peptidelig
 from django.core.management.base import BaseCommand, CommandError
-from django.db.models import F
 from pathlib import Path
-import pandas as pd
 import json
-import datetime
 from modules.dynadb.models import DyndbModel, DyndbProtein, DyndbFilesDynamics, DyndbSubmissionMolecule, DyndbDynamicsComponents,DyndbModeledResidues, DyndbDynamics
 from modules.protein.models import Protein
 from modules.dynadb.obtain_generic_numbering import obtain_class,generic_numbering 
@@ -186,7 +179,7 @@ def get_orthostericlig_resname(dyn_id,change_lig_name):
         ddc = DyndbDynamicsComponents.objects.get(id_molecule=dsm.molecule_id.id,id_dynamics=dyn_id)
         ddc_id = ddc.pk
         lig_resname = ddc.resname
-        leg_name = ddc.id_molecule.id_compound.name
+        lig_name = ddc.id_molecule.id_compound.name
 
     # There are couple of exceptions (in views/data.py, systems with specific cholesterols as aligands and this stuff)
     if (dyn_id in change_lig_name):
@@ -223,6 +216,7 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
     (comp_id,lig_name,lig_sel)=get_orthostericlig_resname(dyn_id,change_lig_name)
     if not comp_id:
         (comp_id,lig_name,peplig_chain) = get_peptidelig(dyn_id)
+        lig_sel = peplig_chain
 
     #Assign short name for dynamic
     up_name_gpcr = prot_gpcr.entry_name if prot_gpcr else False

@@ -278,6 +278,10 @@ hr {
   width: 204px !important;
 } */
 
+.bk-tooltip-row-label {
+  white-space: nowrap !important;
+}
+
 .extrawid{
   width: 110%;
 }

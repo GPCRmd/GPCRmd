@@ -81,8 +81,8 @@ def unpublished_submission(modeladmin, request, queryset):
 class DyndbSubmissionAdmin(admin.ModelAdmin):
     
     search_fields = ["=id"]
-    list_display = ("id", "is_closed", "is_published", "is_published_dyn", "id_model_link", "username")
-    list_filter = ["is_closed", "is_published"]
+    list_display = ("id", "is_closed", "is_published", "is_prepared", "is_gpcrmd_community", "id_model_link", "username")
+    list_filter = ["is_closed", "is_published", "is_gpcrmd_community"]
     actions = [close_submission, open_submission, published_submission, unpublished_submission]
 
     def id_model_link(self, obj):
@@ -96,14 +96,13 @@ class DyndbSubmissionAdmin(admin.ModelAdmin):
         except:
             return ""
 
-    def is_published_dyn(self,obj):
+    def is_prepared(self,obj):
         try:
-            is_published_dyn = DyndbDynamics.objects.filter(submission_id=obj.id).values_list("is_published", flat = True)[0]
-            if is_published_dyn:
+            is_prepared = DyndbDynamics.objects.filter(submission_id=obj.id).values_list("is_published", flat = True)[0]
+            if is_prepared:
                 return format_html('<img src="/static/admin/img/icon-yes.svg" alt="True">')
             else:
                 return format_html('<img src="/static/admin/img/icon-no.svg" alt="False">')
-
         except:
             return ""
         

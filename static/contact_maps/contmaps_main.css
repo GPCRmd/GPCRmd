@@ -215,6 +215,7 @@ input[type=checkbox] {
 }
 
 #dendrogram-heatmap {
+  margin-top: 160px;
   margin-bottom: 50px;
 }
 
@@ -609,6 +610,10 @@ hr {
 
 .tooltip {
   position: fixed;
+}
+
+.bk-tooltip-row-label {
+  white-space: nowrap !important;
 }
 
 #menu_link {

@@ -200,8 +200,8 @@ class smalmol_entry {
           <br>
         </div>              
       </div>
-      <div id="imagediv${id}" class='col-md-6 imagediv'>
-        <img id="mol_image${id}" class="mol_image" src="${imagepath}" height="100%" alt="Image not avalible yet for this molecule">
+      <div id="imagediv${id}" class='col-md-6 imagediv' style="text-align: center;">
+        <img id="mol_image${id}" class="mol_image" src="${imagepath}" height="50%" alt="Image not avalible yet for this molecule" style="margin-top: 25%;">
         <input type='hidden' name="image_path${id}" id="image_path${id}" form="mainform" value=${imagepath} >
       </div>
     </div>
@@ -326,7 +326,7 @@ function smalmol_listeners(){
         $('#smalmol_description'+id).val(smalmol_data['description']) 
         $('#mol_image'+id).attr('src',smalmol_data['imagepath'])
   
-        //Add SDF file input entry if required
+        // //Add SDF file input entry if required
         submitSDF(String(id), smalmol_data['inGPCRmd'], smalmol_data['creation_submission'])
 
         // Change name of the entry to name of the molecule

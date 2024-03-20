@@ -372,8 +372,8 @@ $(document).ready(function(){
     var all_chains = all_chains_raw_s.split(",");
 
     // Structure chains
-    var viewscreen = $("#view_screen");
-    var gpcr_chain = viewscreen.data('gpcr_chain');
+    var viewscreen = $("#view_screen")
+    var gpcr_chain = viewscreen.data('gpcr_chain')
 
     var gpcr_pdb_dict = $(".gpcr_pdb").data("gpcr_pdb");
     var bw_dict,gpcrdb_dict,pdb_gpcrdb,gpcr_id_name,all_gpcr_dicts,num_gpcrs;
@@ -5015,16 +5015,10 @@ $("#show_nearby_residues").on("change", function() {
 //-------- Pass data to MDsrv --------
     var gpcr_selection = function(){
     //function gpcr_selection(){
-        if (chains_str == ""){
-            receptorsel="protein";
+        if (gpcr_chain){
+            receptorsel="protein and (:"+gpcr_chain+")";
         } else {
-            var chains_s=/:(.*)$/.exec(chains_str)[1];
-            var chains_l = chains_s.match(/\w+/g);
-            receptorsel="protein and (";
-            for (cN=0 ; cN < chains_l.length ;cN++){
-                receptorsel+=":"+chains_l[cN]+ " , ";
-            }
-            receptorsel=receptorsel.slice(0,-3) +")";
+            receptorsel="protein";
         }
         return (receptorsel);
     }

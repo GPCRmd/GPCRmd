@@ -390,7 +390,7 @@ class SequenceParser(object):
                     self.mapping[chain_id][starting_aa + offset].add_gpcrdb(r.display_generic_number)
                 offset += 1
             elif c == '-' and w != '-':
-                print(offset)
+                # print(offset)
                 self.mapping[chain_id][starting_aa + offset].add_deletion()
             elif w != '-' and c != '-' and w != c:
                 self.mapping[chain_id][starting_aa + offset].add_mutation(c)
@@ -538,7 +538,7 @@ class SequenceParserPW(object):
         self.wt = Structure.objects.get(pdb_code__index=self.struct_id).protein_conformation.protein.parent
         self.wt_seq = str(self.wt.sequence)
         self.wt_seq_start = Residue.objects.filter(protein_conformation__protein=self.wt.id).order_by("sequence_number")[0].sequence_number
-        print(self.wt_seq_start)
+        # print(self.wt_seq_start)
         # a dictionary of per chain lists of peptides found in the pdb
         self.pdb_seq = {}
         for chain in self.pdb_struct:
@@ -584,7 +584,7 @@ class SequenceParserPW(object):
                     self.mapping[chain.id][offset+self.wt_seq_start].add_gpcrdb(r.display_generic_number)
                 offset += 1
             elif c == '-' and w != '-':
-                print(offset+self.wt_seq_start)
+                # print(offset+self.wt_seq_start)
                 self.mapping[chain.id][offset+self.wt_seq_start].add_deletion()
                 offset += 1
             elif w != '-' and c != '-' and w != c:
