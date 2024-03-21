@@ -930,7 +930,6 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                             if alignment[0][residcounter]!=alignment[1][residcounter]:
                                 print('\n\n\n\nSequences do not match:\n\n\n\n\n\n\n\n')
                                 a=[str(prot_id),str(residcounter+1),str(alignment[0][residcounter]),str(alignment[1][residcounter])]
-                                print(a)
                                 time.sleep(1)
                                 newrecord(['dyndb_protein_mutations',DyndbProteinMutations],{'id_protein':prot_id,'resid':residcounter+1,'resletter_from':alignment[0][residcounter],'resletter_to':alignment[1][residcounter]},True)
 

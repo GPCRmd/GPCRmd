@@ -82,7 +82,8 @@ def improve_receptor_names(df_ts,compl_data):
         dyn_data['recept_name_dynid'] = recept_name_dynid
         for k in ["up_name","lig_sname","dyn_id","prot_id","comp_id",
         "prot_lname","pdb_id","lig_lname","struc_fname","struc_f",
-        "traj_fnames","traj_f","delta",'class','peplig','gprot_name','gprot_chain','gpcr_chain']:
+        "traj_fnames","traj_f","delta",'class','peplig','gprot_name',
+        'gprot_chain_a','gprot_chain_b','gprot_chain_g','gpcr_chain']:
             dyn_data[k] = compl_data[dyn_id][k]
 
         # Dictionary for generic numberings       
@@ -119,15 +120,13 @@ def create_hovertool(itype, typelist, nogprot = False):
 
     return hover
   
-def define_figure(width, height, dataframe, hover, colors):
+def define_figure(width, height, dataframe, hover, colors, app='gpcr_gprot'):
     """
     Prepare bokeh figure heatmap as intended
     """
-    print(width,height)
 
     # Mapper colors
     # I left here the ones just in case
-    colors.reverse()
     mapper = LinearColorMapper(palette=colors, low=0, high=100)
 
     #Bokeh figure
@@ -168,13 +167,19 @@ def define_figure(width, height, dataframe, hover, colors):
         nonselection_line_color="white"
         )
 
+    # Initial X-label
+    if app=='gpcr_gprot':
+        title = '\n\n           A: \n           B: \n           C: \n           F: \n\nG protein: \n\n\n'
+        my_x=-3
+    else:
+        title = '\nA: \nB: \nC: \nF: \n\n\nA: \nB: \nC: \nF: \n'
+        my_x=-1
     #Very poor way of creating X-axis labels. Necessary for having linejumps inside the axis labels
     x_cord = 0
     y_cord = len(list(dataframe.Id.drop_duplicates()))#Residue: 11 spaces above the plot's top border
-    print('coords',x_cord,y_cord)
-    foolabel = HTMLLabel(x=-3,
+    foolabel = HTMLLabel(x=my_x,
                      y=y_cord,
-                     text='\n\n           A: \n           B: \n           C: \n           F: \n\nG protein: \n\n\n',
+                     text=title,
                     #  render_mode='css', 
                      border_line_alpha=1.0,
                      text_font_size = "10pt",
@@ -259,7 +264,9 @@ def select_tool_callback(p, partial_db_dict, gennum, itype, typelist, mysource):
                 var pdb_id=db_dyn['pdb_id'];
                 var pdb_id_nochain = pdb_id.split(".")[0];
                 var gpcr_chain=db_dyn['gpcr_chain'];
-                var gprot_chain=db_dyn['gprot_chain'];
+                var gprot_chain_a=db_dyn['gprot_chain_a'];
+                var gprot_chain_b=db_dyn['gprot_chain_b'];
+                var gprot_chain_g=db_dyn['gprot_chain_g'];
                 var delta=db_dyn['delta'];
              
                 if (plot_bclass != "col-xs-9"){
@@ -305,9 +312,9 @@ def select_tool_callback(p, partial_db_dict, gennum, itype, typelist, mysource):
                 $("#viewer_link").attr("href","../../../view/"+dId+"/"+pos_string);
                 $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
                 
-                console.log(gpcr_chain,gprot_chain)
                 $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', 
-                [struc_file, traj_fnames, traj_f ,lig, delta, pos, nglsel_pos_array, gpcr_chain, gprot_chain]);
+                [struc_file, traj_fnames, traj_f ,lig, delta, pos, nglsel_pos_array, 
+                gpcr_chain, gprot_chain_a, gprot_chain_b, gprot_chain_g, peplig]);
 
             } else {
                 if (plot_bclass != "col-xs-12"){
@@ -378,6 +385,7 @@ def customized_csv(df_filt,itype):
     Prepare the downloadable customized csv file
     """
     
+    df_filt['Name'] = df_filt['Name']+' ('+df_filt['Id']+')'
     df_csv = df_filt.pivot(index='Residue', columns='Name')
     #Sorting by ballesteros Id's (helixloop column) and clustering order
     df_csv['Interacting positions'] = df_csv.index

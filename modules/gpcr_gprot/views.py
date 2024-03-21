@@ -192,6 +192,7 @@ def customized_heatmap(request, foo):
 	number_heatmaps_list = []
 	script_list = []
 	prev_slicepoint = 0
+	colors_grlgrdgr.reverse()
 	for i in range(1,number_heatmaps+1):
 		number_heatmaps_list.append(str(i))
 

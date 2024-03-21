@@ -117,7 +117,7 @@ $(document).ready(function(){
       //Elements to scroll
       container = $("#main_plot_body"); 
       // anots = $("div.bk-root div.bk div.bk div.bk div.bk");
-      anots = $(".nanaanan")
+      anots = $("#pager_container")
       anots_height = anots.outerHeight();
       checkbutton = document.getElementById('xbutton');
       container.scroll(function(){

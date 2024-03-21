@@ -4271,7 +4271,7 @@ def quickload(request,dyn_id,trajfile_id):
 def quickloadall(request):
 
     # Create uploading file
-    f = open(settings.MEDIA_ROOT + 'config/isloading.txt','w')
+    f = open(settings.MAIN_ROOT + '/config/isloading.txt','w')
     f.close()
 
     #DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_trajectory=True)
@@ -4296,7 +4296,11 @@ def quickloadall(request):
         file_info=dyn["file_path"]
         if not file_info:
             continue
-        file_short=file_info[file_info.index("Dynamics"):]
+        try:
+            file_short=file_info[file_info.index("Dynamics"):]
+        except:
+            print(file_info)
+            continue
         if dyn["file_is_traj"]:
             dyn_dict[dyn_id]["traj"].append(file_short)
         elif dyn["file_ext"]=="pdb":

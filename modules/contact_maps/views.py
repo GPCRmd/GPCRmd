@@ -205,6 +205,7 @@ def customized_heatmap(request, foo):
 	number_heatmaps_list = []
 	script_list = []
 	prev_slicepoint = 0
+	colors_grorrd.reverse()
 	for i in range(1,number_heatmaps+1):
 		number_heatmaps_list.append(str(i))
 
@@ -220,7 +221,7 @@ def customized_heatmap(request, foo):
 		
 		# Define bokeh figure and hovertool
 		hover = create_hovertool(itype, typelist, nogprot=True)
-		mysource,p = define_figure(w, h, df_slided, hover, colors_grorrd)
+		mysource,p = define_figure(w, h, df_slided, hover, colors_grorrd, "contact_maps")
 		# Creating javascript for side-window
 		p = select_tool_callback(p, partial_db_dict, gennum, itype, typelist, mysource)
 		
