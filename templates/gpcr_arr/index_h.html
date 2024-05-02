@@ -1,0 +1,368 @@
+<head>
+
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script>document.domain = document.domain;</script>
+
+  <!--Jquery things-->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+
+  {% extends "home/base.html" %}
+  {% load static %}
+  {{staticfiles}}
+
+  {% block addon_css %}
+  <!--Contmaps styles-->
+  <link rel="stylesheet" type="text/css" href="{% static 'gpcr_gprot/gpcrgprot_main.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static '../mdsrv/webapp/css/main.css' %}" />
+  {% endblock %}
+
+</head>
+
+<body>
+
+  {% block content %}
+  {% csrf_token %}
+
+  <div class="panel panel-primary" id="inner_fixed">
+    <div id="aroundtitle">
+      <h2 class="panel-heading">Receptor meta-analysis</h2>
+      <h4 class="panel-heading">GPCR-Arrestin interaction frequency: <b style="vertical-align:unset">{{itype_name}}</b></h4>
+    </div>
+    <div class="howtoparent">
+      <a href="https://youtu.be/hHaw3SEf-D0" class="howBtn btn btn-default btn-sm" target="_blank" role="button">How
+        to use it<br><span class="glyphicon glyphicon-play"></span></a>
+    </div>
+    <div class="panel-body">
+
+    </div>
+  </div>
+
+  <div id="inner_remaining" class="row">
+    <!--Here be dendrogram and heatmaps-->
+    <div class="col-xs-12" id="retracting_parts">
+      <div class="panel panel-primary" id="main_plot_body">
+        <div class="panel-body">
+          <div id="menus" class="container-fluid">
+            {% include 'gpcr_gprot/menus.html' %}
+            {% include 'gpcr_gprot/menu_customheatmap.html' %}
+          </div>
+          <!--Heatmap pager -->
+          {% include 'gpcr_gprot/pager_colorbar.html' %}
+          <div id="dendrogram-heatmap" class="row fixedwidth">
+            <div id="dendrogram">
+              {{dendrogram | safe }}
+            </div>
+            <script>
+              //-------------- Resize dendrograms to avoid spurious margin. 
+              //I know it is a bad practice to put javascript intermixed with html, but it was the only way to get it correctly executed
+              var dend_elements = $('.infolayer, .cartesianlayer');
+              dend_elements.css('transform-origin', 'bottom');
+              dend_elements.css('transform', 'scale(1, 1.0516)');
+            </script>
+            <div id="loading_div">
+              <img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}" />
+              <p id="loading_text">Loading {{number_heatmaps_list|length}} heatmaps</p>
+            </div>
+            {% for number,div in numbered_divs %}
+            {% if number == "1" %}
+            <div id="heatmap{{number}}" data-number={{number}} style="display: inline-block;" class="heatmap">
+              {{ div | safe }}
+            </div>
+            {% else %}
+            <div id="heatmap{{number}}" data-number={{number}} class="heatmap">
+              {{ div | safe }}
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% for script in script_list %}
+            {{script | safe}}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--Here be side-window (the thing that opens up upon clicking on heatmap)-->
+    {% include 'gpcr_arr/side_window.html' %}
+
+    <div class="col-xs-12" id="not_retracting_parts">
+
+      <!--Here be flareplots and NGLs -->
+      <div class="panel panel-primary" id="flare_title">
+        <div class="panel-body" id="click_title" data-toggle="collapse" data-target="#flare_col"
+          onclick="turn_arrow('flare_arrow','click_title')">
+          <div class="title_div">
+            <h4 class="title">Top representative interactions in clusters <span id="flare_arrow"
+                class="glyphicon arrow glyphicon-chevron-down"></span>
+            </h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel panel-primary collapse" id="flare_col" data-fpdir="{{fpdir}}" aria-expanded="true">
+        <div class="panel-body">
+
+          <center>
+            <h4>Please, select two of the clusters from the above dendrogram to compare its top
+              <select id="flarerange">
+                {% for number in flarerange %}
+                {% if number == 5 %}
+                <option value={{number}} selected>{{number}}</option>
+                {% else %}
+                <option value={{number}}>{{number}}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+              interactions
+            </h4>
+          </center>
+
+          <div id="fpdiv0" class="col-xs-6 fpdiv bottomElement">
+            <center>
+
+              <!--Flareplot toolbar-->
+              <div id="allFPoptions" class="showIfTrajFP">
+                <button id="FPdisplay0" class="btn btn-default active changefocus FP-button"
+                  title="Show/Hide structural representations of the residues selected at the plot." type="button">
+                  Show in structure
+                </button>
+
+                <div class="clusters_dropup-div">
+                  <button id="clusterbutton0" class="btn btn-default dropdown-toggle-aux changefocus FP-button"
+                    type="button" data-toggle="dropdown">
+                    Cluster 1 <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu clusters_dropup-ul">
+                    {% for clus in clusrange %}
+                    {% if clus == 1 %}
+                    <li id="fp0_cluster{{clus}}" class="fp_display_element is_active" data-tag={{clus}}
+                      title="Display all interactions.">Cluster {{clus}}</li>
+                    {% else %}
+                    <li id="fp0_cluster{{clus}}" class="fp_display_element" data-tag={{clus}}
+                      title="Display all interactions.">Cluster {{clus}}</li>
+                    {% endif %}
+                    {% endfor %}
+                  </ul>
+                </div>
+
+                <div class="numbering_dropup-div">
+                  <button id="numberbutton0" class="btn btn-default dropdown-toggle-aux changefocus FP-button" type="button"
+                    data-toggle="dropdown">
+                    Class A numbering <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu numbering_dropup-ul">
+                    <li id="fp0_nomenA" class="fp_display_element is_active" data-tag="A"
+                      title="Ballesteros-Weinstein numbering system">Class A numbering</li>
+                    <li id="fp0_nomenB" class="fp_display_element" data-tag="B" title="Wootten numbering system">Class B
+                      numbering</li>
+                    <li id="fp0_nomenC" class="fp_display_element" data-tag="C" title="Pin numbering system">Class C
+                      numbering</li>
+                    <li id="fp0_nomenF" class="fp_display_element" data-tag="F" title="Wang numbering system">Class F
+                      numbering</li>
+                  </ul>
+                </div>
+
+                <button id="FPclearSel0" class="btn btn-danger FP-button" type="button"
+                  title="Unselect all interactions from the plot.">
+                  Clear plot
+                </button>
+              </div>
+
+              <span>
+                <center id="loading_flare0" class="loading_flare">
+                  <img src="/static/view/images/loading-gear.gif">
+                </center>
+              </span>
+              <div id="flare-container0" class="flare-container"></div>
+
+            </center>
+          </div>
+
+          <div id="fpdiv1" class="col-xs-6 fpdiv bottomElement" data-fpdir="{{fpdir}}">
+            <center>
+
+              <!--Flareplot toolbar-->
+              <div id="allFPoptions" class="showIfTrajFP">
+                <button id="FPdisplay1" class="btn btn-default active changefocus FP-button"
+                  title="Show/Hide structural representations of the residues selected at the plot." type="button">
+                  Show in structure
+                </button>
+
+                <div class="clusters_dropup-div">
+                  <button id="clusterbutton1" class="btn btn-default dropdown-toggle-aux changefocus FP-button"
+                    type="button" data-toggle="dropdown">
+                    Cluster 2 <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu clusters_dropup-ul">
+                    {% for clus in clusrange %}
+                    {% if clus == 2 %}
+                    <li id="fp1_cluster{{clus}}" class="fp_display_element is_active" data-tag={{clus}}
+                      title="Display 5 main interactions of cluster {{clus}}.">Cluster {{clus}}</li>
+                    {% else %}
+                    <li id="fp1_cluster{{clus}}" class="fp_display_element" data-tag={{clus}}
+                      title="Display 5 main interactions of cluster {{clus}}.">Cluster {{clus}}</li>
+                    {% endif %}
+                    {% endfor %}
+                  </ul>
+                </div>
+                <div class="numbering_dropup-div">
+                  <button id="numberbutton1" class="btn btn-default dropdown-toggle-aux changefocus FP-button" type="button"
+                    data-toggle="dropdown">
+                    Class A numbering <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu numbering_dropup-ul">
+                    <li id="fp1_nomenA" class="fp_display_element is_active" data-tag="A"
+                      title="Ballesteros-Weinstein numbering system">Class A numbering</li>
+                    <li id="fp1_nomenB" class="fp_display_element" data-tag="B" title="Wootten numbering system">Class B
+                      numbering</li>
+                    <li id="fp1_nomenC" class="fp_display_element" data-tag="C" title="Pin numbering system">Class C
+                      numbering</li>
+                    <li id="fp1_nomenF" class="fp_display_element" data-tag="F" title="Wang numbering system">Class F
+                      numbering</li>
+                  </ul>
+                </div>
+
+                <button id="FPclearSel1" class="btn btn-danger FP-button" type="button"
+                  title="Unselect all interactions from the plot.">
+                  Clear plot
+                </button>
+              </div>
+
+              <span>
+                <center id="loading_flare1" class="loading_flare">
+                  <img src="/static/view/images/loading-gear.gif">
+                </center>
+              </span>
+
+              <div id="flare-container1" class="flare-container"></div>
+
+            </center>
+          </div>
+
+          <div id="ngldiv0" class="col-xs-6 ngldiv bottomElement">
+
+            <div class="container-fluid NGLtoolbar">
+              <div class="row NGLtoolbar_row">
+                <div class="dropdown blueDropdownDiv" id="simulation_select">
+                  <button id="simButton0" class="btn btn-default btn-xs dropdown-toggle-aux blueButton" type="button"
+                    data-toggle="dropdown" data-dynid="{{clustdict.cluster1.0}}" aria-expanded="false"><span
+                      class="caret"></span></button>
+                  <ul class="dropdown-menu blueList simList">
+                    <span id="add_sim_bottom0"></span>
+                  </ul>
+                </div>
+                <div id="trajsDropdown0" class="dropdown blueDropdownDiv traj_select">
+                  <button id="trajButton0" class="btn btn-default btn-xs dropdown-toggle-aux blueButton" type="button"
+                    data-toggle="dropdown">
+                    <span class="caret"></span></button>
+                  <ul class="dropdown-menu blueList trajList">
+                    <span id="add_traj_bottom0"></span>
+                  </ul>
+                </div>
+              </div>
+              <div class="row NGLtoolbar_row">
+                <a id="viewer_link_bottom0" href="#" target='_blank' class="dropdown-toggle-aux btn btn-success btn-sm viewer_link_bottom"
+                  role="button"><b>View in workbench</b></a>
+              </div>
+            </div>
+
+            <span id="loading_ngl0"><img src="{% static 'view/images/loading-gear.gif' %}"
+                class="loading_NGL_bottom" /></span>
+            <iframe id="ngl_iframe0" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed_contmaps_bottom.html"
+              data-number="0" data-itype={{itype_code}} data-ligandonly={{ligandonly}} data-cluster={{cluster}}
+              data-warnings=true scrolling="no" style="border:none;" height="500px" width="100%"></iframe>
+            <div id="posNotinRec0" class="alert alert-warning posNotinRec">
+              <span id="posNotinRec_text0"></span>
+            </div>
+            <div id="speed_warnings0" data-display=true>
+            </div>
+            <button class="dropdown-toggle-aux btn btn-danger btn-xs NGLclear">Clear All</button>
+            <div class="pull-right">
+              <button id="restartPos0" type="button" class="btn btn-link settingsB" title="Reset position"><span
+                  class="glyphicon glyphicon-repeat"></span></button>
+              <button id="center0" type="button" class="btn btn-link settingsB" title="Center"><span
+                  class="glyphicon glyphicon-record"></span></button>
+            </div>
+          </div>
+
+          <div id="ngldiv1" class="col-xs-6 ngldiv bottomElement">
+
+            <div class="container-fluid NGLtoolbar">
+              <div class="row NGLtoolbar_row">
+                <div class="dropdown blueDropdownDiv" id="simulation_select">
+                  <button id="simButton1" class="btn btn-default btn-xs dropdown-toggle-aux blueButton" type="button"
+                    data-toggle="dropdown" data-dynid="{{clustdict.cluster2.0}}" aria-expanded="false"><span
+                      class="caret"></span></button>
+                  <ul class="dropdown-menu blueList simList">
+                    <span id="add_sim_bottom0"></span>
+                  </ul>
+                </div>
+                <div id="trajsDropdown1" class="dropdown blueDropdownDiv traj_select">
+                  <button id="trajButton1" class="btn btn-default btn-xs dropdown-toggle-aux blueButton" type="button"
+                    data-toggle="dropdown">
+                    <span class="caret"></span></button>
+                  <ul class="dropdown-menu blueList trajList">
+                    <span id="add_traj_bottom1"></span>
+                  </ul>
+                </div>
+              </div>
+              <div class="row NGLtoolbar_row">
+                <a id="viewer_link_bottom1" href="#" target='_blank' class="dropdown-toggle-aux btn btn-success btn-sm viewer_link_bottom"
+                  role="button"><b>View in workbench</b></a>
+              </div>
+            </div>
+
+            <span id="loading_ngl1"><img src="{% static 'view/images/loading-gear.gif' %}"
+                class="loading_NGL_bottom" /></span>
+            <iframe id="ngl_iframe1" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed_contmaps_bottom.html"
+              data-number="1" data-itype={{itype_code}} data-ligandonly={{ligandonly}} data-cluster={{cluster}}
+              data-stnd={{stnd}} scrolling="no" style="border:none;" height="500px" width="100%"></iframe>
+            <div id="posNotinRec1" class="alert alert-warning posNotinRec">
+              <span id="posNotinRec_text1"></span>
+            </div>
+            <div id="speed_warnings1" data-display=true>
+            </div>
+            <button class="dropdown-toggle-aux btn btn-danger btn-xs NGLclear">Clear All</button>
+            <div class="pull-right">
+              <button id="restartPos1" type="button" class="btn btn-link settingsB" title="Reset position"><span
+                  class="glyphicon glyphicon-repeat"></span></button>
+              <button id="center1" type="button" class="btn btn-link settingsB" title="Center"><span
+                  class="glyphicon glyphicon-record"></span></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <!--Load documentation div-->
+      {% include 'gpcr_arr/docs.html' %}
+    </div>
+
+  </div>
+
+
+  {% endblock content %}
+
+
+  {% block addon_js %}
+  <!--Contmaps javascripts -->
+  <script src="{% static 'gpcr_gprot/gpcrgprot_main.js' %}"></script>
+  <script src="{% static 'gpcr_gprot/emb_crossgpcr.js' %}"></script>
+
+  <!--Flareplots -->
+  <link rel="stylesheet" type="text/css" href="{% static 'contact_maps/flareplot-custom.css' %}" />
+  <script src="{% static 'view/fplot2/d3.v3.min.js' %}"></script>
+  <script src="{% static 'view/fplot2/docs/js/flareplot-main.js' %}"></script><!-- D:< -->
+  <script src="{% static 'contact_maps/flareplots.js' %}"></script>
+
+  <!-- Bokeh -->
+
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.1.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.1.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.1.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.1.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.1.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-api-2.4.1.min.js"></script>
+  
+  {% endblock %}
+
+</body>

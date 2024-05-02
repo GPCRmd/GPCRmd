@@ -5498,6 +5498,7 @@ $(document).ready(function(){
     }
    google.load("visualization", "1", {packages:["corechart"],'callback': drawCharts_time});
 
+
 /*      function drawChart_class() {
         var data_pre=$("#stats_class").data("class_data");
         var datainfo=[['Class', 'GPCR']];

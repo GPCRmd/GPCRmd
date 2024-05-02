@@ -23,9 +23,20 @@
       </div>
 
       <div class="row newsRow">
-        <div class="panelLeft col-xs-12 col-md-8">
+        <div class="panelLeft col-xs-12 col-md-10">
+          {% for article in article_table %}
+          <div id="div_news{{forloop.counter}}" class="subPanelLeft panel panel-primary">
+            <div class="news">
+                <h2 class="newTitle"><a href="{{ article.url }}" target="_blank" rel="noreferrer noopener" style="color:#BF3C1F">{{ article.title }}</a></h2>
+                <h6 class="line-clamp" style="font-size: 16px;">{{ article.authors }}</h6>
+                <p id="news{{forloop.counter}}_ab">{{ article.abstract }}</p>
+            </div><!-- End Item -->
+          </div>
+          {% endfor %}
+
           <!-- First piece of news -->
           <!-- Remember to use the number in all FOUR ids for the show/hide to work! -->
+          {% comment %} 
           <div id="div_news1" class="subPanelLeft panel panel-primary">
             <div class="news">
               <h2 class="newTitle">8th and Final ERNEST Meeting to Take Place in Crete with Participation from GPCR Drug Discovery Group</h2>
@@ -152,7 +163,7 @@
                 pathways. <a id="hide_news4" class="textlink" onclick="hideDiv(this)">Hide</a><br>
               </p>
             </div>
-          </div>
+          </div> {% endcomment %}
 
           
 
@@ -160,10 +171,8 @@
 
         <!-- Twitter section -->
         <div class="subPanelRight">
-          <div id="twitter_sect" class=" twPanel panel panel-primary text_col col-xs-12 col-md-4">
-            <a class="twitter-timeline" data-height="700" href="https://twitter.com/GPCRmd?ref_src=twsrc%5Etfw">News by
-              GPCRmd</a>
-            <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+          <div id="twitter_sect" class="text_col col-xs-12 col-md-2">
+            <p class="footA shortfoot"><a class="footA" target="_blank" href=https://twitter.com/GPCRmd><img style="width:100px" src="{% static 'home/images/footer/twitter-logo.png' %}"></img></a></p>
           </div>
         </div>
       </div>

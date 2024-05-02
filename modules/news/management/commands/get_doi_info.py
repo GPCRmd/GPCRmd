@@ -10,7 +10,9 @@ def doitopmid(doi):
 
     url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=" + doi + "&format=json"
     r = requests.get(url)
-    return r.text
+    info_pubmed_dict = json.loads(r.text)
+    pmid = info_pubmed_dict["esearchresult"]["idlist"][0]# PMID:
+    return int(pmid)
 
 
 def doitobib(doi):
@@ -28,15 +30,17 @@ def doitobib(doi):
 # Indicate the doi where we will obtain the data
 doi = "10.1038/s41586-023-05789-z"
 doi = "10.1093/bioinformatics/btaa117"
-
+doi = "10.1016/j.cell.2023.04.018"
+doi = input("Enter the doi: ")
 # Obtain the information from doi
 info = doitobib(doi)
-print(info)
+
 # Clean the data
 info = info.replace("\n", "").replace("\t", "").split(",") 
 
 auth_switch = 0
 authors = ""
+pages = ""
 
 # Extract info and store it on different variables
 for data in info: 
@@ -75,7 +79,6 @@ for data in info:
         auth_switch = 0
     elif "author" in data or auth_switch == 1: #Author
         auth_switch = 1
-        print(data)
         if "=" in data:
             l_auth = data.split("=")
             auth = l_auth[-1].replace("{","").replace("\\", "").replace("'","").replace("}","")
@@ -86,25 +89,17 @@ for data in info:
             authors = unidecode(auth).replace(" ,",",").replace("}","").rstrip().lstrip()
         else:
             authors = authors + ", " + unidecode(auth).replace(" ,",",").replace("}","").rstrip().lstrip()
-        print(authors)
 
 # Get PMID from PUBMED with DOI
-info_pubmed = doitopmid(doi)
-info_pubmed_dict = json.loads(info_pubmed)
-pmid = info_pubmed_dict["esearchresult"]["idlist"][0]# PMID:
+pmid = doitopmid(doi)
 
 print("DOI: " + doi)
 print("Authors: " + authors)
 print("Title: " + title)
-print("PMID: " + pmid)
+print("PMID: " + str(pmid))
 print("Journal: " + journal)
 print("Publication year: " + year)
 print("Issue: " + number)
 print("Volume: " + volume)
 print("Pages: " + pages)
 print("Url: " + ref_url)
-
-
-
-
-

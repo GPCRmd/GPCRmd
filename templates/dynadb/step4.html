@@ -1,5 +1,6 @@
 {% extends "home/base.html" %} 
 {% load static %} 
+{% load dynadb %}
 
 <!-- Form styles -->
 {% block addon_css %}
@@ -33,21 +34,39 @@
           </h4>
         </div>
         <div class="col-md-12 panel panel-primary panel-body">    
+          <!--Headers-->   
+          <div class="row input_row">
+            <div class="col-md-3 label_div">
+              <i>File type</i>
+            </div>
+            <div class="col-md-4">
+              <i>Input file/s</i>
+            </div>
+            <div class="col-md-2">
+              <i>Saved file/s</i>
+            </div>
+            <div class="col-md-2">
+              <i>Accepted formats</i>
+            </div>
+          </div>
           <!--topology file-->
           <div class="row input_row">
             <div class="col-md-3 label_div">
               <label for="dyn">
                 <p>
                   <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title="" data-original-title="Topology file used in your simulation."></span>
-                  Topology file:
+                  Topology:
                 </p>
               </label>
             </div>
             <div class="col-md-4">
-              <input type="file" required name="dyn"  class="validate[required,length[0,100]] feedback-input" placeholder="" accept=".psf,.top,.cms" id="dyn" />
+              <input type="file" name="dyn"  class="validate[required,length[0,100]] feedback-input" placeholder="" accept=".psf,.top,.cms" id="dyn" />
             </div>
-            <div>
-              <i>Accepted formats: psf, top, cms </i>
+            <div class="col-md-2">
+              <a style="font-size:14px" href={{ url_top }} download> {{ filename_top }} </a>          
+            </div>
+            <div class="col-md-2">
+              <i>psf, top, cms </i>
             </div>
 
           </div>
@@ -58,15 +77,20 @@
               <label for="trj">
                 <p>
                   <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title="" data-original-title="Trajectory file/s of your simulation (Multiple files allowed)."></span>
-                  Trajectory file/s:
+                  Trajectory:
                 </p>
               </label>
             </div>
             <div class="col-md-4">
-              <input type="file" required name="trj"  class="validate[required,length[0,100]] feedback-input" placeholder="" accept=".xtc,.dcd,.trr" id="trj" multiple />
+              <input type="file" name="trj"  class="validate[required,length[0,100]] feedback-input" placeholder="" accept=".xtc,.dcd,.trr" id="trj" multiple />
             </div>
-            <div>
-              <i>Accepted formats: dcd, xtc, trr </i>
+            <div class="col-md-2">
+            {% for f_traj in filename_trj %}
+              <a style="font-size:14px" href={{ url_trj|list_item:forloop.counter }} download> {{ f_traj }} </a>          
+            {% endfor %}
+            </div>
+            <div class="col-md-2">
+              <i>dcd, xtc, trr </i>
             </div>
           </div>
 
@@ -81,10 +105,13 @@
               </label>
             </div>
             <div class="col-md-4">
-              <input type="file" required name="prm" placeholder="" accept=".prm,.prmtop,.tar.gz,.tgz,.zip" id="prm"/>
+              <input type="file" name="prm" placeholder="" accept=".prm,.prmtop,.tar.gz,.tgz,.zip" id="prm"/>
             </div>
-            <div>
-              <i>Accepted formats: prm, prmtop, zip, tar.gz, tgz </i>
+            <div class="col-md-2">
+              <a style="font-size:14px" href={{ url_prm }} download> {{ filename_prm }} </a>          
+            </div>
+            <div class="col-md-2">
+              <i>prm, prmtop, zip, tar.gz, tgz </i>
             </div>
 
           </div>
@@ -102,8 +129,11 @@
             <div class="col-md-4">
               <input type="file"  name="prt" placeholder="" accept=".zip,.tar.gz,.tgz" id="prt"/>
             </div>
-            <div>
-              <i>Accepted formats: zip, tar.gz, tgz </i>
+            <div class="col-md-2">
+              <a style="font-size:14px" href={{ url_prot }} download> {{ filename_prot }} </a>          
+            </div>
+            <div class="col-md-2">
+              <i>zip, tar.gz, tgz </i>
             </div>
 
           </div>
@@ -114,15 +144,18 @@
               <label for="oth">
                 <p>
                   <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title="" data-original-title="Any other file relevant for this simulation (submit them as a compressed .tar.gz or .tgz file)"></span>
-                  Other files:
+                  Other:
                 </p>
               </label>
             </div>
             <div class="col-md-4">
               <input type="file"  name="oth" placeholder="" accept=".zip,.tar.gz,.tgz" id="oth"/>
             </div>
-            <div>
-              <i>Accepted formats: zip, tar.gz, tgz </i>
+            <div class="col-md-2">
+              <a style="font-size:14px" href={{ url_oth }} download> {{ filename_oth }} </a>          
+            </div>
+            <div class="col-md-2">
+              <i>zip, tar.gz, tgz </i>
             </div>
 
           </div>

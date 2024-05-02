@@ -18,3 +18,10 @@ def limitlength(value,maxlen):
             return value
     except:
         return maxlen
+    
+@register.filter(name='list_item')
+def list_item(lst, i):
+    try:
+        return lst[i]
+    except:
+        return None

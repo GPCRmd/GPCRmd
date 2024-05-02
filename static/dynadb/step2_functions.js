@@ -410,7 +410,11 @@ function smalmol_entries(data, container) {
   container.append(newmol.smalmolTemplate)
   //Listener to add new molecule entry on click of "add molecule" button
   $("#addmol_button").click(function(){
-    var new_id = $(".smalmol_entry").last().data('id') +1;
+    var new_id = $(".smalmol_entry").last().data('id') + 1;
+    if (isNaN(new_id)) {
+      var new_id = 0;
+    }
+
     mymol = new smalmol_entry(
      String(new_id),
      "readonly",

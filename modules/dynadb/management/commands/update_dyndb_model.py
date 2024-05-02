@@ -47,4 +47,3 @@ class Command(BaseCommand):
         if l_errors["not_found"] != []:                        
             print("         > Not pdb found in database...")
             print(f"    {l_errors['not_found']}")
-        

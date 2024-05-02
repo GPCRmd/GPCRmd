@@ -23,27 +23,34 @@ class Command(BaseCommand):
             help='Overwrites already stored data on ../modules/protein/management/tools/prot_data.json',
         )
     def handle(self, *args, **kwargs):
-        #Get data from GPCRdb services
-        url = "https://gpcrdb.org/services/receptorlist/"
         l_errors = {} #Store possible errors & warnings to display them at the end
         j_file = f"{MODULES_ROOT}/protein/management/tools/prot_data.json"
-        
-        try:
-            # urlData = requests.get(url).json()
-            urlData = requests.get(url)
-            urltext = urlData.text
-        except:
-            l_errors["connection"] = "Request to GPCRdb fails."
-        html_cleaner = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')#Clean tags and some not enclosed elements like &nsbm  
-        
         # Opening JSON file
         try:
             with open(j_file) as json_file:
                 prot_dic = json.load(json_file)
         except:
             prot_dic = ""
+        
+        gpcrdb_struct = f"{MODULES_ROOT}/protein/management/tools/gpcrdb_pdb.json"
+        try:
+            with open(gpcrdb_struct) as json_file:
+                struc_dic = json.load(json_file)
+        except:
+            struc_dic = ""
 
-        if kwargs['update'] or prot_dic == "": 
+        if kwargs['update'] or prot_dic == "" or struc_dic == "": 
+            #Get data from GPCRdb services
+            #Receptorlist   
+            url = "https://gpcrdb.org/services/receptorlist/"
+        
+            try:
+                # urlData = requests.get(url).json()
+                urlData = requests.get(url)
+                urltext = urlData.text
+            except:
+                l_errors["connection"] = "Request to GPCRdb fails."
+            html_cleaner = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')#Clean tags and some not enclosed elements like &nsbm  
             print("     - UPDATE FILES STEP...")
             if prot_dic == "":
                 print("         > Data not found... Collecting data...")
@@ -56,12 +63,27 @@ class Command(BaseCommand):
             dic_species_file.write(urltext)
             dic_species_file.close()
             
+            #Structure 
+            print("         > Writing info into ../modules/protein/management/tools/gpcrdb_pdb.json...")
+            
+            url = "https://gpcrdb.org/services/structure/"
+            json_info = open(mode="w", file=f"{MODULES_ROOT}/protein/management/tools/gpcrdb_pdb.json")
+            urlData = requests.get(url)
+            urltext = urlData.text
+            json_info.write(urltext)
+            json_info.close()
+                
         # Read information from table Protein   
         print("     - READING STEP...")
         print("         > Reading json data from GPCRdb...")
+        
         # data_prot = Protein.objects.all() 
         with open(j_file) as json_file:
             prot_dic = json.load(json_file)
+            
+        with open(gpcrdb_struct) as json_file:
+            struc_dic = json.load(json_file)
+
         # entry_name, accession, name, sequence, family_id, parent_id, residue_numbering_scheme_id, 
         # sequence_type_id, source_id, species_id      
 

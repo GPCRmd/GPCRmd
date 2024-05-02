@@ -377,11 +377,7 @@ $(document).ready(function(){
 
         //According to which application is using this file (the receptor meta-analysis or the gpcr-gprot) choose a file or the other      
         var compl_data_file;
-        if (main_url.includes('gpcr_gprot')){
             compl_data_file = window.location.origin + "/dynadb/files/Precomputed/compl_info.json"; 
-        } else {
-            compl_data_file = window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json"; //These 2 should be merged at some point
-        }
 
         $.getJSON(compl_data_file, function(compl_data){
             //Trigger the NGL viewers

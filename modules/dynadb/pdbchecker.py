@@ -172,7 +172,7 @@ def split_resnames_pdb(filename,outputfolder=None):
                             data[cresname]['filename'] = rfilename
                             data[cresname]['residues'] = set()
                             fileh = open(rfilename,'w',newline='\n')
-                            print(header,file=fileh)
+                            # print(header,file=fileh)
                             
                         else:
                             fileh = open(data[cresname]['filename'],'a',newline='\n')

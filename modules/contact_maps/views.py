@@ -220,7 +220,7 @@ def customized_heatmap(request, foo):
 		prev_slicepoint = slicepoint
 		
 		# Define bokeh figure and hovertool
-		hover = create_hovertool(itype, typelist, nogprot=True)
+		hover = create_hovertool(itype, typelist)
 		mysource,p = define_figure(w, h, df_slided, hover, colors_grorrd, "contact_maps")
 		# Creating javascript for side-window
 		p = select_tool_callback(p, partial_db_dict, gennum, itype, typelist, mysource)

@@ -31,7 +31,6 @@
 
   {% endblock %}
 
-
   <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
   <script src="{% static 'home/js/jquery.js' %}"></script>
   <!-- jQueryUI -->
@@ -42,7 +41,6 @@
   $.widget.bridge('uibutton', $.ui.button);
   </script>
   <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
-
 
 </head>
 <body>
@@ -67,6 +65,9 @@
       <div class="tab-content">
         <div id="topcorP" class="tab-pane fade in active">    
           <form id="topcorform"class="col-md-4">
+            <div id="nglviewer" style="display:none">
+              {% include "corplots/viewer.html" %}
+            </div>
             {% csrf_token %}
             <table class="table table-condensed table-borderless">
               <tbody>

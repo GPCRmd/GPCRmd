@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 import re 
+import json
 from unidecode import unidecode
 from bs4 import BeautifulSoup
 
@@ -10,13 +11,24 @@ from django.db.models import CharField,TextField, Case, When, Value as V, F, Q, 
 from modules.dynadb.models import DyndbDynamics, DyndbReferencesDynamics, DyndbReferences
 from modules.news.models import Article
 
+def doitopmid(doi):
+    """
+    Return the PMID for a given DOI.
+    """
+
+    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=" + doi + "&format=json"
+    r = requests.get(url)
+    info_pubmed_dict = json.loads(r.text)
+    pmid = info_pubmed_dict["esearchresult"]["idlist"][0]# PMID:
+    return str(pmid)
+
 def pmidtoabstract(pmid):
     """
     Get abstract from pmid
     """
 
-    url = "  https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id="+ pmid + "&retmode=XML&rettype=abstract" 
-
+    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id="+ pmid + "&retmode=XML&rettype=abstract" 
+    print(url)
     #   headers = {"accept": "application/x-bibtex"}
     r = requests.get(url) #, headers = headers)
     pubmed = r.text
@@ -43,28 +55,28 @@ class Command(BaseCommand):
         
         gpcrmd_refs_dois = Article.objects.all().values_list("doi").distinct().values_list('doi', flat=True)
         for ref in gpcrmd_refs:
-            abstract = pmidtoabstract(str(ref.pmid))
-            if not ref.doi in gpcrmd_refs_dois:
-                entry = Article(doi = ref.doi, 
-                                authors = ref.authors, 
-                                title = ref.title, 
-                                abstract = abstract,
-                                pmid = ref.pmid, 
-                                journal = ref.journal_press, 
-                                pub_year = ref.pub_year, 
-                                issue = ref.issue, 
-                                volume = ref.volume, 
-                                pages = ref.pages, 
-                                url = ref.url, 
-                                url_image = "", 
-                                date=ref.creation_timestamp
-                )
-                entry.save()
-                print(f"{ref.doi} - New article!")
-            else:
-                print(f"{ref.doi} - Already in the database!")
+            try:
+                pmid = doitopmid(ref.doi)
+                abstract = pmidtoabstract(pmid)
+                if not ref.doi in gpcrmd_refs_dois:
+                    entry = Article(doi = ref.doi, 
+                                    authors = ref.authors, 
+                                    title = ref.title, 
+                                    abstract = abstract,
+                                    pmid = pmid, 
+                                    journal = ref.journal_press, 
+                                    pub_year = ref.pub_year, 
+                                    issue = ref.issue, 
+                                    volume = ref.volume, 
+                                    pages = ref.pages, 
+                                    url = ref.url, 
+                                    url_image = "", 
+                                    date=ref.creation_timestamp
+                    )
+                    entry.save()
+                    print(f"{ref.doi} - New article!")
+                else:
+                    print(f"{ref.doi} - Already in the database!")
 
-
-
-
-
+            except:
+                print(f"Error in {ref.doi}")

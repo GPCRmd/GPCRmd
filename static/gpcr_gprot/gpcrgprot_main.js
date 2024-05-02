@@ -262,8 +262,9 @@ function printchecked(){
   }
 
   else if (Boolean(check_opt)){
-    var newurl = window.origin + '/gpcr_gprot/?itype=' + check_opt + "&cluster=" + clusters + "&stnd=" + stnd_value;
-    if (window.location.pathname == URL){
+    var pathname = window.location.pathname
+    var newurl = window.origin + pathname + '?itype=' + check_opt + "&cluster=" + clusters + "&stnd=" + stnd_value;
+    if (pathname == URL){
       location.reload()
     }
     else {
@@ -330,7 +331,8 @@ function select_simulations(itype, clusters, ligandonly, rev, stnd){
   code = Math.random().toString(36).substring(7);
 
   //Open new tab with the results
-  URL = window.location.origin + '/gpcr_gprot/customized/?itype=' + itype + "&cluster=" + clusters + "&stnd=" + stnd + "&code=" + code;
+  var pathname = window.location.pathname
+  URL = window.location.origin + pathname + 'customized/?itype=' + itype + "&cluster=" + clusters + "&stnd=" + stnd + "&code=" + code;
 
   //Set new attributes to the custom form, and enable it if any simulations are selected
   custombutton = $("#CustomButton");

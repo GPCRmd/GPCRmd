@@ -5,7 +5,7 @@ import re
 import os
 from django.conf import settings
 from modules.view.data import change_lig_name
-from modules.view.views import obtain_compounds,  get_gpcr, get_gprot, get_peptidelig
+from modules.view.views import obtain_compounds,  get_gpcr, get_gprot, get_peptidelig, get_arr
 from django.core.management.base import BaseCommand, CommandError
 from pathlib import Path
 import json
@@ -148,6 +148,7 @@ def obtain_files_from_dyn(dyn_id):
     """
     # Select all files in this dynamic
     DFD = DyndbFilesDynamics.objects.filter(id_dynamics=dyn_id)
+    topo_file = False
     struc_file = False
     struc_file_name = False
     traj_files = []
@@ -158,12 +159,14 @@ def obtain_files_from_dyn(dyn_id):
         if file_type == 0: # If it is coordinate file
             struc_file = dfd.id_files.filepath
             struc_file_name = dfd.id_files.filename
+        elif file_type == 1:
+            topo_file = dfd.id_files.filepath
         elif file_type == 2: # If it is trajectory
             traj_files.append(dfd.id_files.filepath)
             traj_files_names.append(dfd.id_files.filename)
             framenums.append(dfd.framenum)
 
-    return (struc_file,struc_file_name,traj_files,traj_files_names,framenums)
+    return (struc_file,struc_file_name,topo_file,traj_files,traj_files_names,framenums)
 
 def get_orthostericlig_resname(dyn_id,change_lig_name):
     """Returns a list with the the resname of the orthosteric ligamd(s) of a dynamics"""
@@ -201,13 +204,14 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
     pdb_id=model.pdbid
     user=dyn.submission_id.user_id.username
     is_ours = dyn.submission_id.is_gpcrmd_community
+    (arr_name,arr_chain) = get_arr(dyn_id)
     (gprot_name_alpha, gprot_chain_a, gprot_chain_b, gprot_chain_g) = get_gprot(dyn_id)
     (gpcr_chain,dbprot_gpcr,prot_gpcr) = get_gpcr(dyn_id)
     dbprot_id = dbprot_gpcr.pk if dbprot_gpcr else False
     lname = dbprot_gpcr.name if dbprot_gpcr else False
     # (prot,total_num_prot)=prot_from_model(model)
     # Obtain uniprot name of GPCR ONLY if we have a GPCR here
-    (struc_file,struc_file_name,traj_files,traj_files_names,framenums)=obtain_files_from_dyn(dyn_id) 
+    (struc_file,struc_file_name,topo_file,traj_files,traj_files_names,framenums)=obtain_files_from_dyn(dyn_id) 
     if not struc_file_name:
         self.stdout.write(self.style.NOTICE("No structure file found. Skipping."))
 
@@ -232,15 +236,17 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
 
         # Find GPCR numbering and class if any GPCR actually present in model 
         # Extract it from file if already calculated
-        gennum = {'gpcr' : {}, 'gprot' : {}}
-        for prot in ('gpcr','gprot'):
+        gennum = {'gpcr' : {}, 'gprot' : {}, 'arr' : {}}
+        mod = False
+        for prot in gennum.keys():
             gennum_path = "%s/Precomputed/gennum/dyn%d.json"%(settings.MEDIA_ROOT,dyn_id)
             if os.path.exists(gennum_path):
                 gennum = json_dict(gennum_path)
-            else:    
+            if not (prot in gennum) or not gennum[prot]:    
+                mod = True
                 gennum[prot] = (generic_numbering(dyn_id,prot))
         # Save gennum in a file, if not existing yet
-        if not os.path.exists(gennum_path):
+        if mod:
             with open(gennum_path,'w') as out:
                 json.dump(gennum, out, indent=4)
 
@@ -254,15 +260,18 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
             "lig_lname": lig_name,
             "lig_sname":lig_sel,
             "prot_lname":lname,
+            "arr_name" : arr_name,
             "gprot_name":gprot_name_alpha,
             "prot_sname":shortname,
             "peplig":peplig_chain,
+            "arr_chain":arr_chain,
             "gprot_chain_a":gprot_chain_a,
             "gprot_chain_b":gprot_chain_b,
             "gprot_chain_g":gprot_chain_g,
             "gpcr_chain":gpcr_chain,
             "up_name":up_name_gpcr,
             "pdb_id":pdb_id,
+            "topo_f":topo_file,
             "struc_f":struc_file,
             "struc_fname":struc_file_name,
             "traj_f":traj_files,
@@ -271,6 +280,7 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
             "delta":delta,
             "gpcr_pdb":gennum['gpcr'], 
             "gprot_pdb":gennum['gprot'],
+            "arr_pdb":gennum['arr'],
             "user":user,
             "is_gpcrmd_community" : is_ours,
             }

@@ -105,5 +105,3 @@ class Command(BaseCommand):
         dic_state_file = open(mode="w", file=f"{MODULES_ROOT}/dynadb/data.py")
         dic_state_file.write(f"pdb_state={dic_state}")
         dic_state_file.close()
-
-        

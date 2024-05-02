@@ -194,7 +194,7 @@ def retreive_data_uniprot(acnum,isoform=None,columns='id,accession,reviewed,prot
     do_not_skip_on_debug = False
     isoform = str(isoform)
     try:
-      print('isoform',isoform)
+      # print('isoform',isoform)
       if (isoform is None) or (isoform=="1"):
         isostr = ""
       else:
@@ -467,5 +467,5 @@ def retreive_isoform_data_uniprot(acnum,\
     raise
   finally:
     if not (settings.DEBUG and do_not_skip_on_debug):
-      print(data,errdata)
+      # print(data,errdata)
       return (data,errdata)

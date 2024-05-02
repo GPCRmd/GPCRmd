@@ -326,7 +326,7 @@
               </label>
             </div>
             <div class="col-md-2">
-              <input required id="id_delta" name="delta" type="number" class="input_step" step="any" placeholder="" min = "0" max = "20
+              <input required id="id_delta" name="delta" type="number" class="input_step" step="any" placeholder="" min = "0" max = "20"
                 {%if model_id or saved%} value="{{delta}}" {%endif%} />
             </div>
             <br>
@@ -361,6 +361,24 @@
           <br>
 
           <div class="row">
+            {% if filename_coord %}
+            <div class="col-md-4 col-md-offset-2 label_div">
+              <label for="dynamics">
+                <p><span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title=""
+                    data-original-title="Coordinates of the simulated system at the start of the simulation (PDB format) (Max. size: 50 MB)"></span>
+                  Coordinates of the simulated structure (.pdb):</p>
+              </label>
+            </div>
+            <div class="col-md-4">
+              <input type="file" name="dynamics"
+                class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder="" accept=".pdb"
+                id="dynamics" />
+            </div>
+            
+            <div class="col-md-4">
+              <p> Coordinate file saved: <a href={{ url_coord }} download> {{ filename }} </a> </p>          
+            </div>
+            {% else %}
             <div class="col-md-4 col-md-offset-2 label_div">
               <label for="dynamics">
                 <p><span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title=""
@@ -373,6 +391,7 @@
                 class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder="" accept=".pdb"
                 id="dynamics" />
             </div>
+            {% endif %}
           </div>
         </div>
 

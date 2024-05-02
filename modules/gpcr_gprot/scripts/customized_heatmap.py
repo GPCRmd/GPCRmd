@@ -83,35 +83,39 @@ def improve_receptor_names(df_ts,compl_data):
         for k in ["up_name","lig_sname","dyn_id","prot_id","comp_id",
         "prot_lname","pdb_id","lig_lname","struc_fname","struc_f",
         "traj_fnames","traj_f","delta",'class','peplig','gprot_name',
-        'gprot_chain_a','gprot_chain_b','gprot_chain_g','gpcr_chain']:
+        'gprot_chain_a','gprot_chain_b','gprot_chain_g','arr_name','arr_chain','gpcr_chain']:
             dyn_data[k] = compl_data[dyn_id][k]
 
         # Dictionary for generic numberings       
         gennums[dyn_id]=compl_data[dyn_id]["gpcr_pdb"]
         gennums[dyn_id].update(compl_data[dyn_id]["gprot_pdb"])
+        gennums[dyn_id].update(compl_data[dyn_id]["arr_pdb"])
 
         partial_data[dyn_id] = dyn_data
 
     df_ts['pdb_id'] = df_ts['Id'].apply(lambda x: partial_data[x]['pdb_id'])
     df_ts['Name'] = df_ts['Id'].apply(lambda x: partial_data[x]['recept_name'])
     df_ts['gprot_name'] = df_ts['Id'].apply(lambda x: partial_data[x]['gprot_name'])
+    df_ts['arr_name'] = df_ts['Id'].apply(lambda x: partial_data[x]['arr_name'])
 
     return(partial_data,df_ts,gennums)
 
-def create_hovertool(itype, typelist, nogprot = False):
+def create_hovertool(itype, typelist, gprot = False, arr = False):
     """
     Creates a list in hovertool format from the two dictionaries above
     """
 
     #Creating hovertool listzzzz
-    hoverlist = [('GPCR', '@Name'),
-                 ('Gprot', '@gprot_name'),   
+    hoverlist = [
                  ('PDB id', '@pdb_id'),
                  ('Residue', '@resname_gennum'),
                  (typelist[itype], '@{freq}{0.00}%')
                 ]
-    if nogprot:
-        del hoverlist[1]
+    if arr:
+        hoverlist.insert(0,('Arrestin', '@arr_name'))
+    if gprot:
+        hoverlist.insert(0,('Gprot', '@gprot_name'))
+    hoverlist.insert(0,('GPCR', '@Name'))
 
     #Hover tool:
     hover = HoverTool(
@@ -171,6 +175,9 @@ def define_figure(width, height, dataframe, hover, colors, app='gpcr_gprot'):
     if app=='gpcr_gprot':
         title = '\n\n           A: \n           B: \n           C: \n           F: \n\nG protein: \n\n\n'
         my_x=-3
+    elif app=='gpcr_arr':
+        title = '\n\n           A: \n           B: \n           C: \n           F: \n\nArrestin: \n\n\n'
+        my_x=-2
     else:
         title = '\nA: \nB: \nC: \nF: \n\n\nA: \nB: \nC: \nF: \n'
         my_x=-1
@@ -267,6 +274,7 @@ def select_tool_callback(p, partial_db_dict, gennum, itype, typelist, mysource):
                 var gprot_chain_a=db_dyn['gprot_chain_a'];
                 var gprot_chain_b=db_dyn['gprot_chain_b'];
                 var gprot_chain_g=db_dyn['gprot_chain_g'];
+                var arr_chain=db_dyn['arr_chain'];
                 var delta=db_dyn['delta'];
              
                 if (plot_bclass != "col-xs-9"){
@@ -314,7 +322,7 @@ def select_tool_callback(p, partial_db_dict, gennum, itype, typelist, mysource):
                 
                 $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', 
                 [struc_file, traj_fnames, traj_f ,lig, delta, pos, nglsel_pos_array, 
-                gpcr_chain, gprot_chain_a, gprot_chain_b, gprot_chain_g, peplig]);
+                gpcr_chain, gprot_chain_a, gprot_chain_b, gprot_chain_g, peplig, arr_chain]);
 
             } else {
                 if (plot_bclass != "col-xs-12"){
@@ -348,9 +356,9 @@ def find_resnames_resids(row,db_dict,three_to_one):
             gennum_multiclass = pos.split('\n')
             gennum = gennum_multiclass[0]+gennum_multiclass[class_index]
             
-        # If from Gprot
+        # If from Gprot/Arrestin
         else:
-            prot = 'gprot'
+            prot = 'gprot' if pos.startswith('G') else 'arr'
             gennum = pos.replace('_','.')
             gennum = pos.replace('\n','.')
 

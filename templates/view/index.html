@@ -176,6 +176,7 @@
                           data-pdb_vars="{{pdb_vars}}" data-seg_li="{{seg_li}}" data-light_sel="{{light_sel}}"
                           data-heavy_comp_sel="{{heavy_comp_sel}}" data-exception_light="{{exception_light}}"
                           data-network_default="{% if network_def %}true{% else %}false{% endif %}"
+                          data-lipvol_default="{% if lipvol_def %}true{% else %}false{% endif %}"
                           data-watervol_default="{% if watervol_def %}true{% else %}false{% endif %}"
                           data-waterhap_default="{% if happiness %}true{% else %}false{% endif %}"
                           data-waterhap_nums="{{num_interface_waters}}"
@@ -1142,7 +1143,7 @@
 
                           </div> <!-- end strucSel -->
     
-                          <!-- edSel -->
+                          {% comment %} <!-- edSel -->
                           {% if ed_mats and pdbid %}
                           <div id="edSel" style="margin-bottom:5px" data-r_angl="{{ed_align_matrix.0}}"
                               data-trajmat_dict="{{ed_mats}}">
@@ -1850,7 +1851,7 @@
 
                             </div>
                           {% endif %}
-                          <!-- end edSel -->
+                          <!-- end edSel --> {% endcomment %}
     
                         </div><!-- End allSelTools -->
     
@@ -1937,13 +1938,13 @@
                                     style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0;">
                               <span>Interaction network </span><span id="analysis_fplot_icon"
                                 style="float:right;margin-right:5px;"
-                                      class="glyphicon {% if watervol_def or pharmacophore_def or tunnels_channels_def or ligprotint_def %}glyphicon-chevron-down{% else %}glyphicon-chevron-up{% endif %} arrow"></span>
+                                      class="glyphicon {% if watervol_def or lipvol_def or pharmacophore_def or tunnels_channels_def or ligprotint_def %}glyphicon-chevron-down{% else %}glyphicon-chevron-up{% endif %} arrow"></span>
                                   </div>
                                 </div>
 
                                 <!-- analysis_fplot -->
                                 <div id="analysis_fplot"
-                                  class="collapse {% if watervol_def or pharmacophore_def or tunnels_channels_def or ligprotint_def %} {% else %} in {% endif %}">
+                                  class="collapse {% if watervol_def or lipvol_def or pharmacophore_def or tunnels_channels_def or ligprotint_def %} {% else %} in {% endif %}">
                                   <div id="loading_fp">
                                     <center>
                                       <img style="height:50px" src="{% static 'view/images/loading-gear.gif' %}" />
@@ -2723,7 +2724,796 @@
                                   <div class="col-md-12;clear:left;" id="rmsd_chart"></div>
                                 </div>
                               </div>
-     
+                              
+                              <!-- EXPERIMENTAL DENSITY MAP  -->
+                              {% if ed_mats and pdbid %}
+                              <div id="edSel" data-r_angl="{{ed_align_matrix.0}}"
+                                  data-trajmat_dict="{{ed_mats}}">
+                                  <div class="row">
+                                    <div class="section_pan collapsed"
+                                      style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0;font-size:16px"
+                                      data-toggle="collapse" data-target="#edSel_opt" aria-expanded="false"><span>Experimental density map </span>
+                                      <span id="loading_edmap" style="display:none"><img
+                                          src="{% static 'view/images/loading-gear.gif' %}"
+                                          style="width:17px;height:17px;" /></span>
+                                      <span style="float:right;margin-right:5px"
+                                        class="glyphicon glyphicon-chevron-down arrow"></span>
+                                    </div>
+                                  </div>
+
+                                  <!-- edSel_opt -->
+                                  <div id="edSel_opt" class="collapse" style="padding-left:15px; height: 0px" aria-expanded="false">
+
+                                    <!-- ============= ED Comp buttonss (ED quicksel) =========== -->
+                                    <div id="ed_quicksel_all" style="margin-bottom:5px">
+                                      <div class="row" style="margin-top:5px;">
+                                        <div class="section_pan"
+                                          style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0"
+                                          data-toggle="collapse" data-target="#ed_quicksel"><span>Quick selection </span><span
+                                            style="float:right;margin-right:5px"
+                                            class="glyphicon glyphicon-chevron-down arrow"></span></div>
+          
+                                        <div id="ed_quicksel" class="collapse" style="padding-right:15px;">
+                                          <div style="margin-top:10px;margin-bottom:10px">
+                                            <center>
+                                              <div id="ed_map_btns">
+                                                <button title="{{chains}}"
+                                                  style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;"
+                                                  class="indexBtnSize btn btn-default ed_receptor nglCallBtn changefocus  ed_map_el"
+                                                  id="ed_receptor">Receptor</button>
+          
+                                                {% for long_n, short_n, ctype, load_heavy_tag in compounds %}
+                                                {% if ctype == "Ligand" %}
+                                                <button
+                                                  style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;"
+                                                  class="indexBtnSize btn btn-default  ed_map_el nglCallBtn changefocus  ed_ligand"
+                                                  title="{{short_n}}" data-shortn="{{short_n}}">{{long_n}}</button>
+                                                {% endif %}
+                                                {% endfor %}
+                                                <!--<button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default  ed_map_el nglCallBtn changefocus  ed_free" title="Center the electron density map on selection.">Free selection</button>-->
+                                              </div>
+                                            </center>
+                                          </div>
+          
+                                          {% if TMsel_all %}
+                                          <center>
+                                            <div style="height:1px;background-color:lightgrey;width:90%"></div>
+                                          </center>
+                                          <div class="row" style="margin-top:15px;margin-bottom:10px">
+                                            <center>
+                                              {% for tmname, tmsel in TMsel_all %}
+                                              <button
+                                                style="margin-bottom:10px;margin-right:3px;margin-left:3px;padding:5px 10px 5px 10px;"
+                                                class="indexBtnSize btn btn-default changefocus  ed_tmsel ed_map_el changefocus"
+                                                id="ed_quick_{{tmname}}" data-tmsel="{{tmsel}}">{{tmname}}</button>
+                                              {% endfor %}
+                                            </center>
+                                          </div>
+                                          {% endif %}
+          
+                                        </div><!-- end ed_quicksel -->
+                                      </div>
+                                    </div><!-- end ed_quicksel_all-->
+          
+                                    <!-- ============= ED atom sel =========== -->
+                                    <div id="ed_atomsel_all" style="margin-bottom:5px">
+                                      <div class="row" style="margin-top:5px;">
+                                        <div class="section_pan"
+                                          style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0"
+                                          data-toggle="collapse" data-target="#ed_atomsel"><span>Custom selection </span><span
+                                            style="float:right;margin-right:5px"
+                                            class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                                        <div id="ed_atomsel" class="collapse" style="padding-right:15px;">
+                                          <div style="margin-top:10px;margin-bottom:10px">
+          
+          
+                                            <div class="ed_input_row" id="ed_ti_row0"
+                                              style="margin-bottom:5px;padding-left: 15px">
+                                              <div class="">
+                                                <div class="ed_ti_left "
+                                                  style="padding-right:3px;padding-left:3px;width:90%;float:left">
+                                                  <input value="" class="form-control  ed_input" id="ed_sel_input"
+                                                    placeholder="Specify your selection."
+                                                    style="height:40px;width:100%;background-color:#F8F8F8" type="text">
+                                                </div>
+                                                <button class="indexBtnSize btn btn-default ed_map_el changefocus act_input "
+                                                  id="ed_sel_input_btn" style="width:10%;display:inline" data-toggle="popover"
+                                                  data-placement="right" data-content="Click to apply."
+                                                  data-trigger="manual">Apply</button>
+                                              </div>
+                                              <div class="ed_ti_alert">
+                                                <div class="ed_ti_alert_gnum ed_alert_inst col-md-12" style="margin-top:5px">
+                                                </div>
+                                                <div class="ed_ti_alert_ngl ed_alert_inst col-md-12" style="margin-top:5px">
+                                              </div>
+                                              </div>
+                                            </div>
+          
+                                          </div>
+                                        </div><!-- end ed_atomsel -->
+                                      </div>
+                                    </div><!-- end ed_atomsel_all-->
+          
+                                    <!-- ============= ED Sequence selection =========== -->
+                                    {% if prot_seq_pos %}
+                                      <div id="ed_seqselection_all" style="margin-bottom:5px;margin-top:5px">
+                                        <div class="row">
+                                          <div class="section_pan"
+                                            style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0"
+                                            data-toggle="collapse" data-target="#ed_seqselection"><span>Sequence selection
+                                            </span><span style="float:right;margin-right:5px"
+                                              class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                                        </div>
+                                        <div id="ed_seqselection" class="collapse" style="padding-right:15px;">
+                                          <div style="margin-top:10px;margin-bottom:10px">
+            
+            
+            
+            
+                                            <div id="ed_seq_sel_div"
+                                              style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                                              <button type="button" id="ED_addToSel"
+                                                class="indexBtnSize btn btn-default changefocus ed_map_el act_seq_input"
+                                                style="margin-left:10px" data-toggle="popover" data-placement="right"
+                                                data-content="Click to apply." data-trigger="manual"> Apply</button>
+
+                                              <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
+                                                {% for prot_name, seq_pos in prot_seq_pos %}
+                                                <div style="clear: left;padding-bottom:20px">
+                                                  {% if prot_seq_pos|length > 1 %}
+                                                  <div>{{prot_name}}</div>
+                                                  {% endif %}
+                                                  {% for seq,pos,gnum,chain,index in seq_pos %}
+                                                  <div id="ed_{{index}}" title="{{gnum}}" class="ed_seq_sel"
+                                                    style="cursor:pointer;float: left;text-align:center;font-size:10px;margin-bottom:5px;background-color:#f2f2f2">
+                                                    <div id="ed_ss_seq"
+                                                    style="clear: left;border:1px solid #E8E8E8; ;width:25px;height:15px">
+                                                    {{seq}}
+                                                    </div>
+                                                    <div id="ed_ss_pos" class="{{chain}}"
+                                                    style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">
+                                                    {{pos}}
+                                                    </div>
+                                                  </div>
+                                                  {% endfor %}
+                                                </div>
+                                                {% endfor %}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div><!-- end ed_seqselection -->
+            
+                                      </div><!-- end ed_seqselection_all-->
+                                    {% endif %}
+          
+                                    <!-- ============= ED Predefined views of cons pos =========== -->
+                                    {% if gpcr_pdb != "no" %}
+                                      <div id="ed_cons_pos_box_all" style="margin-top:5px;margin-bottom:5px">
+                                        <div class="row">
+                                          <div class="section_pan"
+                                            style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0"
+                                            data-toggle="collapse" data-target="#ed_cons_pos_box"><span>GPCR conserved positions
+                                            </span><span style="float:right;margin-right:5px"
+                                              class="glyphicon glyphicon-chevron-down arrow"></span>
+                                            </div>
+                                        </div>
+
+                                        <div id="ed_cons_pos_box" class="collapse cons_pos_section" 
+                                          style="padding-right:15px;padding-left:15px;padding-top:10">
+                                          {% if gpcr_id_name|length > 1 %}        
+                                            <div class="row" style="margin-bottom:10px">
+                                              <select class="form-control gpcr_sel" style="width:100%;height:32px;">
+                                                <option value="all">All GPCRs</option>
+                                                {% for gpcr_id, prot_name in gpcr_id_name.items %}
+                                                <option value="{{gpcr_id}}">{{prot_name}}</option>
+                                                {% endfor %}
+                                              </select>
+                                            </div>
+
+                                            <!-- Conserved pos for all GPCRs -->
+                                            <div class="gpcr_prot_show_cons gpcr_id_all" style="display:inline">
+                                              <ul class="nav nav-tabs" id="ed_allclasses">
+                                                <li class="GPCRclass {{cons_pos_all_info.2.A.0}} cons_nav"
+                                                  data-TF="{{cons_pos_all_info.1.A}}"><a data-TF="{{cons_pos_all_info.1.A}}"
+                                                    class="cons_nav" data-toggle="tab" href="#ed_classA_all">Class A</a></li>
+                                                <li class="GPCRclass {{cons_pos_all_info.2.B.0}} cons_nav"
+                                                  data-TF="{{cons_pos_all_info.1.B}}"><a data-TF="{{cons_pos_all_info.1.B}}"
+                                                    class="cons_nav" data-toggle="tab" href="#ed_classB_all">Class B</a></li>
+                                                <li class="GPCRclass {{cons_pos_all_info.2.C.0}} cons_nav"
+                                                  data-TF="{{cons_pos_all_info.1.C}}"><a data-TF="{{cons_pos_all_info.1.C}}"
+                                                    class="cons_nav" data-toggle="tab" href="#ed_classC_all">Class C</a></li>
+                                                <li class="GPCRclass {{cons_pos_all_info.2.F.0}} cons_nav"
+                                                  data-TF="{{cons_pos_all_info.1..F}}"><a data-TF="{{cons_pos_all_info.1..F}}"
+                                                    class="cons_nav" data-toggle="tab" href="#ed_classF_all">Class F</a></li>
+                                              </ul>
+                                              <div class="row tab-content"
+                                                style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                                                <div style="margin:0;" id="ed_classA_all"
+                                                  class="tab-pane {{cons_pos_all_info.2.A.1}}">
+                                                  {% if cons_pos_all_info.1.A %}
+                                                  {% if cons_pos_all_info.0.A.1 %}
+                                                  <p>Highly conserved residues and motifs</p>
+                                                  {% for pos in cons_pos_all_info.0.A.1 %}
+                                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                    class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus"
+                                                    data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                  {% endfor %}
+                                                  {% for pos in motifs_all_info.A %}
+                                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                    class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus"
+                                                    data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                  {% endfor %}
+                                                  {% endif %}
+                                                  {% if cons_pos_all_info.0.A.0 %}
+                                                  <p>Most conserved residues</p>
+                                                  {% for pos in cons_pos_all_info.0.A.0 %}
+                                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                    title="{{pos.1}}"
+                                                    class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus"
+                                                    data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                  {% endfor %}
+                                                  {% endif %}
+                                                  {% endif %}
+                                                </div>
+                                                <div id="ed_classB_all" class="tab-pane {{cons_pos_all_info.2.B.1}}">
+                                                  {% if cons_pos_all_info.0.B.0 %}
+                                                  <p>Most conserved residues</p>
+                                                  {% for pos in cons_pos_all_info.0.B.0 %}
+                                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                    title="{{pos.1}}"
+                                                    class="high_pd ed_map_el high_pdB_ed btn btn-default changefocus"
+                                                    data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                  {% endfor %}
+                                                  {% endif %}
+                                                </div>
+                                                <div id="ed_classC_all" class="tab-pane {{cons_pos_all_info.2.C.1}}">
+                                                  {% if cons_pos_all_info.0.C.0 %}
+                                                  <p>Most conserved residues</p>
+                                                  {% for pos in cons_pos_all_info.0.C.0 %}
+                                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                    title="{{pos.1}}"
+                                                    class="high_pd ed_map_el high_pdC_ed btn btn-default changefocus"
+                                                    data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                  {% endfor %}
+                                                  {% endif %}
+                                                </div>
+                                                <div id="ed_classF_all" class="tab-pane {{cons_pos_all_info.2.F.1}}">
+                                                  {% if cons_pos_all_info.0.F.0 %}
+                                                  <p>Most conserved residues</p>
+                                                  {% for pos in cons_pos_all_info.0.F.0 %}
+                                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                    title="{{pos.1}}"
+                                                    class="high_pd ed_map_el high_pdF_ed btn btn-default changefocus"
+                                                    data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                  {% endfor %}
+                                                  {% endif %}
+                                                </div>
+                                                <button class="btn btn-link pull-right clear_conspos ed_section"
+                                                  style="color:#DC143C;margin-bottom:0;padding-bottom:0">Clear</button>
+                                              </div>
+                                            </div>
+
+                                            <!-- Conserved pos for each of the GPCRs -->
+                                            {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}
+                                              <div class="gpcr_prot_show_cons gpcr_id_{{gpcr_id}}" style="display:none">
+                                                <ul class="nav nav-tabs" id="ed_allclasses">
+                                                  <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a
+                                                      data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab"
+                                                      href="#ed_classA_{{gpcr_id}}">Class A</a></li>
+                                                  <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a
+                                                      data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab"
+                                                      href="#ed_classB_{{gpcr_id}}">Class B</a></li>
+                                                  <li class="GPCRclass {{active_class.C.0}} cons_nav" data-TF="{{show_class.C}}"><a
+                                                      data-TF="{{show_class.C}}" class="cons_nav" data-toggle="tab"
+                                                      href="#ed_classC_{{gpcr_id}}">Class C</a></li>
+                                                  <li class="GPCRclass {{active_class.F.0}} cons_nav" data-TF="{{show_class.F}}"><a
+                                                      data-TF="{{show_class.F}}" class="cons_nav" data-toggle="tab"
+                                                      href="#ed_classF_{{gpcr_id}}">Class F</a></li>
+                                                </ul>
+                                                <div class="row tab-content"
+                                                  style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                                                  <div style="margin:0;" id="ed_classA_{{gpcr_id}}"
+                                                    class="tab-pane {{active_class.A.1}}">
+                                                    {% if show_class.A %}
+                                                    {% if cons_class.A.1 %}
+                                                    <p>Highly conserved residues and motifs</p>
+                                                    {% for pos in cons_class.A.1 %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% for pos in motifs_def.A %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                    {% if cons_class.A.0 %}
+                                                    <p>Most conserved residues</p>
+                                                    {% for pos in cons_class.A.0 %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      title="{{pos.1}}"
+                                                      class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                    {% endif %}
+                                                  </div>
+                                                  <div id="ed_classB_{{gpcr_id}}" class="tab-pane {{active_class.B.1}}">
+                                                    {% if cons_class.B.0 %}
+                                                    <p>Most conserved residues</p>
+                                                    {% for pos in cons_class.B.0 %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      title="{{pos.1}}"
+                                                      class="high_pd ed_map_el high_pdB_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                  </div>
+                                                  <div id="ed_classC_{{gpcr_id}}" class="tab-pane {{active_class.C.1}}">
+                                                    {% if cons_class.C.0 %}
+                                                    <p>Most conserved residues</p>
+                                                    {% for pos in cons_class.C.0 %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      title="{{pos.1}}"
+                                                      class="high_pd ed_map_el high_pdC_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                  </div>
+                                                  <div id="ed_classF_{{gpcr_id}}" class="tab-pane {{active_class.F.1}}">
+                                                    {% if cons_class.F.0 %}
+                                                    <p>Most conserved residues</p>
+                                                    {% for pos in cons_class.F.0 %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      title="{{pos.1}}"
+                                                      class="high_pd ed_map_el high_pdF_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                  </div>
+                                                  <button class="btn btn-link pull-right clear_conspos ed_section"
+                                                    style="color:#DC143C;margin-bottom:0;padding-bottom:0">Clear</button>
+                                                </div>
+                                              </div>
+                                            {% endfor %}
+
+                                          {% else %}
+                                            <!-- When only 1 gpcr: -->
+                                            {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}
+                                              <div class="gpcr_prot_show_cons gpcr_id_{{gpcr_id}}">
+                                                <ul class="nav nav-tabs" id="ed_allclasses">
+                                                  <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a
+                                                    data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab"
+                                                    href="#ed_classA">
+                                                      Class A</a></li>
+                                                  <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a
+                                                      data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab"
+                                                      href="#ed_classB">Class B</a></li>
+                                                  <li class="GPCRclass {{active_class.C.0}} cons_nav" data-TF="{{show_class.C}}"><a
+                                                      data-TF="{{show_class.C}}" class="cons_nav" data-toggle="tab"
+                                                      href="#ed_classC">Class C</a></li>
+                                                  <li class="GPCRclass {{active_class.F.0}} cons_nav" data-TF="{{show_class.F}}"><a
+                                                      data-TF="{{show_class.F}}" class="cons_nav" data-toggle="tab"
+                                                      href="#ed_classF">Class F</a></li>
+                                                </ul>
+                                                <div class="row tab-content"
+                                                  style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                                                  <div style="margin:0;" id="ed_classA" class="tab-pane {{active_class.A.1}}">
+                                                    {% if show_class.A %}
+                                                    {% if cons_class.A.1 %}
+                                                    <p>Highly conserved residues and motifs</p>
+                                                    {% for pos in cons_class.A.1 %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% for pos in motifs_def.A %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                    {% if cons_class.A.0 %}
+                                                    <p>Most conserved residues</p>
+                                                    {% for pos in cons_class.A.0 %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      title="{{pos.1}}"
+                                                      class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                    {% endif %}
+                                                  </div>
+                                                  <div id="ed_classB" class="tab-pane {{active_class.B.1}}">
+                                                    {% if cons_class.B.0 %}
+                                                    <p>Most conserved residues</p>
+                                                    {% for pos in cons_class.B.0 %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      title="{{pos.1}}"
+                                                      class="high_pd ed_map_el high_pdB_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                  </div>
+                                                  <div id="ed_classC" class="tab-pane {{active_class.C.1}}">
+                                                    {% if cons_class.C.0 %}
+                                                    <p>Most conserved residues</p>
+                                                    {% for pos in cons_class.C.0 %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      title="{{pos.1}}"
+                                                      class="high_pd ed_map_el high_pdC_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                  </div>
+                                                  <div id="ed_classF" class="tab-pane {{active_class.F.1}}">
+                                                    {% if cons_class.F.0 %}
+                                                    <p>Most conserved residues</p>
+                                                    {% for pos in cons_class.F.0 %}
+                                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px"
+                                                      title="{{pos.1}}"
+                                                      class="high_pd ed_map_el high_pdF_ed btn btn-default changefocus"
+                                                      data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                  </div>
+                                                  <button class="indexBtnSize btn btn-link pull-right clear_conspos ed_section"
+                                                    style="color:#DC143C;margin-bottom:0;padding-bottom:0">Clear</button>
+                                                </div>
+                                              </div>
+                                            {% endfor %}
+            
+                                          {% endif %}
+                                        </div>
+                                      </div> <!-- end ed_cons_pos_box_all-->
+                                    {% endif %}      
+          
+                                    <!-- ============= ED controls=========== -->
+                                    <div id="ed_ctrl_all" style="margin-bottom:5px">
+                                      <div class="row" style="margin-top:5px;">
+                                        <div class="section_pan"
+                                          style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0"
+                                          data-toggle="collapse" data-target="#ed_ctrl"><span>Selection settings </span><span
+                                            style="float:right;margin-right:5px"
+                                            class="glyphicon glyphicon-chevron-down arrow"></span>
+                                        </div>
+          
+                                        <div id="ed_ctrl" class="collapse" style="padding-right:15px;">      
+          
+                                          <div id="ed_no_sel_warning" class="alert alert-warning fade in alert-dismissible"
+                                            style="margin:15px 0 auto;font-weight:bold;">
+                                            <a href="#" class="close" data-dismiss="alert" aria-label="close"
+                                              title="close">×</a>
+                                            Make a selection to display the map.
+                                          </div>
+          
+                                          <div style="margin:10px" class="row">
+                                            <p>Apply default representations</p>
+                                            <div class="btn-group btn-group-xs">
+                                              <button type="button" id="EdrepsOn" class="btn btn-default EdrepsSet active"
+                                                style="padding:2px 5px 2px 5px;">On</button>
+                                              <button type="button" id="EdrepsOff" class="btn btn-default EdrepsSet"
+                                                style="padding:2px 5px 2px 5px;">Off</button>
+                                            </div>
+                                          </div>
+
+                                        <div class="table-responsive">
+                                            <table class="table" style="font-size:14px">
+                                              <thead>
+                                                <tr>
+                                                  <th></th>
+                                                  <th style="text-align:center">2fo-fc</th>
+                                                  <th style="text-align:center">fo-fc</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                <tr>
+                                                  <td style="text-align:right;font-weight:bold">Display map</td>
+                                                  <td style="text-align:center">
+                                                    <label class="checkbox" style="margin:0">
+                                                      <input checked type="checkbox" disabled class="EDdisplay" value="2fofc"
+                                                        style="margin-left:-5px;margin-top:0;margin-bottom:0">
+                                                    </label>
+                                                  </td>
+                                                  <td style="text-align:center">
+                                                    <label class="checkbox" style="margin:0">
+                                                      <input checked type="checkbox" disabled class="EDdisplay" value="fofc"
+                                                        style="margin-left:-5px;margin-top:0;margin-bottom:0">
+                                                    </label>
+                                                  </td>
+                                                </tr>
+                                                <tr>
+                                                  <td style="text-align:right;font-weight:bold">Map color</td>
+                                                  <td style="text-align:center">
+                                                    <!-- color dropdown html 2fo-fc-->
+                                                    <div id="ED2fofcColor" class="EDcolsect" data-map="2fofc"
+                                                      style="display:inline-block;margin:auto;width:16px" data-short="16px"
+                                                      data-long="80px">
+                                                      <!-- to 80-->
+                                                      <div class="dropdown displaydrop ed_ddwn"
+                                                        style="float:left;height:16px;padding:0;margin-top:4px">
+                                                        <button class="dropbtn freedef" style="background-color:#87ceeb"
+                                                          data-color="#87ceeb"></button>
+                                                        <div class="dropdown-content">
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#3cb371;width:16px; height: 16px;"
+                                                            data-color="#3cb371"></div>
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#B3072F;width:16px; height: 16px;"
+                                                            data-color="#B3072F"></div>
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#ff6347;width:16px; height: 16px;"
+                                                            data-color="#ff6347"></div>
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#c5c5c5;width:16px; height: 16px;"
+                                                            data-color="#c5c5c5"></div>
+                                                          <div
+                                                            style="background-color:white;width:16px; height: 16px;border:1px solid #808080;"
+                                                            class="dropcolor morecolors EDcolorDef" data-color="#FFFFFF"><span
+                                                              class="glyphicon glyphicon-plus-sign"
+                                                              style="color:#696969;padding-left:1px"></span></div>
+                                                        </div>
+                                                      </div>
+                                                      <span class="span_morecolors displaydrop" style="float:left"></span>
+                                                    <span style="display:none" data-color="#87ceeb"
+                                                      class="EDselcolvar"></span>
+                                                    </div>
+                                                    <!-- end color dropdown 2fo-fc -->
+          
+                                                  </td>
+                                                  <td style="text-align:center">
+          
+                                                    <!-- color dropdown html fo-fc Positive-->
+                                                    <div id="EDfofcColorPos" class="EDcolsect" data-map="fofcpos"
+                                                      style="display:inline-block;margin: 1px 5px 1px 1px;width:45px"
+                                                      data-short="45px" data-long="110px">
+                                                      <!-- to 110-->
+                                                    <div class="testtest"
+                                                      style="float:left;margin-top:2px;margin-right:4px;">
+                                                        Pos
+                                                      </div>
+                                                      <div class="dropdown displaydrop ed_ddwn"
+                                                        style="float:left;height:16px;padding:0;margin-top:4px">
+                                                        <button class="dropbtn freedef" style="background-color:#3cb371"
+                                                          data-color="#3cb371"></button>
+                                                        <div class="dropdown-content">
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#87ceeb;width:16px; height: 16px;"
+                                                            data-color="#87ceeb"></div>
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#B3072F;width:16px; height: 16px;"
+                                                            data-color="#B3072F"></div>
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#ff6347;width:16px; height: 16px;"
+                                                            data-color="#ff6347"></div>
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#c5c5c5;width:16px; height: 16px;"
+                                                            data-color="#c5c5c5"></div>
+                                                          <div
+                                                            style="background-color:white;width:16px; height: 16px;border:1px solid #808080;"
+                                                            class="dropcolor morecolors EDcolorDef" data-color="#FFFFFF"><span
+                                                              class="glyphicon glyphicon-plus-sign"
+                                                              style="color:#696969;padding-left:1px"></span></div>
+                                                        </div>
+                                                      </div>
+                                                      <span class="span_morecolors displaydrop" style="float:left"></span>
+                                                    <span style="display:none" data-color="#3cb371"
+                                                      class="EDselcolvar"></span>
+                                                    </div>
+                                                    <!-- end color dropdown fo-fc Pos-->
+          
+                                                    <!-- color dropdown html fo-fc Negative-->
+                                                    <div id="EDfofcColorNeg" class="EDcolsect" data-map="fofcneg"
+                                                      style="display:inline-block;margin:1px;width:47px" data-short="47px"
+                                                      data-long="110px">
+                                                      <!-- to 110-->
+                                                      <div style="float:left;margin-top:2px;margin-right:4px">
+                                                        Neg
+                                                      </div>
+                                                      <div class="dropdown displaydrop ed_ddwn"
+                                                        style="float:left;height:16px;padding:0;margin-top:4px">
+                                                        <button class="dropbtn freedef" style="background-color:#ff6347"
+                                                          data-color="#ff6347"></button>
+                                                        <div class="dropdown-content">
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#87ceeb;width:16px; height: 16px;"
+                                                            data-color="#87ceeb"></div>
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#B3072F;width:16px; height: 16px;"
+                                                            data-color="#B3072F"></div>
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#3cb371;width:16px; height: 16px;"
+                                                            data-color="#3cb371"></div>
+                                                          <div class="dropcolor EDcolorDef"
+                                                            style="background-color:#c5c5c5;width:16px; height: 16px;"
+                                                            data-color="#c5c5c5"></div>
+                                                          <div
+                                                            style="background-color:white;width:16px; height: 16px;border:1px solid #808080;"
+                                                            class="dropcolor morecolors EDcolorDef" data-color="#FFFFFF"><span
+                                                              class="glyphicon glyphicon-plus-sign"
+                                                              style="color:#696969;padding-left:1px"></span></div>
+                                                        </div>
+                                                      </div>
+                                                      <span class="span_morecolors displaydrop" style="float:left"></span>
+                                                    <span style="display:none" data-color="#ff6347"
+                                                      class="EDselcolvar"></span>
+                                                    </div>
+                                                    <!-- end color dropdown fo-fc Neg-->
+          
+                                                  </td>
+                                                </tr>
+                                                <tr>
+                                                  <td style="text-align:right;font-weight:bold">Map style</td>
+                                                  <td style="text-align:center">
+                                                    <select class="form-control input-sm EDmapStype" data-map="2fofc"
+                                                      id="EDmapStype2fofc" style="padding:0;font-size:14px;margin:1px">
+                                                    <option class="indexOp" selected value="contour">Contour</option>
+                                                    <option class="indexOp" value="wireframe">Wireframe</option>
+                                                    <option class="indexOp" value="smooth">Smooth</option>
+                                                    <option class="indexOp" value="flat">Flat</option>
+                                                    </select>
+                                                  </td>
+                                                  <td style="text-align:center">
+                                                    <select class="form-control input-sm EDmapStype" data-map="fofc"
+                                                      id="EDmapStypefofc" style="padding:0;font-size:14px;margin:1px">
+                                                    <option class="indexOp" selected value="contour">Contour</option>
+                                                    <option class="indexOp" value="wireframe">Wireframe</option>
+                                                    <option class="indexOp" value="smooth">Smooth</option>
+                                                    <option class="indexOp" value="flat">Flat</option>
+                                                    </select>
+                                                  </td>
+                                                </tr>
+                                                <tr>
+                                                  <td style="text-align:right;font-weight:bold">ISO level</td>
+                                                  <td style="text-align:center">
+                                                    <center>
+                                                      <div class="slider_div" style="max-width:150px;display:inline-block">
+                                                      <input class="slider edslider" data-valtype="isolevel"
+                                                        data-map="2fofc" value="1.5" min="0" max="10" step="0.1"
+                                                        type="range">
+                                                      </div>
+                                                      <div class="slider_val" id="slider_val_2fofc"
+                                                        style="display:inline-block;color:#b3b3b3">1.5</div>
+                                                    </center>
+                                                  </td>
+                                                  <td style="text-align:center">
+                                                    <center>
+                                                      <div class="slider_div" style="max-width:150px;display:inline-block">
+                                                        <input class="slider edslider" data-valtype="isolevel" data-map="fofc"
+                                                          value="3" min="0" max="10" step="0.1" type="range">
+                                                      </div>
+                                                      <div class="slider_val" id="slider_val_fofc"
+                                                        style="color:#b3b3b3;display:inline-block">3</div>
+                                                    </center>
+                                                  </td>
+                                                </tr>
+                                              <!--                          <tr>
+                                      <td style="text-align:right;font-weight:bold">Map size</td>
+                                      <td style="text-align:center">
+                                        <center>
+                                          <div class="slider_div" style="max-width:150px;display:inline-block">
+                                            <input class="slider edslider" data-valtype="mapsize" data-map="2fofc" value="20" min="0" max="100" step="1" type="range">
+                                          </div>
+                                          <div class="slider_val" style="width:20px;display:inline-block;color:#b3b3b3">20</div>
+                                        </center>
+                                      </td>
+                                      <td style="text-align:center">                              
+                                        <center>
+                                          <div class="slider_div" style="max-width:150px;display:inline-block">
+                                            <input class="slider edslider" data-map="fofc" data-valtype="mapsize" value="20" min="0" max="100" step="1" type="range">
+                                          </div>
+                                          <div class="slider_val"  style="color:#b3b3b3;width:20px;display:inline-block">20</div>
+                                        </center>
+                                      </td>
+                                    </tr>-->
+                                                <tr>
+                                                  <td style="text-align:right;font-weight:bold">Zoom</td>
+                                                  <td style="text-align:center" colspan="2">
+                                                    <center>
+                                                      <div class="slider_div" style="width:50%;display:inline-block">
+                                                        <input class="slider edslider" id="EDmapzoom" data-valtype="zoom"
+                                                          value="0" min="0" max="100" step="1" type="range">
+                                                      </div>
+                                                      <div class="slider_val" id="EDmapzoom_val"
+                                                        style="width:20px;display:inline-block;color:#b3b3b3">0</div>
+                                                    </center>
+                                                  </td>
+                                                </tr>
+                                              </tbody>
+                                            </table>
+                                          </div>
+          
+                                        </div><!-- end ed_ctrl -->
+
+                                      </div>
+                                    </div><!-- end ed_ctrl_all-->
+          
+                                  </div> <!-- End edSel_opt -->
+
+                                </div>
+                              {% endif %}
+                              <!-- end EXPERIMENTAL DENSITY MAP -->
+                              <!-- ============= Breathing motions =========== -->   
+                              {% if breath_sel %}   
+                              <div class="row">
+                                <div id="breathing_pan" class="section_pan" data-toggle="collapse"
+                                  data-target="#analysis_breathing"
+                                  style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0;">
+                                  <span>Breathing motions </span><span id="analysis_breathing_icon" style="float:right;margin-right:5px;"
+                                    class="glyphicon glyphicon-chevron-down arrow"></span>
+                                </div>
+                              </div>                              
+
+                              <div id="analysis_breathing" class="collapse">
+                                <p id='breath_info'>We classify GPCR breathing motions in a simulation "open", "intermediate" or "closed". 
+                                    This classification is based on a specific distance between TM2 and TM6, plotted bellow.</p>                                  
+                                <div id='breathing_plot' data-breath_sel="{{breath_sel}}">
+                                  <div class='breath_plot'  id='breathing_t'></div>
+                                  <div  class='breath_plot' id='breathing_f'></div>
+                                  <div class="col-md-12">
+                                    <label>
+                                      <input type="checkbox" value="breathing" id="BreathDisplay">
+                                        Display in viewer
+                                    </label>
+                                  </div>
+                                  <div class='settings col-md-4' >
+                                      <div class='plot_breath_by_sel_cont'>
+                                          <p>Plot breathing distance by</p>
+                                          <span >
+                                            <select id='plot_breath_by_sel' name='frame_time'>
+                                              <option class='plot_breath_by' selected value='breathing_t'>time</option>
+                                              <option class='plot_breath_by' value='breathing_f'>frame</option>
+                                            </select>
+                                          </span>
+                                          <!-- <div style='display:inline-block;margin:5px;cursor:pointer;'>
+                                              <a role='button' class='btn btn-link save_img_dist_plot settingsB breath_link' href='#' target='_blank'>
+                                                  <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>
+                                              </a>
+                                          </div> -->
+                                          <div style='display:inline-block;margin:5px;'>
+                                              <a role='button' id='breathing_dwnl' class='btn btn-link href_save_data_dist_plot settingsB breath_link' href='#'>
+                                                  <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_dist_plot'></span>
+                                              </a>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <div class="col-md-8">
+                                    <p class="breath_row row">Download trajectory clustered by conformations:</p>
+                                    <div class="breath_row row">
+                                      <button id="closed_btn" type="button" data-state="closed" class="btn breath_btn">
+                                        <span title="Save data" class="glyphicon glyphicon-download-alt save_data_dist_plot white_icon"></span>
+                                        Inactive-like
+                                      </button>
+                                      <button id="inter_btn" type="button" data-state="inter" class="btn breath_btn">
+                                        <span title="Save data" class="glyphicon glyphicon-download-alt save_data_dist_plot white_icon"></span>
+                                        Intermediate-like
+                                      </button>
+                                      <button id="open_btn" type="button" data-state="open" class="btn breath_btn">
+                                        <span title="Save data" class="glyphicon glyphicon-download-alt save_data_dist_plot white_icon"></span>
+                                        Active-like
+                                      </button>
+                                    </div>
+                                    <div id="breathframes_loading" class="breath_row row">
+                                      <center class="col-md-12">
+                                        <img id="img_breathframes_loading" class="row" src="{% static 'view/images/loading-gear.gif' %}" />
+                                        <i class="row">Filtering trajectory frames. Please be patient, this might take a few minutes....</i>
+                                      </center>
+                                    </div>
+                                  </div>
+                                </div>
+                                <span id="breathing_loading">
+                                  <center><img class="img_breathing_loading" src="{% static 'view/images/loading-gear.gif' %}" /></center>
+                                </span>
+                                <div id="breathing_error" class="alert alert-danger"
+                                  style="margin:10px 0; display: none;">
+                                  An unexpected error occurred.
+                                </div>
+
+                              </div>
+                              {% endif %}
+
+
                               <!-- ============= Water Map Analysis =========== -->
                               {% if watermaps %}      
                                 <div class="row">
@@ -3007,11 +3797,143 @@
                                 {% endif %}
                               </div>
 
+                              <!-- ============= Lipid Map Analysis =========== -->
+                              {% if lipmaps %}      
+                                <div class="row">
+                                  <div id="lip_analysis_pan" class="section_pan" data-toggle="collapse"
+                                    data-target="#lip_analysis"
+                                    style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0;">
+                                    <span>Lipid distribution</span><span id="lip_analysis_icon"
+                                style="float:right;margin-right:5px;"
+                                      class="glyphicon {% if lipvol_def %}glyphicon-chevron-up{% else %}glyphicon-chevron-down{% endif %} arrow">
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div id="lip_analysis" class="collapse {% if ligprotint_def %}in{% endif %}"
+                                style="padding-left:15px;">    
+
+                                  <!--Lipid volume tool-->
+                                  <div id="analysis_lipmap" class="{% if lipvol_def %}in{% endif %}"
+                                    data-occupancy_data="{{lipoccupancy}}">
+                                    <div class="row" style="margin-top:20px;margin-bottom:15px">
+                                      <!-- TABLE part -->
+                                      <div class="table-responsive">
+                                        <table class="table" style="font-size:14px">
+
+                                          <tbody>
+                                            <tr>
+                                              <td style="text-align:left">Display map
+                                              </td>
+          
+                                              <td style="text-align:left">
+                                                <label class="checkbox" style="margin:0">
+                                            <input type="checkbox"
+                                              value="lipoccupancy" class="LipDisplay"
+                                              style="margin-left:40px;margin-top:0;margin-bottom:0">
+                                                </label>
+                                                <span id="loading_display_lipmap"
+                                                  style="display:none;margin-left:70px;">Loading... <img
+                                                    src="{% static 'view/images/loading-gear.gif' %}"
+                                                    style="width:17px;height:17px;" /></span>
+                                              </td>
+                                            </tr>
+          
+                                            <!-- MAPTYPES -->
+                                            <tr>
+                                              <td style="text-align:left">Map style</td>
+                                              <td style="text-align:left">
+                                                <select id="LipmapType" data-map="lipoccupancy"
+                                                  style="padding:0;font-size:14px;margin:1px">
+                                                  <option class="indexOp" value="smooth">Smooth</option>
+                                                  <option class="indexOp" value="wireframe">Wireframe</option>
+                                                  <option class="indexOp" value="flat">Flat</option>
+                                                  <option class="indexOp" value="contour">Contour</option>
+                                                </select>
+                                              </td>
+          
+                                            </tr>
+          
+                                            <!-- Opacity slider -->
+                                            <tr>
+                                              <td style="text-align:left">Opacity</td>
+                                              <td style="text-align:left">
+                                                <center>
+                                                  <div class="slider_volmap"
+                                                    style="max-width:150px;display:inline-block;float:left;margin-left:-30px;margin-top: 10px;">
+                                              <input class="slider_volmap" data-valtype="transparency"
+                                                data-map="lipoccupancy" value="0.5" min="0" max="1" step="0.1" type="range">
+                                                  </div>
+                                                  <div class="slider_val" id="slider_val_trans"
+                                                    style="margin-left:10px;display:inline;float:left">0.5</div>
+                                                </center>
+                                              </td>
+                                            </tr>
+          
+                                            <!-- Smoothness slider -->
+                                            <tr>
+                                              <td style="text-align:left">Smoothness</td>
+                                              <td style="text-align:left">
+                                                <center>
+                                                  <div class="slider_volmap"
+                                                    style="max-width:150px;display:inline-block;float:left;margin-left:-30px;margin-top: 10px;">
+                                                    <input class="slider_volmap" data-valtype="smoothness" data-map="lipoccupancy"
+                                                      value="1" min="0" max="10" step="0.5" type="range">
+                                                  </div>
+                                                  <div class="slider_val" id="slider_val_smooth" style="margin-left:10px;display:inline;float:left">1</div>
+                                                </center>
+                                              </td>
+                                            </tr>
+          
+          
+                                            <!-- ISOLEVEL slider -->
+                                            <tr>
+                                              <td style="text-align:left">ISO level</td>
+                                              <td style="text-align:left">
+                                                <center>
+                                                  <div class="slider_volmap"
+                                                    style="max-width:150px;display:inline-block;float:left;margin-left:-30px;margin-top: 10px;">
+                                                    <input class="slider_volmap" data-valtype="isolevel" data-map="lipoccupancy"
+                                                      value="0.1" min="0.0001" max="1" step="0.01" type="range">
+                                                  </div>
+                                                  <div class="slider_val" id="slider_val_occupancy"
+                                                    style="margin-left:10px;display:inline;float:left">0.1</div>
+                                                </center>
+                                              </td>
+                                            </tr>
+          
+                                            <tr>
+                                              <span class='lipdistance'>
+                                                <td style="text-align:left;margin-left:200px">
+                                                  <label class="checkbox" style="margin:0px">
+                                                    <input type="checkbox" value="showlipdist" class="LipDistDisplay"
+                                                style="margin-left:0px;margin-top:6px;">
+                                                  </label>
+                                                  <div style="margin-left:30px"> Show lipids within </div>
+                                                </td>
+                                              </span>
+          
+                                              <td style="text-align:left">
+                                                <span id="lipwithin_parent">
+                                                  <input class="form-control lipwithin" id='lipwithin' type="text"
+                                                    style="width:40px;height:25px;padding-left:15px;margin-left:25px">
+                                                  Å of protein
+                                                </span>
+                                              </td>
+                                            </tr>
+          
+          
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
+                                  </div>      
+                                </div>  
+                              {% endif %}
                               <!-- ============= Pharmacophores =========== -->
                               {% if has_pharmacophores %}
                                 <div class="row">
-                            <div id="analysis_pharmacophores_pan" class="section_pan" data-toggle="collapse"
-                              data-target="#analysis_pharmacophores"
+                                  <div id="analysis_pharmacophores_pan" class="section_pan" data-toggle="collapse" data-target="#analysis_pharmacophores"
                                     style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0;">
                                     <span> Dynamic pharmacophores </span>
                                     <span id="loading_display_pharmacophores" style="display:none"><img
@@ -3543,8 +4465,8 @@
       
                               <!-- ============= Chemical Shift (CS) =========== -->
                               {% if cs_data_avail %}
-                              {% comment %} {% if dyn_id %}  {% endcomment %}
-                              {% comment %} {% else %} {% endcomment %}
+                              {% comment %} {% if dyn_id %} 
+                              {% else %} {% endcomment %}
                                 <div class="row">
                                   <div id="analysis_cs_pan" class="section_pan check_if_cs_struc" data-toggle="collapse"
                                     data-target="#analysis_cs"><span>Chemical Shift (CS)</span><span id="analysis_cs_icon"
@@ -3650,22 +4572,20 @@
                                                 </tbody>
                                               </table>
                                             </div>
-                                          </div>
         
                                           <div>
-                                      <button type="button" id="cs_apply_comp" class="cs_apply btn btn-success"
-                                              value="comp">Apply changes</button>
-                                      <a download href="/dynadb/files/Dynamics/"
-                                        class="btn btn-default cs_download_raw">
-                                              <span class="glyphicon glyphicon-download-alt"></span> CS raw data
-                                            </a>
-                                      <a download href="/dynadb/files/Dynamics/"
-                                        class="btn btn-default cs_download_simp">
-                                              <span class="glyphicon glyphicon-download-alt"></span> CS simplified data
-                                            </a>
-                                            <p> </p>
+                                            <button type="button" id="cs_apply_comp" class="cs_apply btn btn-success"
+                                                    value="comp">Apply changes</button>
+                                            <a download href="/dynadb/files/Dynamics/"
+                                              class="btn btn-default cs_download_raw">
+                                                    <span class="glyphicon glyphicon-download-alt"></span> CS raw data
+                                                  </a>
+                                            <a download href="/dynadb/files/Dynamics/"
+                                              class="btn btn-default cs_download_simp">
+                                                    <span class="glyphicon glyphicon-download-alt"></span> CS simplified data
+                                                  </a>
+                                                  <p> </p>
                                           </div>
-        
                                           <span class="cs_loading">
                                             <center><img class="img_csloading"
                                                 src="{% static 'view/images/loading-gear.gif' %}" /></center>
@@ -3676,6 +4596,8 @@
                                             style="margin:10px 0; display: none;">
                                             An unexpected error occurred.
                                           </div>
+                                        </div>
+                                            
         
                                         </div>
         
@@ -3726,30 +4648,31 @@
                                                   data-hide_btn="true">Clear</button>
                                               </div>
                                             </div>
-                                          </div>
-                                          <div>
-                                      <button type="button" id="cs_apply_satom" class="cs_apply btn btn-success"
-                                              value="satom">Apply changes</button>
-                                      <a download href="/dynadb/files/Dynamics/"
-                                        class="btn btn-default cs_download_raw">
-                                              <span class="glyphicon glyphicon-download-alt"></span> CS raw data
-                                            </a>
-                                      <a download href="/dynadb/files/Dynamics/"
-                                        class="btn btn-default cs_download_simp">
-                                              <span class="glyphicon glyphicon-download-alt"></span> CS simplified data
-                                            </a>
-                                            <p> </p>
-                                          </div>
-        
-                                          <span class="cs_loading">
-                                            <center><img class="img_csloading"
-                                                src="{% static 'view/images/loading-gear.gif' %}" /></center>
-                                          </span>
-                                          <div id="cs_chart_satom">
-                                          </div>
-                                          <div id="error_cs_satom" class="error_cs alert alert-danger"
-                                            style="margin:10px 0; display: none;">
-                                            An unexpected error occurred.
+
+                                            <div>
+                                              <button type="button" id="cs_apply_satom" class="cs_apply btn btn-success"
+                                                      value="satom">Apply changes</button>
+                                              <a download href="/dynadb/files/Dynamics/"
+                                                class="btn btn-default cs_download_raw">
+                                                      <span class="glyphicon glyphicon-download-alt"></span> CS raw data
+                                                    </a>
+                                              <a download href="/dynadb/files/Dynamics/"
+                                                class="btn btn-default cs_download_simp">
+                                                      <span class="glyphicon glyphicon-download-alt"></span> CS simplified data
+                                                    </a>
+                                                    <p> </p>
+                                            </div>
+              
+                                                  
+                                            <span class="cs_loading">
+                                                <center><img class="img_csloading" src="{% static 'view/images/loading-gear.gif' %}" /></center>
+                                            </span>
+                                            <div id="cs_chart_satom">
+                                            </div>
+                                            <div id="error_cs_satom" class="error_cs alert alert-danger"
+                                              style="margin:10px 0; display: none;">
+                                              An unexpected error occurred.
+                                            </div>
                                           </div>
         
                                         </div>
@@ -3757,10 +4680,8 @@
                                         <div id="cs_atype_2d" class="tab-pane fade">
                                           <p class="cs_title"> Selection type:</p>
                                           <ul class="nav nav-tabs tab_list">
-                                            <li id="cs_2d_tab_predef" class="active"><a data-toggle="tab"
-                                                href="#cs_2d_predef">Predefined</a></li>
-                                      <li id="cs_2d_tab_custom"><a data-toggle="tab" href="#cs_2d_custom">Custom</a>
-                                      </li>
+                                            <li id="cs_2d_tab_predef" class="active"><a data-toggle="tab" href="#cs_2d_predef">Predefined</a></li>
+                                            <li id="cs_2d_tab_custom"><a data-toggle="tab" href="#cs_2d_custom">Custom</a></li>
                                           </ul>
         
                                           <div class="tab-content">
@@ -3814,7 +4735,6 @@
                                                       data-hide_btn="true">Clear</button>
                                                   </div>
                                                 </div>
-                                              </div>
                                               <table class="table table-condensed table-borderless">
                                                 <tbody>
                                                   <tr>
@@ -3839,9 +4759,6 @@
                                                   </tr>
                                                 </tbody>
                                               </table>
-                                            </div>
-                                          </div>
-        
                                           <table class="table table-condensed table-borderless">
                                             <tbody>
                                               <tr>
@@ -3872,8 +4789,10 @@
                                               </tr>
                                             </tbody>
                                           </table>
+                                        </div>
         
-                                          <div>
+                                      </div>        
+
                                       <button type="button" id="cs_apply_2d" class="cs_apply btn btn-success"
                                               value="2d">Apply changes</button>
                                       <a download href="/dynadb/files/Dynamics/"
@@ -3885,6 +4804,9 @@
                                               <span class="glyphicon glyphicon-download-alt"></span> CS simplified data
                                             </a>
                                             <p></p>
+                                          </div>
+        
+                                          <div>
                                           </div>
         
                                           <span class="cs_loading">
@@ -4397,6 +5319,19 @@
               scroll_to_tool(myTool.slice(1));
           show_tool_icon("water_analysis_icon");
           show_tool("water_analysis");
+          hide_icon("analysis_fplot_icon");
+          hide_panel("analysis_fplot");
+            } else {
+              document.getElementById("toolAlert").style.display = 'block';
+          }
+          break;
+        // lipid vol distribution
+        case "#lip_analysis_pan":
+          var lData = "{{lipmaps}}";
+          if (lData != 'False') {
+            scroll_to_tool(myTool.slice(1));
+          show_tool_icon("lip_analysis_icon");
+          show_tool("lip_analysis");
           hide_icon("analysis_fplot_icon");
           hide_panel("analysis_fplot");
             } else {

@@ -33,6 +33,7 @@ import math
 from os import path
 import shutil 
 from modules.dynadb.views import  get_precomputed_file_path, get_file_name , get_file_name_dict, get_file_paths
+from modules.dynadb.obtain_generic_numbering import obtain_class,generic_numbering
 from django.shortcuts import redirect
 import os
 from pathlib import Path
@@ -41,6 +42,8 @@ pd.set_option('display.max_colwidth', None)
 import urllib
 import random
 from collections import OrderedDict
+import tempfile
+
 
 from bokeh.embed import components,json_item
 import scipy.stats
@@ -54,7 +57,20 @@ from bokeh.palettes import RdYlBu
 import plotly.express as px
 import plotly as pt
 
+# Basic function of mine
+def json_dict(path):
+    """Converts json file to pyhton dict."""
+    json_file=open(path)
+    json_str = json_file.read()
+    json_data = json.loads(json_str)
+    return json_data
+
 ############GLOBAL VARIABLES
+
+# Thresholds for breathing motions states (open, closed, intermediate)
+breathing_thres = json_dict(settings.MEDIA_ROOT + "Precomputed/BreathingMotions/threshold_dists.json")
+# Generic numberings of residues used to calcualte the state-defining distance 
+breathing_gennums = json_dict(settings.MEDIA_ROOT + "Precomputed/BreathingMotions/dist_res_gennum.json")
 
 #Options avalible for each subtype of allosteric communication
 # ac_options = {
@@ -254,6 +270,15 @@ def json_dict(path):
     json_str = json_file.read()
     json_data = json.loads(json_str)
     return json_data
+
+def move_element_to_beginning(lst, element):
+    trajl = []
+    for l in lst: 
+        if element in l:
+            trajl.insert(0, l)
+        else:
+            trajl.append(l)
+    return trajl
 
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
     """Given a position in GPCR generic numbering, returns the residue number."""
@@ -669,6 +694,27 @@ def get_gprot(dyn_id):
                     chain_gamma = chain_id
 
     return(name_alpha, chain_alpha, chain_beta, chain_gamma)
+
+def get_arr(dyn_id):
+    """
+    Given a dyn_id, determine if any of its proteins is a Beta-arrestin. 
+    Return corresponding Protein and DyndbProtein objects
+    """
+    arr_name = False
+    arr_chain = False
+    DP = DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics__pk=dyn_id)
+    dm = DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id__dyndbdynamics__id=dyn_id)[0]
+    for dp in DP:
+        if dp.prot_type==3:
+            uniprot = dp.uniprotkbac
+
+            # Get name from Protein table. If not exists yet in database, get it from user's entry
+            try:
+                arr_name = Protein.objects.get(accession=uniprot).name.lower()
+            except Protein.DoesNotExist:
+                arr_name = dp.name.lower()
+            arr_chain=  DyndbModeledResidues.objects.filter(id_protein=dp.id,id_model=dm.pk)[0].chain.upper() 
+    return(arr_name, arr_chain)
 
 def get_gpcr(dyn_id):
     """
@@ -1690,6 +1736,10 @@ def obtain_tunnel_data(dyn_id,traj_list):
 #                    dyntunnel_stride=int( stridestr.split(" ")[1])
 #        dyn_clu_pairs=[ dyn_clu_pairs_d[k] for k in sorted(dyn_clu_pairs_d.keys())]
 
+#VOLMAPS
+
+# EDMAPS
+
 def obtain_ed_align_matrix(dyn_id,traj_list):
 #    if dyn_id=="4":
 #        r_angl=[0.09766122750587349, -0.058302789675214316, 0.1389009096961483]
@@ -1713,6 +1763,7 @@ def obtain_ed_align_matrix(dyn_id,traj_list):
     else:
         return False
 
+# WATERMAPS
 def obtain_volmaps(dyn_id):
     """This function takes the dyn_id as argument and returns 2 dictionaries with the 
     traj_id as key and the filepath as value. If the map does not exist, the key gets the value: None (string)"""
@@ -1742,6 +1793,33 @@ def obtain_volmaps(dyn_id):
 
     return (occupancy_files)
 
+# LIPIDSMAPS
+def obtain_lipvolmaps(dyn_id):
+    """This function takes the dyn_id as argument and returns 2 dictionaries with the 
+    traj_id as key and the filepath as value. If the map does not exist, the key gets the value: None (string)"""
+
+    root = settings.MEDIA_ROOT
+    occupancy_path = os.path.join(root, "Precomputed/LipMaps")    #change this if the lipidmaps are in another folder! 
+
+    trajfiles = DyndbFiles.objects.annotate(dynid=F('dyndbfilesdynamics__id_dynamics'))
+    trajfiles = trajfiles.filter(dynid=dyn_id, id_file_types__is_trajectory=True)
+    trajfiles = trajfiles.annotate(file_id=F('dyndbfilesdynamics__id_files_id'))
+    trajfiles = trajfiles.values('file_id')
+    occupancy_files = {}
+    # density_files = {}
+
+    for i in trajfiles:
+        traj_id = i['file_id']
+        if i['file_id'] not in occupancy_files:
+            occupancy_file = os.path.join(occupancy_path, '%s_occupancy_%s.dx' %(traj_id, dyn_id))
+            if os.path.isfile(occupancy_file):
+                occupancy_files[traj_id] = occupancy_file
+            else:
+                #occupancy_files[traj_id] = None
+                continue
+    return (occupancy_files)
+
+#HAPPINESS!!! :D
 def obtain_happiness_num(hap_file):
     """Get the number of atoms in happiness pdb file to be displayed in the slider"""
     with open(hap_file, 'r') as file:
@@ -2001,7 +2079,6 @@ def update_bokeh_interface_water(request):
         }
 
         return HttpResponse(json.dumps(context), content_type='view/'+dyn_id)  
-
 
 
 def construct_def_ligresint_results(request,dyn_id,thresh, int_traj_p, int_struc_p, dist_scheme, no_rv, strideVal,int_dict):
@@ -2375,7 +2452,7 @@ def sub_id_redirect(request,sub_id):
         return render(request, 'view/sub_id_redirect.html', context )
 
 @ensure_csrf_cookie
-def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, watervol_def=False,pharmacophore_def=False,tunnels_channels_def=False, ligprotint_def=False, pocket_id=[]):
+def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, watervol_def=False, lipvol_def=False, pharmacophore_def=False,tunnels_channels_def=False, ligprotint_def=False, pocket_id=[]):
 #    if request.session.get('dist_data', False):
 #        dist_data=request.session['dist_data']
 #        dist_dict=dist_data["dist_dict"]
@@ -2415,7 +2492,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
         return render(request, 'accounts/login_sub.html', context)
        
     is_default_page=False
-    if network_def or watervol_def or pharmacophore_def or tunnels_channels_def or ligprotint_def:
+    if network_def or watervol_def or lipvol_def or pharmacophore_def or tunnels_channels_def or ligprotint_def:
         is_default_page=True
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.POST:
         if request.POST.get("rmsdStr"):
@@ -2437,7 +2514,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         rmsd_dict=rmsd_data["rmsd_dict"]
                         new_rmsd_id=rmsd_data["new_rmsd_id"]
                         no_rv_l=no_rv.split(",")
-                        to_rv=[];
+                        to_rv=[]
                         for r_id in rmsd_dict.keys():
                             if (r_id not in no_rv_l):
                                 to_rv.append(r_id)
@@ -2650,12 +2727,21 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
         else:
             warning_load={"trajload":True,"heavy":True}
 
-##### ---- NATHALIE CODE HERE -------
+        # Obtain generic numbering, if it exists
+        gennums = generic_numbering(dyn_id)
+
+        ##### ---- Water Maps - NATHALIE CODE HERE -------
 # retrieving the filepaths from the database. put traj_id as key and vol/occ map as value. Then pass this variable through context variable.
         watermaps = False
         occupancy = obtain_volmaps(dyn_id)   #the variables contain dictionaries with the occupancy and density maps filepaths. CHANGE THIS! only occupancy 
         if occupancy:
             watermaps = True 
+
+        #### ---- Lipid Maps -------
+        lipmaps = False
+        lipoccupancy = obtain_lipvolmaps(dyn_id)   #the variables contain dictionaries with the occupancy and density maps filepaths. CHANGE THIS! only occupancy 
+        if lipoccupancy:
+            lipmaps = True
 
 #### ---- Water Happiness -------
 # retrieving the filepaths from the database. put traj_id as key and vol/occ map as value. Then pass this variable through context variable.
@@ -2689,6 +2775,21 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
         #### ------Getting GPCR and Gprot chains---
         (gprot_name_alpha, gprot_chain_a, gprot_chain_b, gprot_chain_g) = get_gprot(dyn_id)
         (gpcr_chain,dbprot_gpcr,prot_gpcr) = get_gpcr(dyn_id)
+
+        #### -------Breathing
+        # Check if this system has breathing data
+        if os.path.exists(settings.MEDIA_ROOT + "Precomputed/BreathingMotions/dyn%s.json" % str(dyn_id)):
+            # Obtain GPCR classs
+            gclass = obtain_class(dyn_id)
+            # Obtain generic numberings of state-defining-distance residues for this class 
+            breath_gennums = breathing_gennums[gclass]
+            # Obtain resids of said gennums
+            resid1 = gennums[breath_gennums[0]].split('-')[0]
+            resid2 = gennums[breath_gennums[1]].split('-')[0]
+            # Make selection line
+            breath_sel = "(%s %s) and :%s" % (resid1,resid2,gpcr_chain)
+        else:
+            breath_sel = False 
 
 #### --------------------------------
 
@@ -2724,11 +2825,19 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
         else:
             show_fp = False
         ed_mats=obtain_ed_align_matrix(dyn_id,traj_list)
-        ############
+
+        # Jana requested specifically these two trajetories to be the ones loaded by default in dyn773 and dyn872
+        if int(dyn_id)==773:
+            traj_list = move_element_to_beginning(traj_list, 15596)
+        if int(dyn_id)==872:
+            traj_list = move_element_to_beginning(traj_list, 16264)
+
+        ############Tunnels and Pockets##########
         (tunnels,clust_rep_avail,traj_clust_rad)=obtain_tunnel_data(dyn_id,traj_list)
         (pockets, traj_pockID_coordfile, traj_isovalueFile) = obtain_pocket_data(dyn_id,traj_list)
         #dyn_clu_merge,dyntunnel_stride
-        ############
+        ##########################################
+
         if str(dyn_id)=="197":
             i=1
             for traj_e in traj_list:
@@ -2762,6 +2871,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
             "ap_data_avail" : ap_data_avail,
             "ap_options" : ap_options,
             "bind_domain":bind_domain,
+            "breath_sel" : breath_sel,
             'cs_data_avail' : cs_data_avail,
             'cs_resid_names' :  cs_resid_names,
             'cs_selection_params' : cs_selection_params,
@@ -2787,6 +2897,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
             "ligands_short": ",".join(lig_li_s),                  
             "light_sel":json.dumps(light_sel),
             "ligprotint_def":ligprotint_def,
+            "lipmaps" : lipmaps,
+            "lipoccupancy" : json.dumps(lipoccupancy),
+            "lipvol_def":lipvol_def,
             "mdsrv_url":mdsrv_url,
             "network_def":network_def,
             "num_interface_waters":num_interface_waters,
@@ -2798,6 +2911,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
             "pockets_dump": json.dumps(pockets),
             "predef_int_data":predef_int_data,
             "presel_pos":presel_pos,
+            'resid_to_resname' : json.dumps(resid_to_resname),
             "script_cs":False,
             "script_interf_waters":False,
             "seg_li":"",
@@ -3016,7 +3130,6 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         'pdb_vars' : json.dumps(pdb_vars),
                         'pdb_vars_templ' : pdb_vars,
                         'prot_seq_pos' :  list(prot_seq_pos.values()),
-                        'resid_to_resname' : json.dumps(resid_to_resname),
                         "seg_li":",".join(["-".join(seg) for seg in seg_li]),
                         # 'test_cs' : test_cs,
                         'TMsel_all' : sorted(TMsel_all_ok.items(), key=lambda x:int(x[0][-1])),
@@ -3604,6 +3717,175 @@ def download_rmsd(request, dyn_id,rmsd_id):
 def viewer_docs(request):
     return render(request, 'view/viewer_docs.html', {} )
 
+def breathing_dwnl(request,dyn_id,traj_id):
+    """
+    Create and download CSV file for breathing distances
+    """
+    breathing_file = settings.MEDIA_ROOT + "Precomputed/BreathingMotions/dyn" + str(dyn_id) + '.json'
+    if os.path.exists(breathing_file):
+        breathing_dict = json_dict(breathing_file)
+    else:
+        breathing_dict = {}
+
+    # Obtain GPCR class
+    gclass = obtain_class(dyn_id)
+
+    # Obtain generic numberings of state-defining-distance residues for this class 
+    dist_residues = breathing_gennums[gclass]
+    dist_res = '-'.join(dist_residues)
+
+    # Obtain thresholds according to class
+    act_thres = breathing_thres[gclass]['max_int']
+    int_thres = breathing_thres[gclass]['max_inact']
+
+    # Get delta of this simulation
+    dyn_data = DyndbDynamics.objects.get(id=dyn_id)
+    delta = dyn_data.delta
+
+    #Only send data of specified trajectory
+    dists = breathing_dict['rep'+traj_id]
+
+    # Open a csv writer object in future resonse
+    response = HttpResponse(content_type='text/csv')
+    writer = csv.writer(response)
+    writer.writerow(["frame","time(ns)",dist_res+" distance (A)",'predicted conformation'])
+    for frame,dist in enumerate(dists):
+        nstime = round(frame*delta,2)
+        if act_thres < dist:
+            conf = 'Open'
+        elif int_thres < dist:
+            conf = 'Intermediate'
+        else:
+            conf = 'Closed'
+        writer.writerow([frame,nstime,round(dist,2),conf])
+
+    response['Content-Disposition'] = 'attachment; filename="breathing_distance_dyn%s_traj%s.csv"'%(dyn_id,traj_id)
+
+    return(response)
+
+
+def breathing_data(request,dyn_id,traj_id):
+    """
+    Load and send dictionary with data about receptor breathing
+    """
+    breathing_file = settings.MEDIA_ROOT + "Precomputed/BreathingMotions/dyn" + str(dyn_id) + '.json'
+    if os.path.exists(breathing_file):
+        breathing_dict = json_dict(breathing_file)
+    else:
+        breathing_dict = {}
+
+    # Obtain GPCR class
+    gclass = obtain_class(dyn_id)
+
+    # Obtain generic numberings of state-defining-distance residues for this class 
+    dist_residues = breathing_gennums[gclass]
+
+    # Obtain thresholds according to class
+    act_thres = breathing_thres[gclass]['max_int']
+    int_thres = breathing_thres[gclass]['max_inact']
+
+    # Get delta of this simulation
+    dyn_data = DyndbDynamics.objects.get(id=dyn_id)
+    delta = dyn_data.delta
+
+    #Only send data of specified trajectory
+    dists = breathing_dict['rep'+traj_id]
+
+    # Calculate limits of Y axis
+    # print(dists, min(dists))
+    ymin = min((min(dists),int_thres))-2
+    # print(ymin)
+    ymax = max((max(dists),act_thres))+2
+
+    # Create background, which is actually just stacked lines
+    close_stack = int_thres
+    int_stack = act_thres-int_thres
+    open_stack = ymax-act_thres
+
+    # Create dictionary fit for google plots, of pairs of "frame/time : distance" values
+    final_dict = {
+        't' :  [['Time','Closed','Intermediate','Open','Distance']],
+        'f' :  [['Frame','Closed','Intermediate','Open','Distance']],
+        'colors' : ['#808080','#00BD56','#9B063E','#007de4'], # Colors for main line and active and intermediate thresholds
+        'dist_residues' : dist_residues,
+        'ymin' : ymin,
+        'ymax' : ymax
+    }
+
+    final_dict['t'] += [[index*delta, close_stack, int_stack, open_stack, value] for index, value in enumerate(dists)]
+    final_dict['f'] += [[index, close_stack, int_stack, open_stack, value] for index, value in enumerate(dists)]
+
+    # Old method to have multi-color line
+    # # Create a sequence of colors according to open/inter/closed
+    # for frame, dist in enumerate(dists):
+    #     if dist > 16.36:
+    #         color = '#9B063E'
+    #     elif dist > 13.6:
+    #         color = '#00BD56'
+    #     else:
+    #         color = '#727272'
+    #     # final_dict['colors'].append(color)
+    #     final_dict['t'].append([frame*delta, dist, color])
+    #     final_dict['f'].append([frame, dist, color])
+
+
+    return HttpResponse(json.dumps(final_dict), content_type='application/json')
+    # return HttpResponse(json.dumps(data_rmsd), content_type='view/'+dyn_id)  
+
+def breathing_frames(request,dyn_id,traj_id,state):
+    """
+    Filtrate and merge frames from a certain state of this trajectory
+    """
+
+    # Load data
+    breathing_file = settings.MEDIA_ROOT + "Precomputed/BreathingMotions/dyn" + str(dyn_id) + '.json'
+    if os.path.exists(breathing_file):
+        breathing_dict = json_dict(breathing_file)
+    else:
+        breathing_dict = {}
+
+    # Obtain GPCR class
+    gclass = obtain_class(dyn_id)
+
+    # Obtain thresholds according to class
+    act_thres = breathing_thres[gclass]['max_int']
+    int_thres = breathing_thres[gclass]['max_inact']
+
+    # Identify frames corresponding to our target state
+    my_frames = []
+    for (frame,dist) in enumerate(breathing_dict['rep'+traj_id]):
+        if state == 'open' and (act_thres<dist):
+            my_frames.append(frame)
+        elif (state == 'inter') and (act_thres>dist) and (int_thres<dist):
+            my_frames.append(frame)
+        elif (state == 'closed') and (int_thres>dist):
+            my_frames.append(frame)
+
+    # Obtain trajectory and coordinates files
+    df_traj = DyndbFiles.objects.get(pk=traj_id)
+    traj_path = settings.MEDIA_ROOT+df_traj.filepath
+    df_coor = DyndbFiles.objects.filter(dyndbfilesdynamics__type=1, dyndbfilesdynamics__id_dynamics=dyn_id)[0]
+    coor_path = settings.MEDIA_ROOT+df_coor.filepath
+
+    # Load the original trajectory file
+    original_traj = md.load(traj_path, top=coor_path)
+
+    # Extract the specified frames
+    selected_frames = original_traj[my_frames]
+
+    # Save trajectory in buffer, and send it back to the user as download file
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        # Save the trajectory to the temporary file
+        selected_frames.save_dcd(temp_file.name)
+
+    # Read the content of the temporary file
+    with open(temp_file.name, 'rb') as temp_file:
+        content = temp_file.read()
+
+    # Create an HTTP response with the content of the in-memory file
+    response = HttpResponse(content, content_type='application/octet-stream')
+    response['Content-Disposition'] = 'attachment; filename="%s_%s_%s_frames.dcd"'%(dyn_id,traj_id,state)
+    return response
 
 def parser(filename):
     #'dynadb/b2ar_isoprot/b2ar.psf'

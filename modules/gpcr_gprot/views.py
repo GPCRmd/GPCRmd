@@ -48,6 +48,7 @@ def main(request):
 
 	#First batch of context variables
 	context = {
+		'app' : 'gprot',
 		'fpdir' : fpdir,
 		'itype_code' : itype,
 		'itype_name' : typelist[itype],
@@ -207,7 +208,7 @@ def customized_heatmap(request, foo):
 		prev_slicepoint = slicepoint
 		
 		# Define bokeh figure and hovertool
-		hover = create_hovertool(itype, typelist)
+		hover = create_hovertool(itype, typelist,gprot=True)
 		mysource,p = define_figure(w, h, df_slided, hover, colors_grlgrdgr)
 		# Creating javascript for side-window
 		p = select_tool_callback(p, partial_db_dict, gennum, itype, typelist, mysource)
@@ -226,6 +227,7 @@ def customized_heatmap(request, foo):
 	
 	#First batch of context variables
 	context = {
+		'app' : 'gprot',
 		'fpdir' : fpdir,
 		'itype_code' : itype,
 		'itype_name' : typelist[itype],

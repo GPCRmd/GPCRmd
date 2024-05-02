@@ -195,7 +195,7 @@ if 1==1:
                 FROM=(" ").join(FromMOL)
                 WHERE=(" ").join(where)
                 QUERY=(" ").join([SEL,FROM,WHERE])
-                print(QUERY)
+                # print(QUERY)
                 ROWLp=[]#list of complex_exp matching the set of proteins in the QUERY
                 ROWLm=[]#list of complex_molecules matching the  set of Molecules from the QUERY
                 with connection.cursor() as cursor:

@@ -7,7 +7,7 @@ from django import forms
 from django.core.cache import cache
 from django.views.decorators.cache import cache_page
 
-from modules.dynadb.models import Gene, ProteinSegment
+# from modules.dynadb.models import Gene, ProteinSegments
 from modules.structure.models import Structure
 from modules.structure.functions import CASelector, SelectionParser, GenericNumbersSelector, SubstructureSelector, check_gn
 from modules.structure.assign_generic_numbers_gpcr import GenericNumbering

@@ -7,6 +7,7 @@
   {% load static %}
   {% block addon_css %}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="{% static 'home/css/scroll_motion.css' %}" rel="stylesheet">
 
   {% endblock %}
 </head>
@@ -33,6 +34,22 @@
           onclick="search_example(this)">5ht1b_human</a>, <a id="P28222" class="aExamples"
           onclick="search_example(this)">P28222</a>, <a id="4IAQ" class="aExamples"
           onclick="search_example(this)">4IAQ</a></p>
+
+    </div>
+    <!-- Scroll motion -->
+    <div class="showtop" id="mouse-scroll">
+      <div class="row " style="text-align: center;margin-top: 6%;">
+        {% comment %} <a class="newsLink searchExamples lineUp aExamples" onclick="go_to_news()">Latest news</a>  {% endcomment %}
+        <a onclick="go_to_news()"><img style="cursor: pointer; margin-left:10px; width:40px; filter:invert(100%);margin-top: 5px;" src="{% static 'home/images/news/news_icon.png' %}"></img></a>
+      </div>
+      {% comment %} <div class="mouse">
+        <div class="mouse-in"></div>
+      </div> {% endcomment %}
+      <div>
+          <span class="down-arrow-1"></span>
+          <span class="down-arrow-2"></span>
+          <span class="down-arrow-3"></span>
+      </div>
     </div>
   </div>
 
@@ -285,16 +302,17 @@
 
   <!-- News -->
   <div class="wb jumbotron jumbotron-fluid">
-    <div class="row">
-      <a href="/news/">
+    <div id="lastnews" class="row">
+      {% comment %} <a href="/news/">
         <h2 class="jumbotronTitle newsTitle display-4">Check out the latest news of the GPCR community</h2>
-      </a>
-      <div id="moreNews" style="display:block;" class="col-xs-2 col-xs-offset-5 newsbuttonDiv">
+      </a> {% endcomment %}
+      {% include 'home/carousel_news.html' %}
+      {% comment %} <div id="moreNews" style="display:block;" class="col-xs-2 col-xs-offset-5 newsbuttonDiv">
         <a class="buttonNews" onclick="showDiv()">Show more</a>
-      </div>
+      </div> {% endcomment %}
 
       <!-- Three latest news -->
-      <div id="newsSection" style="display:none;" class="newsblock col-xs-12">
+      {% comment %} <div id="newsSection" style="display:none;" class="newsblock col-xs-12">
         <div class="col-xs-12 col-md-4">
           <div class="subPanelLeft panel panel-primary">
             <div class="news">
@@ -348,7 +366,7 @@
           <a href="/news/" class="buttonNews">Show all</a>
         </div>
       </div>
-
+      {% endcomment %}
     </div>
 
   </div>
@@ -725,12 +743,23 @@
   </script>
 
   <!-- Go to news with the open piece of news -->
-  <script>
+  {% comment %} <script>
     function go_to_news(button) {
       var newsid = button.getAttribute('id');
       window.location.href = '/news/#' + newsid;
     }
+  </script> {% endcomment %}
+  <script>
+    function go_to_news() {
+      const element = document.getElementById("lastnews");
+      //var pos = element.parentNode.offsetTop; 
+      //window.scrollTo(0, pos);
+
+      var targetSection = element.parentNode;
+      targetSection.scrollIntoView({behavior: 'smooth'});
+    }
   </script>
+
   {% endblock %}
 
 </body>

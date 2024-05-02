@@ -42,6 +42,10 @@ urlpatterns = [
     re_path(r'^get_pocket_and_dyn_data/$', views.get_pocket_and_dyn_data, name="get_pocket_and_dyn_data"),
     re_path(r'^get_interface_water_dic/$', views.get_interface_water_dic, name="get_interface_water_dic"),
     re_path(r'^update_bokeh_interface_water/$', views.update_bokeh_interface_water, name="update_bokeh_interface_water"),
+    re_path(r'^breathing/(?P<dyn_id>[0-9]+)&(?P<traj_id>[0-9]+)/$', views.breathing_data, name="breathing_data"),
+    re_path(r'^breathing_dwnl/(?P<dyn_id>[0-9]+)&(?P<traj_id>[0-9]+)/$', views.breathing_dwnl, name="breathing_dwnl"),
+    re_path(r'^breathing_frames/(?P<dyn_id>[0-9]+)&(?P<traj_id>[0-9]+)&(?P<state>\w+)/$', views.breathing_frames, name="breathing_frames"),
+
 ]
 
 

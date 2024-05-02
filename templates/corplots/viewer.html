@@ -1,0 +1,90 @@
+<!-- Draggable DIV -->
+<div id="nglfloat">
+    <!-- Include a header DIV with the same name as the draggable DIV, followed by "header" -->
+    <div id="nglfloatheader">Click&hold to move <p class="close warn_heavy_close" data-dismiss="alert" aria-label="close" onclick="close_viewer()">×</p></div>
+        <iframe class="str_file traj_file" data-dyn_id="1389"
+            style="border: 0px none;width: 545px;" id="embed_mdsrv"
+            src="https://www.gpcrmd.org:443/html/embed_show_corplots.html" scrolling="no" height="400px" width="590px"
+            data-struc_file="/Dynamics/dyn1603/tmp_dyn_0_1603.pdb" data-traj_file="/Dynamics/dyn1603/19886_trj_1389.xtc">
+        </iframe>
+        <center>
+            <div
+            style="padding-bottom:10px;padding-top:10px;padding-right:3px;padding-left:3px;width:545px">
+                <p style='text-align:center;color:#808080'>Visualization and
+                    trajectory sharing powered by <a href="http://nglviewer.org/ngl/api/index.html"
+                    rel="noreferrer" target="_blank">NGL viewer</a> and <a href="http://nglviewer.org/mdsrv/"
+                    rel="noreferrer" target="_blank">MDSrv</a>
+                </p>
+                <p>More detail visualization: <a id="gpcrmd_link" href="https://www.gpcrmd.org/view/1389"
+                    rel="noreferrer" target="_blank">GPCRmd(1389)</a></p>
+            </div>
+        </center>
+</div> 
+
+<style>
+#nglfloat {
+  position: absolute;
+  z-index: 9;
+  background-color: #f1f1f1;
+  border: 1px solid #d3d3d3;
+  text-align: center;
+}
+
+#nglfloatheader {
+  padding: 10px;
+  cursor: move;
+  z-index: 10;
+  background-color: #2196F3;
+  color: #fff;
+}
+</style>
+
+<script>
+// Make the DIV element draggable:
+dragElement(document.getElementById("nglfloat"));
+
+function dragElement(elmnt) {
+  var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  if (document.getElementById(elmnt.id + "header")) {
+    // if present, the header is where you move the DIV from:
+    document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+  } else {
+    // otherwise, move the DIV from anywhere inside the DIV:
+    elmnt.onmousedown = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // get the mouse cursor position at startup:
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    // call a function whenever the cursor moves:
+    document.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // calculate the new cursor position:
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    // set the element's new position:
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+  }
+
+  function closeDragElement() {
+    // stop moving when mouse button is released:
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+}
+
+function close_viewer() {
+  document.getElementById("nglviewer").style.display = "none"   
+} 
+</script>

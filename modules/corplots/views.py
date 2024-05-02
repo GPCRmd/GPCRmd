@@ -5,7 +5,10 @@ from django.http import HttpResponse
 from modules.view.views import obtain_domain_url
 from json import loads, dumps
 from wsgiref.util import FileWrapper
+
 from modules.contact_maps.scripts.customized_heatmap import *
+from modules.corplots.models import Corplots
+
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
@@ -21,7 +24,7 @@ from scipy.stats.stats import pearsonr
 
 from bokeh.embed import components,json_item
 from bokeh import palettes
-from bokeh.models import ColumnDataSource,Label,HoverTool, Span, Slope, LabelSet
+from bokeh.models import ColumnDataSource,Label,HoverTool, Span, Slope, LabelSet, TapTool, Circle
 from bokeh.layouts import row, column
 from bokeh.plotting import figure, output_file, show
 
@@ -161,7 +164,7 @@ def corplots(out,path):
 		x_range=x_range,
 		y_axis_label=path,
 		x_axis_label=out,
-	#	 tools=["hover","tap","save","reset","wheel_zoom"], 
+		tools=["pan","tap","save","reset","wheel_zoom"], 
 	#	 x_axis_location="above",
 	#	 active_drag=None,
 	#	 toolbar_location="right",
@@ -174,13 +177,20 @@ def corplots(out,path):
 
 	# Markers for lineplot
 	mysource = ColumnDataSource(df)
-	p.circle(
+	renderer = p.circle(
 		x=out,
 		y=path,
 		legend_label="Correlation value: "+cor, 
 		size=12,
 		source=mysource,		
 		)
+ 
+	selected_circle = Circle(fill_alpha=1, fill_color="#3288bd", line_color="black")
+	nonselected_circle = Circle(fill_alpha=0.2, fill_color="#3288bd", line_color="none")
+
+	renderer.selection_glyph = selected_circle
+	renderer.nonselection_glyph = nonselected_circle
+	
 	# Regression line
 	p.add_layout(regression_line)
 
@@ -224,6 +234,54 @@ def corplots(out,path):
 		tooltips=hoverlist
 	)
 	p.add_tools(hover)
+	
+	# #Get structure:
+	# struc_data = Corplots.objects.get()
+    # dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=x)
+    # (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(paths_dict)
+ 
+	#TapTool 
+	taptool = p.select(type=TapTool)
+	taptool.callback = CustomJS(
+		args=dict(source=mysource, selected= renderer.data_source, struc_data="struc_data"),
+		code="""
+			var index = selected.selected.indices;
+			var drug = source.data.Drug[index];
+      		var viewer = parent.document.getElementById("embed_mdsrv");
+			//viewer.setAttribute('data-dyn_id',dyn_id);
+   			//viewer.setAttribute('data-struc_file',struc_file);
+			//viewer.setAttribute('data-traj_file',traj_file);
+   			viewer.contentWindow.location.reload(true);
+			var info = parent.document.getElementById("gpcrmd_link");
+			// info.setAttribute('href', 'https://www.gpcrmd.org/view/' + dyn_id);
+			// info.textContent = "GPCRmd(" + dyn_id + ")"
+			document.getElementById("nglviewer").style.display = "inline";        
+		""",
+		)
+ 
+	# def on_selection_change(obj, attr, old, new):
+	# 	inds = np.array(new)
+	# 	if len(inds) == 0 or len(inds) == len(x):
+	# 		hhist = hzeros
+	# 		vhist = vzeros
+	# 		hhist2 = hzeros
+	# 		vhist2 = vzeros
+	# 	else:
+	# 		hhist, _ = np.histogram(x[inds], bins=hedges)
+	# 		vhist, _ = np.histogram(y[inds], bins=vedges)
+	# 		negative_inds = np.ones_like(x, dtype=np.bool)
+	# 		negative_inds[inds] = False
+	# 		hhist2, _ = np.histogram(x[negative_inds], bins=hedges)
+	# 		vhist2, _ = np.histogram(y[negative_inds], bins=vedges)
+
+	# 	ph_source.data["top"] = hhist
+	# 	pv_source.data["right"] = vhist
+	# 	ph_source2.data["top"] = -hhist2
+	# 	pv_source2.data["right"] = -vhist2
+
+	# 	cursession().store_objects(ph_source, pv_source, ph_source2, pv_source2)
+
+	# scatter_ds.on_change('selected', on_selection_change)
 	
 	# Return plot components
 	script, div = components(p)

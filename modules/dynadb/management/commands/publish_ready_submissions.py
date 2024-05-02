@@ -193,7 +193,6 @@ class Command(BaseCommand):
             dyn_types=dict(DyndbFilesDynamics.file_types)
             for typenum in dyn_types:
                 type_text = dyn_types[typenum]
-                print(type_text)
                 if self.__coorre.search(type_text) or self.__coorre.search(type_text):
                     subtype = "pdb"
                 elif self.__topre.search(type_text):

@@ -305,7 +305,7 @@ def gpcrmd_home(request):
     context["mdsrv_url"]=mdsrv_url
 
     ### News
-    article_table = Article.objects.order_by('-id')[:3]
+    article_table = Article.objects.order_by('-id')[:5]
     context["article_table"] = article_table
 
     return render(request, 'home/index_gpcrmd.html', context)
@@ -564,6 +564,9 @@ def gpcrtree(request):
 
 def news(request):
     context = {}
+    ### News
+    article_table = Article.objects.order_by('-id')
+    context["article_table"] = article_table
     return render(request, 'home/news.html', context )
 
 def ndround(request):

@@ -65,7 +65,7 @@
   </div>
 
   <!--Here be side-window (the thing that opens up upon clicking on heatmap)-->
-  {% include 'gpcr_gprot/side_window.html' %}
+  {% include 'gpcr_'|add:app|add:'/side_window.html' %}
 
   <div class="col-xs-12" id="not_retracting_parts">
     <!--Here be flareplots and NGLs -->
@@ -273,7 +273,7 @@
     </div>
 
     <!--Load documentation div-->
-    {% include 'gpcr_gprot/docs.html' %}
+    {% include 'gpcr_'|add:app|add:'/docs.html' %}
   </div>
 
 </div>

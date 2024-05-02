@@ -12,6 +12,23 @@ three_to_one = {'ALA': 'A', 'ARG': 'R', 'ASN': 'N', 'ASP': 'D', 'CYS': 'C',
                 'LEU': 'L', 'LYS': 'K', 'MET': 'M', 'PHE': 'F', 'PRO': 'P',
                 'SER': 'S', 'THR': 'T', 'TRP': 'W', 'TYR': 'Y', 'VAL': 'V'}
 
+def get_protein_name(uniprot_id):
+    base_url = "https://www.uniprot.org/uniprot/"
+    query_url = f"{base_url}{uniprot_id}.txt"
+
+    try:
+        response = requests.get(query_url)
+        response.raise_for_status()
+        content = response.text
+        for line in content.splitlines():
+            if line.startswith("ID"):
+                gene_name = line.split()[1].lower()
+                return gene_name
+    except requests.exceptions.RequestException as e:
+        print("Error fetching data:", e)
+        return None
+
+
 def obtain_class(dyn_id):
     """
     Obtain GPCR class of the GPCR in a certain dynamic
@@ -67,7 +84,7 @@ def generic_numbering(dyn_id, prot = 'gpcr'):
     """
 
     # Take prot type id, as it is in DyndbProtein
-    prot_types = { 'gpcr' : 1, 'gprot' : 2}
+    prot_types = { 'gpcr' : 1, 'gprot' : 2, 'arr' : 3}
     prot_type = prot_types[prot]
 
     # Obtain protein object of GPCRs/G-prots in this dynamic. 
@@ -77,23 +94,25 @@ def generic_numbering(dyn_id, prot = 'gpcr'):
         # Obtain uniprot name of this GPCR/Gprot
         if prot == 'gpcr':
             dp = DP[0]
-            if not dp.receptor_id_protein:
-                print('GPCR/Gprot has no receptor name associated. Class left unefined')
-                return {}
-            else:
+            if dp.receptor_id_protein:
                 prot_name = dp.receptor_id_protein.entry_name
-        # Else is gprot. We are only interested in G alpha
+            else: 
+                print('GPCR has no receptor name associated. Class left unefined')
+                return {}
+        # Else is gprot/b-arrestin
         else: 
-            DP = DP.filter(name__contains='alpha')
+            # We are only interested in G protein alpha subunit
+            if prot=='gprot':
+                DP = DP.filter(name__contains='alpha')
+
             if len(DP):
                 uniprot = DP[0].uniprotkbac
                 P = Protein.objects.filter(accession=uniprot)
+                dp = DP[0]
                 if len(P):
-                    dp = DP[0]
                     prot_name = P[0].entry_name
                 else:
-                    print('no protein entry for this Uniprotkbac. Skipping')
-                    return {}
+                    prot_name = get_protein_name(uniprot)
             else:
                 print('no alpha G prot avaliable. Skipping')
                 return {}

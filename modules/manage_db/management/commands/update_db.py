@@ -43,7 +43,8 @@ class Command(BaseCommand):
         # Dyndb tables
         dynparser = parser.add_argument_group("Dyndb tables options", "Options to update the dyndb tables.")
         dynparser.add_argument("-dm", "--dynmodel", help="Update the dyndb model table.", action="store_true")
-    
+        dynparser.add_argument("-ds", "--dsdfpath", help="Replace the filenames and paths of a list of submission ids, separated by comma, with the correct ones in the dyndb submission dynamics files. You can use the range statement to provide range of numbers instead of write them one by one (e.g. 1594-1933).", action="store_true")
+
     def handle(self, *args, **kwargs):
         # General functions
         def replace_func(field_name, find_str, replace_str):
@@ -162,6 +163,15 @@ class Command(BaseCommand):
 
             os.system(f"python /var/www/GPCRmd/manage.py update_dyndb_model")
         
+        def update_dsdf_paths(*args, **kwargs): #David function to replace filenames
+            """
+            Restores the filenames and filepath in table dyndb_submission_dynamics_files. 
+            """
+           
+            print(f"    - Dyndb Submission Dynamics Files table...")
+            
+            os.system(f"python /var/www/GPCRmd/manage.py update_dsdf_paths")
+        
         if len(sys.argv) < 3:
             raise Exception("No arguments given. Use the help option (-h | --help) to check the available options.") 
         
@@ -183,7 +193,6 @@ class Command(BaseCommand):
             update_species(kwargs)
             # update_gene(kwargs)
             update_prot(kwargs)
-            sys.exit("Exiting...")
             
         # Protein family table
         if kwargs["protfamily"]:
@@ -206,6 +215,10 @@ class Command(BaseCommand):
         # Dyndb model table 
         if kwargs["dynmodel"]:
             update_dyndb_model(kwargs)
+            
+        # Dyndb submission dynamics files
+        if kwargs["dsdfpath"]:
+            update_dsdf_paths(kwargs)
 
         sys.exit("Exiting...")  
                 

@@ -2,7 +2,7 @@
 <!--Here be side-window (the thing that opens up upon clicking on heatmap)-->
   <div class="col-xs-3" id="info">
     <div id="subinfo" class="panel panel-info">
-      <div class="panel-heading" style="">Interaction details
+      <div class="panel-heading">Interaction details
         <button type="button" class="close" aria-label="Close" onclick="closeSideWindow()">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -10,6 +10,7 @@
       <div id="side-window-content" class="panel-body">
           <!-- Info on clicked dyn -->
           <p><b>Receptor:</b> <span id="recept_val"></span> <a id="recept_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
+          <p><b>G protein:</b> <span id="gprot_val"></span> </p>
           <p><b>PDB id:</b> <span id="pdb_id"></span> <a id="pdb_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
           <p><b>Ligand:</b> <span id="lig_val"></span> <a id="lig_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
           <p><b>Residues:</b> <span id="pos_val"></span></p>

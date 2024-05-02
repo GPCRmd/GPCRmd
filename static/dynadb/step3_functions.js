@@ -328,10 +328,14 @@ class prot_entry {
 function add_prot_entry(){
   //Add a whole new protein entry into the form
   var id = $(".prot_entry").last().data('id') +1;
+  if (isNaN(id)) {
+    var id = 0;
+  }
   myprot = new prot_entry(
    String(id),
    "number"+id
    );
+
   $(myprot.protTemplate).insertBefore($("#add_new_prot"));
   prot_listeners(id)//entry listeners
   update_entrynumber()

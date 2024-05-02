@@ -82,7 +82,7 @@
                                                         <div class="opblock-description-wrapper">
                                                             <div class="opblock-description">
                                                                 <div class="markdown">
-                                                                    <p>Get a zip with all the files related with the dynamics ids requested. Consider that this step need a long time (from 5 minutes to 15 minutes) to collect all the large files (each group of 5 simulations around 10 gb) necessary to build the zip file. Thanks for the patient. </p>
+                                                                    <p>Get a zip with all the files related with the dynamics ids requested.</p>
                                                                         <p>{dyn_ids} is a list of dynamics ids, e.g. 36,90</p>
                                                                         <p style="color: #BF3C1F"> This tool is under development. For this reason, the limit of dyns is 5. </p>
                                                                 </div>
@@ -216,7 +216,7 @@
                     success: function(data){
                         down_data = JSON.parse(data);
                         downlink.attr("href", down_data['url']);
-                        downdiv.show()
+                        downdiv.show();
                     },
                     //Migth something go wrong, show an error message bellow the retreive button
                     error: function(){
@@ -231,9 +231,7 @@
             });
             //To add class format to input fields
             $("form input").addClass("input_step")
-
         });
-
         </script>
     {% endblock %}
 
@@ -276,7 +274,6 @@
 <br>
 <br>
 {% endblock %}
-
 </body>
 
 

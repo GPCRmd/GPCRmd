@@ -323,12 +323,24 @@ hr {
   position: absolute;
 }
 
-#legend_bar {
+#legend_bar_gprot {
   /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#800000+0,ff0000+25,ff8c00+50,ffff00+75,00ff00+100,00ff00+100 */
   background: #800026; /* Old browsers */
   background: -moz-linear-gradient(bottom, #d3d3d3, #cdd0cc, #a7c09c, #82b06d, #5ca03e, #418826, #306921, #1e4a1c, #0d2b17); /* FF3.6-15 */  
   background: -webkit-linear-gradient(bottom, #d3d3d3, #cdd0cc, #a7c09c, #82b06d, #5ca03e, #418826, #306921, #1e4a1c, #0d2b17); /* Chrome10-25,Safari5.1-6 */  
   background: linear-gradient(to top, #d3d3d3, #cdd0cc, #a7c09c, #82b06d, #5ca03e, #418826, #306921, #1e4a1c, #0d2b17); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */  
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#0d2b17', endColorstr='#d3d3d3',GradientType=0 ); /* IE6-9 */    
+  /*background: -moz-linear-gradient(top, #800000 0%, #ff0000 20%, #ff8c00 40%, #ffff00 60%, #00ff00 80%, #d3d3d3 100%); /* FF3.6-15 */
+  /*background: -webkit-linear-gradient(top, #800000 0%, #ff0000 20%, #ff8c00 40%, #ffff00 60%, #00ff00 80%, #d3d3d3 100%); /* Chrome10-25,Safari5.1-6 */
+  /*background: linear-gradient(to bottom, #800000 0%, #ff0000 20%, #ff8c00 40%, #ffff00 60%, #00ff00 80%, #d3d3d3 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  /*filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#800000', endColorstr='#d3d3d3',GradientType=0 ); /* IE6-9 */  
+}
+#legend_bar_arr {
+  /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#800000+0,ff0000+25,ff8c00+50,ffff00+75,00ff00+100,00ff00+100 */
+  background: #010313; /* Old browsers */
+  background: -moz-linear-gradient(bottom,#cbcfd2, #97b6d1, #629ecf, #2e85cd, #1467af, #0d467b, #072447, #010313); /* FF3.6-15 */  
+  background: -webkit-linear-gradient(bottom, #cbcfd2, #97b6d1, #629ecf, #2e85cd, #1467af, #0d467b, #072447, #010313); /* Chrome10-25,Safari5.1-6 */  
+  background: linear-gradient(to top, #cbcfd2, #97b6d1, #629ecf, #2e85cd, #1467af, #0d467b, #072447, #010313); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */  
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#0d2b17', endColorstr='#d3d3d3',GradientType=0 ); /* IE6-9 */    
   /*background: -moz-linear-gradient(top, #800000 0%, #ff0000 20%, #ff8c00 40%, #ffff00 60%, #00ff00 80%, #d3d3d3 100%); /* FF3.6-15 */
   /*background: -webkit-linear-gradient(top, #800000 0%, #ff0000 20%, #ff8c00 40%, #ffff00 60%, #00ff00 80%, #d3d3d3 100%); /* Chrome10-25,Safari5.1-6 */

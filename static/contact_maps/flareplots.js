@@ -368,14 +368,14 @@ $(document).ready(function(){
         });
 
 
-        //According to which application is using this file (the receptor meta-analysis or the gpcr-gprot) choose a file or the other      
+        //According to which application is using this file (the receptor meta-analysis or the gpcr-gprot or the gpcr-arr) choose a file or the other      
         var compl_data_file, compl_data_file;
         if (main_url.includes('gpcr_gprot')){
             clustdict_file = "/dynadb/files/Precomputed/gpcr_gprot/web_inputs/"+itype+"/"+stnd+"/flareplots_clusters/"+clusters+"clusters/clustdict.json";
-            compl_data_file = window.location.origin + "/dynadb/files/Precomputed/compl_info.json"; 
+        } else if (main_url.includes('gpcr_arr')){
+            clustdict_file = "/dynadb/files/Precomputed/gpcr_arr/web_inputs/"+itype+"/"+stnd+"/flareplots_clusters/"+clusters+"clusters/clustdict.json";
         } else {
             clustdict_file = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/"+itype+"/"+stnd+"/"+ligandonly+"/flarejsons/"+clusters+"clusters/clustdict.json";
-            compl_data_file = window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json"; //These 2 should be merged at some point
         }
         compl_data_file = window.location.origin + "/dynadb/files/Precomputed/compl_info.json"; //These 2 should be merged at some point
 

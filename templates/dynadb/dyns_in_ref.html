@@ -62,6 +62,7 @@
     .dt-buttons button:hover span{
         color: white;
     }
+
   </style>
   {% endblock %}
   {% comment %} <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css"> {% endcomment %}
@@ -175,7 +176,7 @@
                   {% if is_hm %}
                       <td  class="pdbid">{{data.pdb_namechain}}</td>
                   {% else %}
-                  <td class="pdbid"><a class='searchLink' title="Go to PDB page" target="_blank" href="https://www.rcsb.org/structure/{{data.pdbid}}" alt="Go to PDB page">{{data.pdb_namechain}}</a></td>
+                      <td class="pdbid"><a  class='searchLink' title="Go to PDB page"  target="_blank" href="https://www.rcsb.org/structure/{{data.pdbid}}" alt="Go to PDB page">{{data.pdb_namechain}}</a></td>
                   {% endif %}
                  <td class="state">{{data.state}}</td>
                   <td  class="species"><i>{{data.species}}</i></td>
@@ -257,8 +258,8 @@
 <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 
 <!-- END From base.html -->
-{% comment %} 
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+
+{% comment %} <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
 <!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.20/features/pageResize/dataTables.pageResize.min.js">-->
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js">
 </script> {% endcomment %}

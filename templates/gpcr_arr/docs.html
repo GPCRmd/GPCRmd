@@ -1,0 +1,80 @@
+<div class="row docRow">
+  <div class="col-xs-12" id="doc_col">
+    <div class="panel-body panel panel-primary">
+      <div id="show_hide_info" class="title_div section_pan" data-target="#more_info" data-toggle="collapse" style="cursor:pointer" aria-expanded="true">
+        <span id="show_hide_info_text" >Hide info </span><span class="glyphicon arrow glyphicon-chevron-up"></span>
+      </div> 
+    </div>
+    <div class="col-md-12 panel panel-primary collapse in" id="more_info" aria-expanded="true">
+      <div class="panel-body">
+
+        <h4 class="doc_title">About the heatmap: </h4>
+
+        <p class="doc_content">This plot compares residue interaction frequencies between GPCRs and Arrestin signal proteins in dynamic simulations. Interaction frequencies have been calculated with <a class="textlink" href="https://github.com/getcontacts/getcontacts" target="_blank">GetContacts</a> scripts, created by Rasmus Fonseca (fonseca.rasmus@gmail.com) and Anthony Ma (anthonyma27@gmail.com). Frequency values are obtained from the proportion of frames in which two residues are considered to be interacting, according to <a  class="textlink" href="./contmaps/interaction_types" target="blank">GetContacts interaction criteria</a>. From these frequency values, a dendrogram clustering is computed and displayed using <a  class="textlink" href="https://github.com/plotly/plotly.py" target="_blank">plotly</a> python library.</p>
+
+        <p class="doc_content">Protein residues are labeled using <a  class="textlink" href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank">generic GPCR residue numbers</a> (GPCRdb structure-based numbering). This numbering system differs for each GPCR class, and so a multi-class index has been used on the heatmap's axis. Only residue pairs with a minimum of 50% interaction frequency in at least one simulation are displayed. Same-helix interactions are not displayed either. Orthosteric ligands of complex forms have been collectively labeled as "Lig", and are treated as a single residue (even if they have more than one, as peptidic ligands have).</p>
+
+        <p class="doc_content"> </p>
+
+        <p class="doc_title">How to use this heatmap: </p>
+
+        <ol>
+          <li class="doc_content">Select the simulation datasets to display</li>
+
+          <li class="doc_content">Select the type of interaction which frequencies display. Total interaction frequency reffers to the percentage of frames on which the residue pair is interacting in any of the interaction criteria</li>
+
+          <li class="doc_content">Select the number of clusters to display in the dendrogram</li>
+
+          <li class="doc_content">Click apply to load the new interactions selected.</li>
+
+        </ol>
+        <p class="doc_content">More information of a specific interaction can be displayed by clicking uppon its cell.</p>
+
+        <p class="doc_title">Customized heatmaps</p>
+        <p class="doc_content"> If you wish to analyze a specific set of simulations, use the "Select simulations" dropdown and then press "apply" . The whole page will reload and a new set of heatmaps comprising exclusively the selected simulations will be displayed. Beware that a large selection may result in a long loading time.</p>
+
+        <h4 class="doc_title">About the TopX interactions flareplots: </h4>
+
+        <p class="doc_content">On these two plots are represented the top most frequent interactions (on average) in each of the clusters. Each line represents one of these top interactions, and its color is based in the cluster average frequency of this interaction. The color scale is the same as the heatmap.</p>
+
+        <p class="doc_title">How to use these flareplots: </p>
+
+        <ol>
+          <li class="doc_content">To select a new cluster to display, use the corresponding dropup under each flareplot. Cluster 1 and Cluster 2 are shown by default. </li>
+
+          <li class="doc_content">To choose the numbering scheme applied in the flareplot interactions, use the corresponding dropup. Both flareplots use class A numbering (Ballesteros-Weinstein) by default.</li>
+
+          <li class="doc_content">To select a position on the flareplot, click on it. If avalible, this position will be displayed on the structure visualizer below.</li>
+
+          <li class="doc_content">Press "show in structure" to disable or reenable the visualization of selected positions in the viewers bellow.</li>
+        </ol>
+
+        <p class="doc_content">All flareplots were created using <a href="https://github.com/GPCRviz/flareplot">FlarePlots</a>, by Rasmus Fonseca (fonseca.rasmus@gmail.com) and Anthony Ma (anthonyma27@gmail.com).</p>
+
+        <h4 class="doc_title">About the cluster simulation viewers: </h4>
+
+        <p class="doc_content">Use these viewers to visualize receptors from the clusters selected in the "TopX intearctions flareplots" above.</p>
+
+        <p class="doc_title">How to use these viewers: </p>
+
+        <ol>
+          <li class="doc_content">Use the top-right dropdown to select the simulation to display. Notice that only simulations of the selected cluster are avalible.</li>
+
+          <li class="doc_content">Use the top-left dropdown to select the trajectory file of this simulation to display.</li>
+
+          <li class="doc_content">Press play to reproduce the simulation on the viewer.</li>
+
+          <li class="doc_content">Click on any residue in the flareplot to display it on the corresponding viewer.</li>
+
+          <li class="doc_content">Click on any interaction in the flareplot to display its corresonding residues in the viewer. If one of the residues is a peptidic ligand, only the ligand residues closer than 3 amstrongs to the non-ligand residue will be displayed.</li>
+
+          <li class="doc_content">For a more detailed visualization of this simulation, click on "open with GPCRmd viewer".</li>
+        </ol>
+
+        <p class="doc_content">These visualizers run on <a href="https://github.com/arose/ngl">NGL viewer</a>.</p>
+
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -87,12 +87,29 @@ $(document).ready(function(){
         }
     })
     
+    $(".LipDistDisplay").on("click", function(){ 
+        $("#selectionDiv").trigger("click");
+    })
 
+    $(".lipwithin").on("change", function(){
+        $("#selectionDiv").trigger("click");
+    })
+    //show coloring options of interface lipids if display is ON
+    $(".LipInterfaceDisplay").on("click", function(){
+        var interfaceDisplay = $(".LipInterfaceDisplay").prop("checked");
+        var sl_element = document.getElementById("numOfDisplayedCells");
+        var sl_element_aux = document.getElementById("numOfDisplayedCells_slide");
+        if (interfaceDisplay){
+            $("#interfaceColor").css("display","block");
+            sl_element.classList.remove("non-visible");
+            sl_element_aux.classList.remove("non-visible");
     
-
-
-
-
+        }else{
+            $("#interfaceColor").css("display","none");
+            sl_element.classList.add("non-visible");
+            sl_element_aux.classList.add("non-visible");
+        }
+    })
 
     function uniq(a) {
         var seen = {};
@@ -1682,6 +1699,26 @@ $(document).ready(function(){
         return[show_wat, water_dist]
     }
 
+    function obtainLipDist(){             
+        //TO DO: ask if this is error proof! now we define, if there is something typed and if it is a digit. but what if user types a character ?    //we are in the parent so no need for window.parent.document                                     
+        var checked=$(".LipDistDisplay").is(":checked");  //with Jquery check if checkbox is checked, if it not consider radius as 0. 
+        show_lip=false;
+        if (checked){
+            var inp=$("#lipwithin").val()
+            if(inp && /^[\d.]+$/.test(inp)) {  
+                var lip_dist=Number(inp)
+                $("#lipwithin_parent").removeClass("has-error")
+                show_lip=true;
+            }else{
+                lip_dist=Number(0)      //give an error?? or not? for example if user types a letter 
+                $("#lipwithin_parent").addClass("has-error")
+            }
+            
+        }
+
+        return[show_lip, lip_dist]
+    }
+
     function obtainPolar(){
         var checked=$(".PolarDisplay").is(":checked");
         return (checked)
@@ -1695,6 +1732,16 @@ $(document).ready(function(){
             water_box = Number(0)
         }
         return(water_box)
+    }
+
+    function obtainLipBox(){
+        var inp = $("#lipwithin").val()
+        if(inp && /^[\d.]+$/.test(inp)) {  
+            var lip_box=Number(inp)
+        }else{
+            lip_box = Number(0)
+        }
+        return(lip_box)
     }
 
 /**
@@ -3718,6 +3765,156 @@ $(document).ready(function(){
         }
     });
     
+    //-------- Breathing motions computation
+    function plot_breathing(breathing_data,trajfile){
+        
+        //Breathing residues
+        dist_residues = breathing_data['dist_residues']
+        dist_residues_str = dist_residues.join('-')
+        
+        //ITerate over 'frames' and 'time' options
+        ary_chart = []
+        for (var val of ['t','f']) {
+            //Show plot div (otherwise the y-axis doesnt render properly)
+            $("#breathing_"+val).show()
+            //Load breathing data into a google DataTable
+            var data = google.visualization.arrayToDataTable(breathing_data[val],false);
+            //Get plot div container
+            dist_array = breathing_data['f']
+            var chart_div = document.getElementById("breathing_"+val);
+            var chart = new google.visualization.ComboChart(chart_div);
+            ary_chart.push(chart)
+            var title_haxis = (val=='f') ? "Frame number" : "Time (ns)" 
+            //Options for linechart
+            var my_options = {'title':'Trajectory: '+trajfile,
+                "height":350, "width": 700,  
+                "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},
+                hAxis: {title: title_haxis},
+                vAxis: {title: dist_residues_str+' distance (Å)',
+                        viewWindow : {
+                            min: breathing_data['ymin'], 
+                            max: breathing_data['ymax'], 
+                        }},
+                "tooltip": { "trigger": 'selection' },
+                "colors" : breathing_data['colors'],
+                isStacked: true,
+                series: {
+                    // Closed area
+                    0: {
+                      areaOpacity: 0.2,
+                    },
+            
+                    // Intermediate Area
+                    1: {
+                      areaOpacity: 0.2,
+                    },
+            
+                    // Open Area
+                    2: {
+                      areaOpacity: 0.2,
+                    },
+            
+                    // Distance
+                    3: {
+                      type: 'line',
+                      visibleInLegend: false                      
+                    }
+                  },
+                seriesType: 'area'
+            }           
+            
+            // // Add color column to our datatable
+            // var dataView = new google.visualization.DataView(data);
+            // dataView.setColumns([
+            //   // reference first column by index
+            //   0,
+            //   {
+            //     calc: function(data, row) {
+            //       return data.getValue(row, 1);
+            //     },
+            //     type: 'number',
+            //     label: 'Distance'
+            //   },
+            //   {
+            //     calc: function(data, row) {
+            //         //Set color of row based on 2nd column of 'data' (the color column we passed)
+            //         return data.getValue(row, 2);
+            //     },
+            //     type: 'string',
+            //     role: 'style'
+            //   }
+            // ]);
+            
+            //Add "download picture" thing (inactive for the time being)
+            google.visualization.events.addListener(chart, 'ready', function () {
+                var img_source =  chart.getImageURI(); 
+                $("#breathing_"+val).attr("data-url",img_source);
+                $("#breathing_"+val).siblings(".settings").find(".save_img_dist_plot").attr("href",img_source);
+            });
+
+            //Draw lineplot
+            chart.draw(data, my_options);
+
+            //Hide plot div 
+            $("#breathing_"+val).hide()
+        }
+
+        //Add on-click listerners to both plots. Cannot do it in loop because chart object gets overwriten
+        ary_chart[0].setAction({
+            id: "c_time",
+            text: 'Display frame on viewer',
+            action: function() {
+                updateframeFromPlot(ary_chart[0],dist_array);
+            }
+        });
+        ary_chart[1].setAction({
+            id: "c_frame",
+            text: 'Display frame on viewer',
+            action: function() {
+                updateframeFromPlot(ary_chart[1],dist_array);
+            }
+        });
+
+        //Trigger change event on selector to trigger whatever plot is selected to be shown
+        $("#plot_breath_by_sel").trigger('change')
+
+    }
+
+    function load_breathing(dyn_id){ 
+        //Load breathing motions raw data
+        var traj_id=$("#selectedTraj").find("#selectedTraj_id").text();
+        plotdiv = $("#breathing_plot")
+        errordiv = $("#breathing_error")
+        loadingdiv = $("#breathing_loading")
+        errordiv.hide()
+        loadingdiv.hide()
+        $.ajax({
+            type: "POST",
+            url: "/view/breathing/"+dyn_id+'&'+traj_id, 
+            dataType: "json",
+            
+            // IF successfull, plot breathing motions
+            success: function(result) {
+                plotdiv.show()
+                plot_breathing(result,traj_id)
+                loadingdiv.hide()
+
+                //Update download button for breathing CSVs
+                $("#breathing_dwnl").attr('href',"/view/breathing_dwnl/"+dyn_id+'&'+traj_id)
+                
+            },
+            //Otherwise just show standard error message
+            error: function(error){
+                errordiv.show()
+                loadingdiv.hide()
+            },
+            timeout: 600000
+        });
+        //Hide frames plot (we show time by default)
+    }
+    //update on trajectory change
+    window.load_breathing=load_breathing;
+
 //-------- Salt bridges computation --------
 
     $("#ComputeSaltBridges").click(function(){
@@ -4856,7 +5053,6 @@ $("#show_nearby_residues").on("change", function() {
     });
 
     $("#variant_columns_shown").on("click", "button", function(e) {
-       //e.preventDefault(); // is it neccesary? check
 
         toggleButtonGetStatus($(this));
         let column = variants_table.column($(this).attr('data-column'));
@@ -5035,9 +5231,6 @@ $("#show_nearby_residues").on("change", function() {
         return (receptorsel);
     }
 
-
-
-
     var seq_ids=[];
     
     var atomshb=[];//
@@ -5132,6 +5325,8 @@ $("#show_nearby_residues").on("change", function() {
         var traj = $("#selectedTraj").data("tpath");
         var receptorsel=gpcr_selection_active(false);
         bs_info=obtainBS();
+        var lip_dist = obtainLipDist()[1];
+        var lip_check = obtainLipDist()[0]
         var water_dist = obtainWaterDist()[1];
         var water_check = obtainWaterDist()[0]
         var waterbox = obtainWaterBox();
@@ -5173,6 +5368,8 @@ $("#show_nearby_residues").on("change", function() {
                 "traj":traj,
                 "receptorsel":receptorsel,
                 "bs_info" :bs_info,
+                "lip_dist":lip_dist,
+                "lip_check": lip_check,
                 "water_dist":water_dist,
                 "water_check": water_check,
                 "waterbox": waterbox,
@@ -5242,6 +5439,10 @@ $("#show_nearby_residues").on("change", function() {
         window.water_dist=water_dist;
         var water_check = obtainWaterDist()[0];
         window.water_check = water_check; 
+        var lip_dist=obtainLipDist()[1];     //
+        window.lip_dist=lip_dist;
+        var lip_check = obtainLipDist()[0];
+        window.lip_check = lip_check; 
     }
     window.passinfoToPlayTraj=passinfoToPlayTraj;
     
@@ -5586,6 +5787,7 @@ $("#show_nearby_residues").on("change", function() {
         $("#analysis_salt").find(".showsb.active").removeClass("active");
         $("#analysis_bonds").find(".showhb.active").removeClass("active");
         $(".WaterDisplay , .WaterDistDisplay").prop("checked",false);
+        $(".LipDisplay , .LipDistDisplay").prop("checked",false);
         $('#embed_mdsrv')[0].contentWindow.hideAllWaterMaps();
         //$("#FPdisplay").removeClass("active");
         //$("#FPdisplay").text("Display interactions");
@@ -6741,6 +6943,68 @@ $("#show_nearby_residues").on("change", function() {
 
     }
     window.csResidueSelFromStruc=csResidueSelFromStruc;
+
+    //----- Breathing plots (activeate for first time when tab is opened)
+    $('#breathing_pan').on("click", function(e){
+        if ($('#breathing_t').is(':empty')) {
+            load_breathing(dyn_id)
+            //Trigger click on checkbox to display breathing representations in viewer
+            $("#BreathDisplay").trigger('click')
+        } 
+    });
+
+    //Function for the "download all frames of a breathing state" buttons (open, interm., closed)
+    $('.breath_btn').on("click", function(){
+        state = $(this).data('state')
+        traj_id=$("#selectedTraj").find("#selectedTraj_id").text();
+        myurl = "/view/breathing_frames/"+dyn_id+'&'+traj_id+'&'+state
+        loadings = $("#breathframes_loading")
+        breath_btns = $(".breath_btn")
+
+        //Hide buttons and show loading thingy
+        breath_btns.hide()
+        loadings.show()
+
+        //Download on background using a request object
+        var req = new XMLHttpRequest();
+        req.open("GET", myurl, true);
+        req.responseType = "blob";
+        req.onload = function (event) {
+            var blob = req.response;
+            var fileName = dyn_id+"_"+traj_id+"_"+state+"_frames.dcd"
+            var link=document.createElement('a');
+            breath_btns.show()
+            loadings.hide()    
+            link.href=window.URL.createObjectURL(blob);
+            link.download=fileName;
+            link.click();
+        };
+   
+        req.send();
+
+        // iframe.on('load', function() { //This does not work
+        //     console.log('sadfsdf',breath_btns)
+        // });        
+        // window.open(myurl, '_blank').focus();
+    })
+
+    //Selector to display breathing distance by frame or ns
+    $("#plot_breath_by_sel").on("change", function(){
+        sel_opt = $(this).val()
+        $(".breath_plot").hide()
+        $("#"+sel_opt).show()
+    })
+
+
+    //------- Lipid maps
+    //Trigger lipid maps being show at first time of tab onpening 
+    $('#lip_analysis_pan').on("click", function(e){
+        var lipcheck = $("input.LipDisplay") 
+        if (!lipcheck.hasClass('firstopen')) {
+            lipcheck.trigger("click");
+            lipcheck.addClass('firstopen')
+        }
+    });
 
 
 //-------- Allosteric communications
