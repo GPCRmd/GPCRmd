@@ -592,7 +592,7 @@ def segment_id(pdbname, segid, start, stop, chain):
 				ccoor[1]=float(fields[7])
 				ccoor[2]=float(fields[8])
 			except:
-				continue
+				pass
 				# print (fields[6],fields[7],fields[8])
 			if fields[5]!=pfields[5]: #do not run same aa more than 1 time.
 				if fields[4]!=pfields[4] or fields[9]!=pfields[9] or fields[5]=='1': #different chain and new counting

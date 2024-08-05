@@ -19,7 +19,7 @@ class DyndbDynamicsAdmin(admin.ModelAdmin):
             + f"{obj.id_model.id}/change"
         )
         return format_html('<a href="{}">Model Id {} </a>', url, obj.id_model.id)
-
+    
     def submission_id_link(self, obj):
         url = (
             reverse("admin:dynadb_dyndbsubmission_changelist")
@@ -81,7 +81,7 @@ def unpublished_submission(modeladmin, request, queryset):
 class DyndbSubmissionAdmin(admin.ModelAdmin):
     
     search_fields = ["=id"]
-    list_display = ("id", "is_closed", "is_published", "is_prepared", "is_gpcrmd_community", "id_model_link", "username")
+    list_display = ("id", "is_closed", "is_published", "is_prepared", "is_gpcrmd_community", "id_dynamics_link", "id_model_link", "username")
     list_filter = ["is_closed", "is_published", "is_gpcrmd_community"]
     actions = [close_submission, open_submission, published_submission, unpublished_submission]
 
@@ -95,7 +95,18 @@ class DyndbSubmissionAdmin(admin.ModelAdmin):
             return format_html('<a href="{}">Model Id {} </a>', url, id_model)
         except:
             return ""
-
+    
+    def id_dynamics_link(self, obj):
+        try:
+            id_dyn = DyndbDynamics.objects.filter(submission_id=obj.id).values_list("id", flat = True)[0]
+            url = (
+                reverse("admin:dynadb_dyndbdynamics_changelist")
+                + f"{id_dyn}/change"
+            )
+            return format_html('<a href="{}">Dynamic Id {} </a>', url, id_dyn)
+        except:
+            return ""
+        
     def is_prepared(self,obj):
         try:
             is_prepared = DyndbDynamics.objects.filter(submission_id=obj.id).values_list("is_published", flat = True)[0]

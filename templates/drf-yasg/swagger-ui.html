@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 
 <head>
@@ -19,9 +19,10 @@
     {% block main_styles %}
         {% comment %} <link rel="stylesheet" type="text/css" href="{% static 'drf-yasg/style.css' %}"/>
         <link rel="stylesheet" type="text/css" href="{% static 'drf-yasg/swagger-ui-dist/swagger-ui.css' %}"> {% endcomment %}
-    {% endblock %}
     {% block extra_styles %}
         {# -- Add any additional CSS scripts here -- #}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">    {% endblock %}
+
     {% endblock %}
 </head>
 
@@ -61,30 +62,32 @@
                     </div>
                     {% if user.is_authenticated %}
                         <div id="downloader" class="wrapper">
+                            <p style="color:#BF3C1F"> TEMPORARY DISABLED DUE TECHNICAL PROBLEMS!!</p>
+                        </div>
+                        {% comment %} <div id="downloader" class="wrapper">
                             <section class="block col-12 block-desktop col-12-desktop">
                                 <div>
                                     <span>
                                         <div class="opblock-tag-section">
-                                            <h3 class="opblock-tag no-desc" id="operations-tag-downloader_all" data-tag="downloader_all" data-is-open="false" onclick="openclosetag(this)">
+                                            <h3 class="opblock-tag no-desc" id="operations-tag-download_id" data-tag="download_id" data-is-open="false" onclick="openclosetag(this)">
                                                 <a class="nostyle">
-                                                    <span>downloader_all</span>
+                                                    <span>download_id</span>
                                                 </a><small></small>
-                                                <button id="operations-button-downloader_all" aria-expanded="true" class="expand-operation" title="Collapse operation">
+                                                <button id="operations-button-download_id" aria-expanded="true" class="expand-operation" title="Collapse operation">
                                                     <svg class="arrow" width="20" height="20" aria-hidden="true" focusable="true">
-                                                        <use id="arrow-downloader_all" href="#large-arrow-down"></use>
+                                                        <use id="arrow-download_id" href="#large-arrow-down"></use>
                                                     </svg>
                                                 </button>
                                             </h3>
                                             {% csrf_token %}
-                                            <form id="retreivefiles" action="/api/download_all/">
-                                                <div class="opblock opblock-get" id="operations-downloader_all" style="display:none">
+                                                <div class="opblock opblock-get" id="operations-download_id" style="display:none">
                                                     <div class="opblock-body">
                                                         <div class="opblock-description-wrapper">
                                                             <div class="opblock-description">
                                                                 <div class="markdown">
                                                                     <p>Get a zip with all the files related with the dynamics ids requested.</p>
                                                                         <p>{dyn_ids} is a list of dynamics ids, e.g. 36,90</p>
-                                                                        <p style="color: #BF3C1F"> This tool is under development. For this reason, the limit of dyns is 5. </p>
+                                                                        <p style="color: #BF3C1F"> Due the large size of the files of each dynamic we decide to limit the number of dyns into 5 for each request. </p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -120,32 +123,32 @@
                                                             </div>
                                                         </div>
                                                         <div class="execute-wrapper">
-                                                            {% comment %} <button class="btn execute opblock-control__btn">Execute</button> {% endcomment %}
-                                                            <input class="btn execute opblock-control__btn" type="submit" id="retrieve_doi" value="Execute">
+                                                            <button id="start-task" class="btn execute opblock-control__btn">Execute</button>
                                                         </div>
                                                         <div class="responses-wrapper">
                                                             <div class="opblock-section-header">
                                                                 <h4>Responses</h4>
                                                             </div>
-                                                            <div id="error_dyns" class="error_loading alert alert-danger" style="display:none">
+                                                            <div id="progress-container" style="display: none;">
+                                                                <div id="progress-bar">0%</div>
                                                             </div>
-                                                            <div id="loading_dyns" class="error_loading" style="display:none">
-                                                                <p> Downloading information... <img id="loading_icon" src="/static/view/images/loading-gear.gif" height="18px"></p><p></p>
-                                                            </div>
-                                                            {% comment %} include the bar progress as response {% endcomment %}
-                                                            <div id="dowload_dyns" class="error_loading" style="display:none">
+                                                            <p id="progress-message"></p>
+                                                            <p id="timer" style="display:none">Elapsed Time: 0m 0s</p>
+                                                            <div id="dowload_dyns" style="display:none">
                                                                 <a id="dowload_dyns_link" href="">Download</a>
+                                                            </div>
+                                                            <div id="log_dyns" style="display:none">
+                                                                <a id="log_dyns_link" href="">Log file</a>
                                                             </div>
                                                             <br>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </form>
                                         </div>
                                     </span>
                                 </div>
                             </section>
-                        </div>
+                        </div> {% endcomment %}
                     {% else %}
                         <div id="downloader" class="wrapper">
                             <p style="color:#BF3C1F"> Log in to use these tools...</p>
@@ -168,6 +171,7 @@
         <script src="{% static 'drf-yasg/insQ.min.js' %}"></script>
         <script src="{% static 'drf-yasg/immutable.min.js' %}"></script>
         <script src="{% static 'drf-yasg/swagger-ui-init.js' %}"></script>
+
     {% endblock %}
     {% block extra_scripts %}
         {# -- Add any additional scripts here -- #}
@@ -180,58 +184,121 @@
                 if (isopen === "false") {
                     parent.dataset.isOpen = "true";
                     arrow.href.baseVal = "#large-arrow-up";
-                    document.getElementById("operations-downloader_all").style.display = "block";
+                    document.getElementById("operations-download_id").style.display = "block";
                     window.scrollTo(0, document.body.scrollHeight);
 
                 } if (isopen ==="true") {
                     parent.dataset.isOpen = "false";
                     arrow.href.baseVal = "#large-arrow-down";
-                    document.getElementById("operations-downloader_all").style.display = "none";
+                    document.getElementById("operations-download_id").style.display = "none";
                 }
             }
         </script>
         <script>
-        $(document).ready(function(){
-            // When the "retreive" button of the doi searcher is clicked, activate this function to retrieve information and 
-            // put in the HTML entry fields
-            $("#retreivefiles").submit(function(e) {
-                e.preventDefault(); // avoid to execute the actual submit of the form.
-                var form = $(this);
-                var url = form.attr('action');
-                var downdiv = $("#dowload_dyns");
-                var downlink =  $("#dowload_dyns_link");
-                var errordiv = $("#error_dyns"); 
-                var loadingdiv = $("#loading_dyns");
-                var dyn_ids = $('#dyn_ids').val();
-                var input_data = {
-                'dyn_ids' : dyn_ids,
-                }
-                downdiv.hide()
-                errordiv.hide()
-                loadingdiv.show()
+            let timerInterval;
+
+            function startTimer() {
+                let startTime = Date.now();
+                $("#timer").show();  // Show the timer when the task starts
+                timerInterval = setInterval(function() {
+                    let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                    let minutes = Math.floor(elapsedTime / 60);
+                    let seconds = elapsedTime % 60;
+                    $("#timer").text(`Elapsed Time: ${minutes}m ${seconds}s`);                
+                }, 1000);
+            }
+
+            function stopTimer() {
+                clearInterval(timerInterval);
+            }
+
+            $("#start-task").click(function() {
+                $("#start-task").prop('disabled', true);
+                let dyn_ids = document.getElementById("dyn_ids").value;
+                $("#dowload_dyns").hide();
+                $("#log_dyns").hide();
                 $.ajax({
-                    url: url,
-                    data: input_data,
-                    // On success, replace prot entry's values by the ones obtained in the retrieved data
-                    success: function(data){
-                        down_data = JSON.parse(data);
-                        downlink.attr("href", down_data['url']);
-                        downdiv.show();
+                    url: "/api/download_id/", 
+                    method: "GET",
+                    data: { dyn_ids: dyn_ids }, 
+                    success: function(data) {
+                        if (data.error) {
+                            // Re-enable the button if an error occurs
+                            $("#start-task").prop('disabled', false);
+                            stopTimer();
+                        } else {
+                            let taskId = data.task_id;
+                            $("#progress-container").show();
+                            $("#progress-bar").width('0%').text('0%');
+                            $("#progress-message").text('');
+                            $("#timer").text('Elapsed Time: 0m 0s');
+                            startTimer();
+                            updateProgress(taskId);
+                        }
                     },
-                    //Migth something go wrong, show an error message bellow the retreive button
-                    error: function(){
-                        errordiv.html("<p>Error: something failed upon retrieving files </p>")
-                        errordiv.show()
-                    },
-                    //Hide loading div when it is done
-                    complete: function(){
-                        loadingdiv.hide()
+                    error: function(xhr, status, error) {
+                        alert("An error occurred while starting the task."  + xhr.responseText);
+                        // Re-enable the button and stop the timer on error
+                        $("#start-task").prop('disabled', false);
+                        stopTimer();
                     }
                 });
             });
-            //To add class format to input fields
-            $("form input").addClass("input_step")
-        });
+
+            function updateProgress(taskId) {
+                $.ajax({
+                    url:`/celery-progress/${taskId}/`,
+                    method:"GET",
+                    success: function(data) {
+                        if (data.progress){
+                            let progress = data.progress.percent;
+                            let message = data.progress.description;
+                            
+                            if (progress > 0 && progress <= 100) {
+                                $("#progress-bar").css('width', `${progress}%`).text(`${progress}%`);
+                                $("#progress-message").text(message);
+                            }
+
+                            if (progress < 100) {
+                                setTimeout(function() {
+                                    updateProgress(taskId);
+                                }, 100);
+                            } else {
+                                // Delay before requesting the zip URL
+                                setTimeout(function() {
+                                    $.ajax({
+                                        url: `/api/download_link/${taskId}/`,
+                                        method: "GET",
+                                        success: function(data) {
+                                            if (data.zip_url) {
+                                                $("#dowload_dyns_link").attr("href", data.zip_url);
+                                                $("#dowload_dyns").show();
+                                            }
+                                            $("#log_dyns_link").attr("href", data.log_url);
+                                            $("#log_dyns").show();
+                                            // Re-enable the button and stop the timer once the progress reaches 100%
+                                            $("#start-task").prop('disabled', false);
+                                            stopTimer();
+                                        },
+                                        error: function(xhr, status, error){
+                                            alert("An error occurred while retrieving the task result." + xhr.responseText);
+                                            // Re-enable the button and stop the timer on error
+                                            $("#start-task").prop('disabled', false);
+                                            stopTimer();
+                                        }
+                                    });
+                                }, 2000); // 5000 milliseconds delay (5 seconds)
+                            }
+                        }
+                    },
+                    error: function(xhr, status, erro){
+                        alert("An error occurred while retrieving the task result." + xhr.responseText);
+                        // Re-enable the button and stop the timer on error
+                        $("#start-task").prop('disabled', false);
+                        stopTimer();
+                    }
+                });
+            }
         </script>
     {% endblock %}
 

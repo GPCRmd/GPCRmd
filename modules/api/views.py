@@ -1,6 +1,6 @@
 # DJANGO REST-API DATABASE TOOLS ########################################################################################################################################
 from django.db.models import Q
-
+from django.http import JsonResponse
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -211,7 +211,10 @@ from django.utils import timezone
 from modules.dynadb.models import DyndbFiles, DyndbFilesDynamics
 from modules.api.models import AllDownloads
 
-class AllDownloader:
+from celery.result import AsyncResult
+from .tasks import prepare_file
+
+class IDDownloader():
     def __init__(self, dyns, user):
         """
         __init__ function to start and define parameters used on class Downloader. 
@@ -233,8 +236,8 @@ class AllDownloader:
         except:
             id = 0
         self.outfile = f"download_all_{id}"
+        self.zip = f"{self.outfile}.zip"
 
-    def prepare_file(self, *args, **kwargs):
         #Modify list of values
         dyns = self.dyns.replace(" ","") # Clean whitespaces e.g. 36
         self.l_dyns = dyns.split(",") # Create list
@@ -242,87 +245,29 @@ class AllDownloader:
         #Create directory to store 
         self.tmp = settings.DOWNLOAD_FILES
         self.tmpdir = join(self.tmp,self.outfile) # .../tmp/GPCRmd_downloads/download_all_0
+        os.umask(0)
         os.makedirs(self.tmpdir, mode=0o777, exist_ok=True)
-
-        # Seach the files
-        self.dic_files = {}
-        for dyn in self.l_dyns[0:5]:#Limit to first 5 dyns 
-            self.dic_files[f"dyn_{dyn}"] = list(DyndbFilesDynamics.objects.filter(id_dynamics = dyn).values_list("id_files", flat=True)) #[10394, 10395, 10396, 10397, 10398, 10399, 10400]     10395_dyn_36.psf  |  NOT 10398_trj_36_xtc_bonds 
-        
-        # Check list 
-        if self.dic_files == []:
-            return int("s") #Return an error to return error callajax   
-
-        # Get the files 
-        for dyn_key in self.dic_files:
-            dyn_path = join(self.tmpdir,dyn_key)
-            os.makedirs(dyn_path, mode=0o777, exist_ok=True)
-            file_ids = self.dic_files[dyn_key]
-            for f_id in file_ids:
-                file_path = list(DyndbFiles.objects.filter(id = f_id).values_list("filepath", flat=True))[0]
-                file_name = list(DyndbFiles.objects.filter(id = f_id).values_list("filename", flat=True))[0]
-                in_file = settings.MEDIA_ROOT[:-1] + file_path
-                out_file = dyn_path + "/" + file_name
-                
-        # Copy the files 
-                try:
-                    shutil.copyfile(in_file, out_file)
-                except:
-                    print(f"        > File {in_file} not found")
-                    continue
-
-        # Zip them
-        self.zip = f"{self.outfile}.zip"
-        shutil.make_archive(self.tmpdir, 'zip', self.tmp, self.outfile)
-        
-        # Remove tmp directory
-        shutil.rmtree(self.tmpdir)
-
-        downfileobj=AllDownloads(
-            tmpname = self.zip,
-            dyn_ids = self.dyns,
-            creation_timestamp = timezone.now(),
-            created_by_dbengine = settings.DB_ENGINE,
-            created_by = self.user,
-            filepath = self.tmpdir + ".zip",
-        )
-        downfileobj.save()
-
-    def download_file(self, downfile, *args, **kwargs):
-        the_file = downfile + ".zip"
-        filename = os.path.basename(the_file)
-        # chunk_size = 8192
-        response = HttpResponse(
-            FileWrapper(
-                open(the_file, "rb"),
-                # chunk_size,
-            ),
-            content_type='application/zip',
-        )
-        response["Content-Length"] = os.path.getsize(the_file)
-        response["Content-Disposition"] = f"attachment; filename={filename}"
-        # return response
-        # temp = tempfile.TemporaryFile()
-        # archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
-        # for index in range(10):
-        #     filename = __file__ # Select your files here.                           
-        #     archive.write(filename, 'file%d.txt' % index)
-        # archive.close()
-        # wrapper = FileWrapper(temp)
-        # response = HttpResponse(wrapper, content_type='application/zip')
-        # response['Content-Disposition'] = 'attachment; filename=test.zip'
-        # response['Content-Length'] = temp.tell()
-        # temp.seek(0)
-        return response
+        # self.dirdyn = join(self.tmpdir,"dynamics") # .../tmp/GPCRmd_downloads/download_all_0
+        # os.makedirs(self.dirdyn, mode=0o777, exist_ok=True)
 
 @login_required
 @csrf_protect
-def download_all(request): 
-    request.session.set_expiry(0)
-    l_dyns = AllDownloader(request.GET['dyn_ids'], request.user.id)
-    l_dyns.prepare_file()
+def download_id(request): 
+    request.session.set_expiry(0) 
+    dyn_ids = request.GET.get('dyn_ids')
+    if not dyn_ids:
+        return JsonResponse({'error': 'dyn_ids parameter is required.'}, status=400)
+    obj = json.dumps(IDDownloader(dyn_ids, request.user.id).__dict__)
+    task = prepare_file.delay(obj)
     data = dict()
-    data["url"] = join("/dynadb/tmp/GPCRmd_downloads/", l_dyns.zip)  # CHANGE URL 
-    # l_dyns.download_file(l_dyns.tmpdir)
-    return HttpResponse(json.dumps(data))
+    #data["url"] = join("/dynadb/tmp/GPCRmd_downloads/", obj["zip"])  # CHANGE URL 
+    data["task_id"] = task.task_id
+    return JsonResponse(data)
 
+def download_link(request, task_id):
+    result = AsyncResult(task_id)
+    time.sleep(5)
+    if result.state == 'SUCCESS':
+        return JsonResponse({'zip_url': result.result, 'log_url':result.result.replace(".zip", ".log")})
+    else:
+        return JsonResponse({'error': 'Task not completed or failed.'}, status=400)

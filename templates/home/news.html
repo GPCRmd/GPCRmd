@@ -8,12 +8,14 @@
   {% load static %}
   {% block addon_css %}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="{% static 'home/css/scroll_motion.css' %}" rel="stylesheet">
   {% endblock %}
 </head>
 
 <body>
 
   {% block content %}
+  <button onclick="topFunction()" id="myBtn" title="Go to top">Top</button>
   <div class="row">
       <div class="col-sm-10 col-sm-offset-1">
       <div class="panel panel-primary newsHeading">
@@ -29,7 +31,7 @@
             <div class="news">
                 <h2 class="newTitle"><a href="{{ article.url }}" target="_blank" rel="noreferrer noopener" style="color:#BF3C1F">{{ article.title }}</a></h2>
                 <h6 class="line-clamp" style="font-size: 16px;">{{ article.authors }}</h6>
-                <p id="news{{forloop.counter}}_ab">{{ article.abstract }}</p>
+                <p id="news{{forloop.counter}}_ab">{{ article.abstract | truncatewords:50 }}</p>
             </div><!-- End Item -->
           </div>
           {% endfor %}
@@ -222,6 +224,27 @@
         window.scrollTo(0, pos-offset);
       }
     })
+  </script>
+  <script>
+  // Get the button
+  let mybutton = document.getElementById("myBtn");
+
+  // When the user scrolls down 20px from the top of the document, show the button
+  window.onscroll = function() {scrollFunction()};
+
+  function scrollFunction() {
+    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+      mybutton.style.display = "block";
+    } else {
+      mybutton.style.display = "none";
+    }
+  }
+
+  // When the user clicks on the button, scroll to the top of the document
+  function topFunction() {
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }
   </script>
   {% endblock %}
 

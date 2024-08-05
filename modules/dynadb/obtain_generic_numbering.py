@@ -34,7 +34,7 @@ def obtain_class(dyn_id):
     Obtain GPCR class of the GPCR in a certain dynamic
     """
 
-    fam_d={"001":"A","002":"B","003":"B","004":"C","005":"F","006":"Taste 2","007":"Others"}
+    fam_d={"001":"A","002":"B","003":"B","004":"C","005":"F","006":"F","007":"Others"} # We'll treat class T as part of F until further notice
     DP = DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id__dyndbdynamics__pk=dyn_id,prot_type=1)
     # If simulation has any GPCR
     if len(DP):
@@ -83,6 +83,7 @@ def generic_numbering(dyn_id, prot = 'gpcr'):
     Obtain generic numbering for GPCRs or G proteins (gpcr/gprot)
     """
 
+    print(prot)
     # Take prot type id, as it is in DyndbProtein
     prot_types = { 'gpcr' : 1, 'gprot' : 2, 'arr' : 3}
     prot_type = prot_types[prot]
@@ -96,7 +97,7 @@ def generic_numbering(dyn_id, prot = 'gpcr'):
             dp = DP[0]
             if dp.receptor_id_protein:
                 prot_name = dp.receptor_id_protein.entry_name
-            else: 
+            else:
                 print('GPCR has no receptor name associated. Class left unefined')
                 return {}
         # Else is gprot/b-arrestin
@@ -126,17 +127,23 @@ def generic_numbering(dyn_id, prot = 'gpcr'):
         (dyn_seq_str, dyn_resnames, dyn_resids) = extract_chain_sequence(strucfile, prot_chain)
         dyn_seq = Seq(dyn_seq_str)
 
+
         # Download standard sequence of this receptor type, and extract sqeuence
         residues_list = requests.get('https://gpcrdb.org/services/residues/extended/%s/'%prot_name).json()
         gpcrdb_gennum = { res['sequence_number'] : res['display_generic_number'] for res in residues_list}
         gpcrdb_seq = Seq("".join([ residue["amino_acid"] for residue in residues_list ]))
         gpcrdb_resids = list(gpcrdb_gennum.keys())
 
+        # Skip if protein is not in uniprot
+        if not len(gpcrdb_resids):
+            print('DynID %d protein %s has no uniprot. Skipping...'%(dyn_id,prot))
+            return {}
+
         # Align with the structure residues
         aligner = Align.PairwiseAligner()
         aligner.mismatch_score = -1
         aligner.extend_gap_score = -0.1
-        aligner.open_gap_score = -0.5
+        aligner.open_gap_score = -4
         alignment = aligner.align(dyn_seq, gpcrdb_seq)[0]
 
         # Correcting resid -> bw association
@@ -168,9 +175,10 @@ def generic_numbering(dyn_id, prot = 'gpcr'):
                     residues_data[gennum_std] = pos 
 
     else:
-        print('DynID %d has no %s'%(dyn_id,prot))
-
+        try:
+            print('DynID %s has no %s'%(dyn_id,prot))
+        except:
+            print('DynID %s has no protein'%(dyn_id))
         return {}
 
-    
     return residues_data

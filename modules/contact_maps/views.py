@@ -25,8 +25,8 @@ def get_contacts_plots(request):
 	Main view of contact plots
 	"""
 
-	request.session.set_expiry(0)
- 
+	request.session.set_expiry(0) 
+
 	#Take query arguments, if any
 	if request.GET.get('itype'): #If there are parameters
 		itype = request.GET.get('itype')

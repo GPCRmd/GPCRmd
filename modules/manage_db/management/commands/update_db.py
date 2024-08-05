@@ -152,17 +152,17 @@ class Command(BaseCommand):
                 return os.system(f"python /var/www/GPCRmd/manage.py update_gene --update")
                 
             os.system(f"python /var/www/GPCRmd/manage.py update_gene")
-            
-         # Dyndb functions
+        
+        # Dyndb functions
         def update_dyndb_model(*args, **kwargs):
             """
             Update dyndb model table of GPCRmd database.
             """
-
+            
             print(f"    - Dyndb model table...")
-
+                               
             os.system(f"python /var/www/GPCRmd/manage.py update_dyndb_model")
-        
+            
         def update_dsdf_paths(*args, **kwargs): #David function to replace filenames
             """
             Restores the filenames and filepath in table dyndb_submission_dynamics_files. 
@@ -180,7 +180,7 @@ class Command(BaseCommand):
         if kwargs["restore"]:
             print(f"- Restoring GPCRmd database...")
             restore_db(kwargs["restore"])     # Get dump file & restore database
-        
+            
         if kwargs["pathfile"]:
             print(f"- Restoring GPCRmd database path files...")
             path_files_db(kwargs)

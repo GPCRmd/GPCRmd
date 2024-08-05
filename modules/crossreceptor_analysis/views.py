@@ -136,8 +136,8 @@ def improve_receptor_names(df_t,compl_data):
 
 
 def ligand_receptor_interaction(request,sel_thresh):
-    request.session.set_expiry(0)
-    
+    request.session.set_expiry(0) 
+
     mdsrv_url=obtain_domain_url(request)
         
     sel_thresh=float(sel_thresh)

@@ -16,9 +16,12 @@
       <a href="/home/" class="navbar-brand" alt="{{ site_title }}" style="padding:0px 0px; margin-left: 23px;"><img id="logo" src="{% static logo_path %}" class="main-logo" style="float:left;margin-right:5px"></a>
     </div>
     {% if prog_maintenance == 1 %}
-      <div class="alert alert-warning" role="alert"  style="padding:5px 30px 5px 10px;margin:0 20px;position:absolute;z-index:10;">
+      <div class="alert alert-warning alert-dismissible show" role="alert"  style="padding:5px 30px 5px 10px;margin:0 20px;position:absolute;z-index:10; width: 40%;">
         <i class="glyphicon glyphicon-warning-sign warnicon"></i>
-        Maintenance from 02/05/2024 10:00 (GMT+1) to 02/05/2024 18:00 (GMT+1). 
+        [INFO] This is a notice to alert you that we will be conducting scheduled maintenance. Down time is scheduled as follows: 10am (GMT+1) Monday, August 5th, 2024 - 8pm (GMT+1) Friday, August 9th, 2024. 
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
       </div> 
     {% endif %}
     <div id="navbar" class="navbar-collapse collapse">

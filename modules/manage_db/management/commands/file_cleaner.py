@@ -69,7 +69,7 @@ class Command(BaseCommand):
         
         # DSDF_files.sort() #Sort the list
         # out_files.sort()
-        print(len(out_files["_dyn_"])+ len(out_files["_trj_"])+ len(out_files["_oth_"])+ len(out_files["_prm_"])+ len(out_files["_prt_"]) , len(out_files["_dyn_"]), len(out_files["_trj_"]), len(out_files["_oth_"]), len(out_files["_prm_"]), len(out_files["_prt_"]))
+        print("Total", len(out_files["_dyn_"])+ len(out_files["_trj_"])+ len(out_files["_oth_"])+ len(out_files["_prm_"])+ len(out_files["_prt_"]) , "Dynamics:", len(out_files["_dyn_"]), "Trajectories:", len(out_files["_trj_"]), "Others:", len(out_files["_oth_"]), "Parameters:", len(out_files["_prm_"]), "Protocols:", len(out_files["_prt_"]))
         print(len(secr_files["_dyn_"])+ len(secr_files["_trj_"])+ len(secr_files["_oth_"])+ len(secr_files["_prm_"])+ len(secr_files["_prt_"]) , len(secr_files["_dyn_"]), len(secr_files["_trj_"]), len(secr_files["_oth_"]), len(secr_files["_prm_"]), len(secr_files["_prt_"]))
         
         # for f in 

@@ -44,7 +44,7 @@ class Command(BaseCommand):
     
     def handle(self, *args, **kwargs):
         # Get published, individual dynamics 
-        dynobj=DyndbDynamics.objects.filter(is_published=True).filter(submission_id__is_gpcrmd_community=False)
+        dynobj=DyndbDynamics.objects.filter(submission_id__is_published=True) #.filter(submission_id__is_gpcrmd_community=False)
         dyn_ids = dynobj.values_list("id")
         
         # Get references of this dynamics
@@ -77,6 +77,6 @@ class Command(BaseCommand):
                     print(f"{ref.doi} - New article!")
                 else:
                     print(f"{ref.doi} - Already in the database!")
-
+                
             except:
                 print(f"Error in {ref.doi}")

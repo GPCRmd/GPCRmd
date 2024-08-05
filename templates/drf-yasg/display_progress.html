@@ -1,0 +1,32 @@
+{% load static %}
+<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+<script src="{% static 'home/js/jquery.js' %}"></script>
+
+<script>
+// JQuery
+
+function customResult(resultElement, result) {
+  $( resultElement ).append(
+    $('<p>').text('Sum of all seconds is ' + result)
+  );
+}
+
+$(function () {
+  var progressUrl = "{% url 'celery_progress:task_status' 'task_id' %}"
+  console.log(progressUrl);
+  var progressUrl = progressUrl.replace("task_id", {{ task_id }});
+  console.log(progressUrl);
+  CeleryProgressBar.initProgressBar(progressUrl, {
+    onResult: customResult,
+  });
+});
+
+</script>    
+
+<div class='progress-wrapper'>
+  <div id='progress-bar' class='progress-bar' style="background-color: #68a9ef; width: 0%;">&nbsp;</div>
+</div>
+<div id="progress-bar-message">Waiting for progress to start...</div>
+<div id="celery-result"></div>
+
+

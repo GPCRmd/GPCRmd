@@ -122,21 +122,21 @@ $(document).ready(function(){
     let setstyle_font =function(d,is_sel){
         if (is_sel){
           if (d.depth === 1) {
-            return "12px sans-serif"
+            return "14px sans-serif"
           } else if (d.depth === 2) {
-            return "10px sans-serif"
+            return "12px sans-serif"
           } else if (d.depth === 3) {
-            return "8px sans-serif"
+            return "10px sans-serif"
           } else if (d.depth === 4) {
             return "2px monospace"
           }    
       } else {
           if (d.depth === 1) {
-            return "10px sans-serif"
+            return "14px sans-serif"
           } else if (d.depth === 2) {
-            return "8px sans-serif"
+            return "12px sans-serif"
           } else if (d.depth === 3) {
-            return "6px sans-serif"
+            return "10px sans-serif"
           } else if (d.depth === 4) {
             return "2px monospace"
           }

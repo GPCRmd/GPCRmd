@@ -36,8 +36,9 @@ urlpatterns = [
    re_path(r'^search_dyn/(?P<dyn_id>.*)$', views.SearchByDyn.as_view()),
    re_path(r'^search_sub/(?P<sub_id>.*)$', views.SearchBySub.as_view()),
    re_path(r'^search_comp/(?P<ligroleids>.*)$', views.SearchCompound.as_view()),
-   re_path(r'^download_all/$', views.download_all, name="download_all"),
-   # re_path(r'^celery-progress/', include('celery_progress.urls')), 
+   path('download_id/', views.download_id, name="download_id"),
+   path('download_link/<str:task_id>/', views.download_link, name='download_link'),
+   # re_path(r'^get_progress/', views.get_progress, name="get_progress"), 
 
 ]
 

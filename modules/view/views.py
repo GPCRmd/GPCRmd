@@ -2460,7 +2460,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
     mdsrv_url=obtain_domain_url(request)
     dyn_data = DyndbDynamics.objects.get(id=dyn_id)
     subm_data = DyndbSubmission.objects.get(id=dyn_data.submission_id.id)
-    userid = dyn_data.created_by
+    userid = subm_data.user_id.id
     delta = dyn_data.delta
     if not request.POST:
         access = False
@@ -2728,7 +2728,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
             warning_load={"trajload":True,"heavy":True}
 
         # Obtain generic numbering, if it exists
-        gennums = generic_numbering(dyn_id)
+        try:
+            gennums = generic_numbering(dyn_id)
+        except: #GPCRDB is broken, no ssl certificate
+            gennums = ""
 
         ##### ---- Water Maps - NATHALIE CODE HERE -------
 # retrieving the filepaths from the database. put traj_id as key and vol/occ map as value. Then pass this variable through context variable.
@@ -3055,6 +3058,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                             motname_li=["PIF","DRY","NPxxY","Sodium binding site","Ionic lock","Rotamer toggle switch"]
                             motifs_dict_mod=copy.deepcopy(motifs_dict)
                             for chain_name, result in dprot_chain_li:
+                                if len(result)<3:
+                                    continue
                                 (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li,seq_pdb)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains, pdbid, seq_pdb=seq_pdb)
                                 (show_class,current_poslists,current_motif,other_classes_ok)=translate_all_poslists_to_ourclass_numb(motifs_dict_mod,gnum_classes_rel,cons_pos_dict_mod,current_class,other_classes_ok)
                                 obtain_predef_positions_lists(dyn_id,current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict_mod, motifs_mod,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name,motifs_dict_mod)
@@ -3143,7 +3148,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         "chains" : chain_str,    
                         "other_prots":other_prots,
                         "pdbid":pdbid,      
-                        "prot_seq_pos": list(prot_seq_pos.values()),
+                        "prot_seq_pos": list(prot_seq_pos.values()),       
                         })
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -3156,7 +3161,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
             context.update({
-                    "chains" : "",            
+                        "chains" : "",    
                         "other_prots" : [],
                         })
             return render(request, 'view/index.html', context)

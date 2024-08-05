@@ -165,7 +165,7 @@ def obtain_files_from_dyn(dyn_id):
             traj_files.append(dfd.id_files.filepath)
             traj_files_names.append(dfd.id_files.filename)
             framenums.append(dfd.framenum)
-
+            
     return (struc_file,struc_file_name,topo_file,traj_files,traj_files_names,framenums)
 
 def get_orthostericlig_resname(dyn_id,change_lig_name):
@@ -189,8 +189,8 @@ def get_orthostericlig_resname(dyn_id,change_lig_name):
         lig_name=change_lig_name[dyn_id]["longname"]
         lig_resname=[change_lig_name[dyn_id]["resname"]] 
     return (ddc_id,lig_name,lig_resname)
-        
-def retrieve_info(self,dyn,data_dict,change_lig_name):
+
+def retrieve_info(self,dyn,data_dict,change_lig_name,overwrite):
     """
     Retrieves all the necessary info of the dyn obj for the analysis and computes it.
     """
@@ -240,9 +240,9 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
         mod = False
         for prot in gennum.keys():
             gennum_path = "%s/Precomputed/gennum/dyn%d.json"%(settings.MEDIA_ROOT,dyn_id)
-            if os.path.exists(gennum_path):
+            if os.path.exists(gennum_path) and not overwrite:
                 gennum = json_dict(gennum_path)
-            if not (prot in gennum) or not gennum[prot]:    
+            elif not (prot in gennum) or not gennum[prot]:    
                 mod = True
                 gennum[prot] = (generic_numbering(dyn_id,prot))
         # Save gennum in a file, if not existing yet
@@ -358,7 +358,7 @@ class Command(BaseCommand):
             action='store_true',
             dest='overwrite',
             default=False,
-            help='Overwrites already stored data, calculating again the interactions for all the public dynamics stored at the DB.',
+            help='Recalculate generic numbering data for this dynamic',
         )
 
     def handle(self, *args, **options):
@@ -370,11 +370,9 @@ class Command(BaseCommand):
         if options['dynid'] or options['alldyn']:
             dynid = options['dynid']
             alldyn = options['alldyn']
+            overwrite = options['overwrite']
         else:
             raise CommandError("Neither dynid(s) nor --all options have been specified. Use --help for more details.")
-
-        # In this file will be stored all commands to run in ORI (for the computer-spending steps, you know)
-        commands_path = settings.MEDIA_ROOT + "Precomputed/get_contacts_files/dyn_freq_commands.sh"
 
         #Prepare compl_data json file and the "last time modified" upd file
         cra_path=settings.MEDIA_ROOT + "Precomputed/"
@@ -391,7 +389,7 @@ class Command(BaseCommand):
         
         # Extract dynamics information from database 
         if alldyn:
-            dynobjs = DyndbDynamics.objects.filter(is_published=True)
+            dynobjs = DyndbDynamics.objects.all()
         else:
             dynobjs = DyndbDynamics.objects.filter(id__in=dynid)
 
@@ -405,7 +403,7 @@ class Command(BaseCommand):
 
                 self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn.id, dyncounter, len(dynobjs))))
                 dyncounter += 1
-                dyn_dict,compl_data = retrieve_info(self,dyn,compl_data,change_lig_name)
+                dyn_dict,compl_data = retrieve_info(self,dyn,compl_data,change_lig_name,overwrite)
 
             except Exception as e:
                 self.stdout.write(self.style.NOTICE("Could not process %s because of %s" % (dyn.id,e)))
@@ -414,8 +412,3 @@ class Command(BaseCommand):
         # Save compl_data.json
         with open(compl_file_path, 'w') as outfile:
             json.dump(compl_data, outfile, indent=2)
-
-        # Save commands in commands file
-        with open(commands_path,"w") as commands_file:
-            commands_file.write(commands_line)
-

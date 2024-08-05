@@ -2887,12 +2887,12 @@ def extract_mutations(mutation_li,seq_pdb):
     
 #  @user_passes_test_args(is_published_or_submission_owner)
 def query_dynamics(request,dynamics_id):
-    '''Returns information about the given dynamics_id.Returns an Http Response '''
+    '''Returns information about the given dynamics_id.Returns an Http Response '''    
     request.session.set_expiry(0) 
     mdsrv_url=obtain_domain_url(request)
     dyn_data = DyndbDynamics.objects.get(id=dynamics_id)
     subm_data = DyndbSubmission.objects.get(id=dyn_data.submission_id.id) #Use the is_published of Dyndbsubmission instead of DyndbDynamics
-    userid = dyn_data.created_by
+    userid = subm_data.user_id.id
     if not request.POST:
         access = False
     if str(userid) == str(request.user.id or ''):#User owner of the submission 
@@ -4661,7 +4661,7 @@ def DYNAMICSreuseview(request, submission_id, model_id ):
             #Maybe we have to label the directory with submissionID?????
             # dyn_id = DyndbDynamics.objects.filter(submission_id=submission_id)[0].pk
             # direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(dyn_id) 
-            direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(submission_id)
+            direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(submission_id) 
 
             print("\nDirectorio a crear ", direct)
             if not os.path.exists(direct):
@@ -7135,7 +7135,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
                                 return response                                                                                                         
             # dyn_id = DyndbDynamics.objects.filter(submission_id=submission_id)[0].pk
             # direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(dyn_id) 
-            direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(submission_id)
+            direct=settings.MEDIA_ROOT+'Dynamics/dyn'+str(submission_id) 
 
             print("\nDirectorio a crear ", direct)
             if not os.path.exists(direct):
@@ -7207,7 +7207,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
                     l['id_molecule__dyndbsubmissionmolecule__type']=l['type']
                     l['type']=DyndbModelComponents.MOLECULE_TYPE[smol_to_dyncomp_type[l['type']]][0]
                 # print(compsub)        
-                print(ddctypel,"PPPPP")
+                # print(ddctypel,"PPPPP")
                 compl=compdcl+compsub
             dd=dyndb_Dynamics()
             ddC =dyndb_Dynamics_Components()
@@ -10323,7 +10323,7 @@ def datasets(request):
     with open(consideredgpcrs_path, 'rb') as filehandle:  
         gpcrclassif = pickle.load(filehandle)
     others_gpcrclassif=copy.deepcopy(gpcrclassif)
-    dynall=DyndbDynamics.objects.filter(is_published=True) #all().exclude(id=5) #I think dyn 5 is wrong
+    dynall=DyndbDynamics.objects.filter(submission_id__is_published=True) #all().exclude(id=5) #I think dyn 5 is wrong
     dynprot=dynall.annotate(fam_slug=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family_id__slug'))
     dynprot=dynprot.annotate(fam_slug2=F('id_model__id_protein__receptor_id_protein__family_id__slug'))
     dynprot=dynprot.annotate(dyn_id=F('id'))
@@ -10899,126 +10899,7 @@ def step1_submit(request, submission_id):
     """
     Introduce in the database the data obtained from the form
     """
-    # Some initial variables, including users and timestamps
-    def_user_dbengine=settings.DATABASES['default']['USER']
-    def_user=request.user.id
-    creation_fields={
-               'creation_timestamp':timezone.now(),
-               'created_by_dbengine':def_user_dbengine, 
-               'created_by':def_user,
-               'update_timestamp':timezone.now(),
-               'last_update_by_dbengine':def_user_dbengine,
-               'last_update_by':def_user
-               }
-    update_fields = {
-               'update_timestamp':timezone.now(),
-               'last_update_by_dbengine':def_user_dbengine,
-               'last_update_by':def_user
-               }
-    initFiles={'update_timestamp':timezone.now(),
-        'creation_timestamp':timezone.now() ,
-        'submission_id':None ,
-        'created_by_dbengine':def_user_dbengine,
-        'last_update_by_dbengine':def_user_dbengine,
-        'created_by':def_user,
-        'last_update_by':def_user  
-    }
-    # Get Post info            
-    dictpost=request.POST
-    # Fix bug of description None value for summary
-    if dictpost['add_info'] == None or dictpost['add_info'] == "":
-        add_info = "-"
-    else:
-        add_info = dictpost['add_info']
     
-    if dictpost['description'] == None or dictpost['description'] == "":
-        description = dictpost['description']
-    else:
-        description = dictpost['description']
-    dictfiles=request.FILES
-    # Dynamics and model dictionaries to convert in database tables
-    dynamics_dict = {
-        'id_model' : None,
-        'id_dynamics_methods' : dictpost['id_dynamics_methods'],
-        'software' : dictpost['software'],
-        'sversion' : dictpost['sversion'],
-        'ff' : dictpost['ff'],
-        'ffversion' : dictpost['ffversion'],
-        'id_assay_types' : dictpost['id_assay_types'],
-        'description' : add_info,
-        'id_dynamics_membrane_types' : dictpost['id_dynamics_membrane_types'],
-        'id_dynamics_solvent_types' : dictpost['id_dynamics_solvent_types'],
-        'timestep' : dictpost['timestep'],
-        'delta' : dictpost['delta'],
-        'submission_id' : submission_id,
-    }
-    models_dict = {
-            'name' : dictpost['name'],
-            'type' : dictpost['type'],
-            'source_type' : dictpost['source_type'],
-            'pdbid' : dictpost['pdbid'],
-            'description' : description,
-            'template_id_model' : None,
-            'model_creation_submission_id':submission_id,
-    }
-    submodels_dict = {
-            'model_id': None,
-            'submission_id':submission_id
-    }
-    ##### Check if this submission already exists
-    ds = DyndbSubmission.objects.get(pk=submission_id)
-    DM=DyndbModel.objects.filter(model_creation_submission_id=submission_id)
-    DD = DyndbDynamics.objects.filter(submission_id=submission_id)
-    DSM=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
-    # Tag submission as from GPCRmd community if it is so
-    if ('gpcrcom' in dictpost) and (dictpost['passcode']=='weareGPCRs'):
-        ds.is_gpcrmd_community = True
-        ds.save()
-    # Create or modify existing DyndbModel object
-    if len(DM):
-        models_dict.update(update_fields)
-        DM.update(**models_dict)
-        model_id = DM[0].id
-    else:
-        models_dict.update(creation_fields)
-        dm = dyndb_Model(models_dict)
-        Dm = dm.save()
-        model_id= Dm.id
-    # Update model ids in to-submit dictionaries
-    submodels_dict['model_id'] = model_id
-    dynamics_dict['id_model'] = model_id
-    # Create (if required) DyndbSubmissionModel object
-    if len(DSM):
-        pass
-    else:
-        submodels_dict.update(creation_fields)
-        dsm=dyndb_Submission_Model(submodels_dict)
-        dsm.save()
-    # Create or update DYndbDynamics object
-    if len(DD):
-        dynamics_dict.update(update_fields)
-        DD.update(**dynamics_dict) 
-        dyn_id = DD[0].id
-    else:
-        dynamics_dict.update(creation_fields)
-        dd = dyndb_Dynamics(dynamics_dict)
-        Dd = dd.save()
-        dyn_id = Dd.id
-    ##### Submit crystal and simulated PDB structures, uploaded in this step
-    DFD = DyndbFilesDynamics.objects.filter(id_dynamics=dyn_id, type=0)
-    DSDF = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=0,is_deleted=False)    
-    # Retreat PDB file from request
-    uploadedfile = request.FILES['dynamics']
-    # If a copy of this file is already avalible for this submission
-    pdbfilepath = DSDF[0].filepath if len(DSDF) else False
-    pdbfileurl = DSDF[0].url if len(DSDF) else False
-    pdbname = DSDF[0].filename if len(DSDF) else False
-    # Save uploaded PDB files in server
-    (pdbfilepath, pdbfileurl, pdbname) = save_pdbfile('dynamics', submission_id, uploadedfile, pdbfilepath, pdbfileurl, pdbname)
-    # Create DyndbFile entry for this file
-    (up_filename, ext) = pdbname.rsplit('.', 1)
-    file_id = save_dyndbfile(pdbname, ext, pdbfilepath, pdbfileurl, creation_fields, update_fields)
-
     # Save DyndbFilesDynamics table
     def save_dyndbfiles_intertables(dyn_id, submission_id, file_id, pdbname, pdbfileurl, pdbfilepath, file_type=0):
         """
@@ -11070,11 +10951,144 @@ def step1_submit(request, submission_id):
             Dfm = dyndb_Files_Model(filemod_data)
             Dfm.save()
 
+    # Some initial variables, including users and timestamps
+    def_user_dbengine=settings.DATABASES['default']['USER']
+    def_user=request.user.id
+    creation_fields={
+               'creation_timestamp':timezone.now(),
+               'created_by_dbengine':def_user_dbengine, 
+               'created_by':def_user,
+               'update_timestamp':timezone.now(),
+               'last_update_by_dbengine':def_user_dbengine,
+               'last_update_by':def_user
+               }
+    update_fields = {
+               'update_timestamp':timezone.now(),
+               'last_update_by_dbengine':def_user_dbengine,
+               'last_update_by':def_user
+               }
+    initFiles={'update_timestamp':timezone.now(),
+        'creation_timestamp':timezone.now() ,
+        'submission_id':None ,
+        'created_by_dbengine':def_user_dbengine,
+        'last_update_by_dbengine':def_user_dbengine,
+        'created_by':def_user,
+        'last_update_by':def_user  
+    }
+    # Get Post info            
+    dictpost=request.POST
+    # Fix bug of description None value for summary
+    if dictpost['add_info'] == None or dictpost['add_info'] == "":
+        add_info = "-"
+    else:
+        add_info = dictpost['add_info']
+    
+    if dictpost['description'] == None or dictpost['description'] == "":
+        description = dictpost['description']
+    else:
+        description = dictpost['description']
+    dictfiles=request.FILES
+    
+    # Add none pdb id 
+    if "-" in dictpost['pdbid']:
+        pdbid = "NONE"
+    else:
+        pdbid = dictpost['pdbid']
+    
+    # Dynamics and model dictionaries to convert in database tables
+    dynamics_dict = {
+        'id_model' : None,
+        'id_dynamics_methods' : dictpost['id_dynamics_methods'],
+        'software' : dictpost['software'],
+        'sversion' : dictpost['sversion'],
+        'ff' : dictpost['ff'],
+        'ffversion' : dictpost['ffversion'],
+        'id_assay_types' : dictpost['id_assay_types'],
+        'description' : add_info,
+        'id_dynamics_membrane_types' : dictpost['id_dynamics_membrane_types'],
+        'id_dynamics_solvent_types' : dictpost['id_dynamics_solvent_types'],
+        'timestep' : dictpost['timestep'],
+        'delta' : dictpost['delta'],
+        'submission_id' : submission_id,
+    }
+    models_dict = {
+            'name' : dictpost['name'],
+            'type' : dictpost['type'],
+            'source_type' : dictpost['source_type'],
+            'pdbid' : pdbid,
+            'description' : description,
+            'template_id_model' : None,
+            'model_creation_submission_id':submission_id,
+    }
+    submodels_dict = {
+            'model_id': None,
+            'submission_id':submission_id
+    }
+    ##### Check if this submission already exists
+    ds = DyndbSubmission.objects.get(pk=submission_id)
+    DM=DyndbModel.objects.filter(model_creation_submission_id=submission_id)
+    DD = DyndbDynamics.objects.filter(submission_id=submission_id)
+    DSM=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+    # Tag submission as from GPCRmd community if it is so
+    if ('gpcrcom' in dictpost) and (dictpost['passcode']=='weareGPCRs'):
+        ds.is_gpcrmd_community = True
+        ds.save()
+    # Create or modify existing DyndbModel object
+    if len(DM):
+        models_dict.update(update_fields)
+        DM.update(**models_dict)
+        model_id = DM[0].id
+    else:
+        models_dict.update(creation_fields)
+        dm = dyndb_Model(models_dict)
+        Dm = dm.save()
+        model_id= Dm.id
+    # Update model ids in to-submit dictionaries
+    submodels_dict['model_id'] = model_id
+    dynamics_dict['id_model'] = model_id
+    # Create (if required) DyndbSubmissionModel object
+    if len(DSM):
+        pass
+    else:
+        submodels_dict.update(creation_fields)
+        dsm=dyndb_Submission_Model(submodels_dict)
+        dsm.save()
+    # Create or update DYndbDynamics object
+    if len(DD):
+        dynamics_dict.update(update_fields)
+        DD.update(**dynamics_dict) 
+        dyn_id = DD[0].id
+    else:
+        dynamics_dict.update(creation_fields)
+        dd = dyndb_Dynamics(dynamics_dict)
+        Dd = dd.save()
+        dyn_id = Dd.id
+    ##### Submit crystal and simulated PDB structures, uploaded in this step
+    DFD = DyndbFilesDynamics.objects.filter(id_dynamics=dyn_id, type=0)
+    DSDF = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=0,is_deleted=False)  
+    # try: 
+    # Retreat PDB file from request
+    uploadedfile = request.FILES['dynamics']
+    if DSDF:
+        # If a copy of this file is already avalible for this submission
+        pdbfilepath = DSDF[0].filepath
+        pdbfileurl = DSDF[0].url 
+        pdbname = DSDF[0].filename 
+    # Save uploaded PDB files in server
+        (pdbfilepath, pdbfileurl, pdbname) = save_pdbfile('dynamics', submission_id, uploadedfile, pdbfilepath, pdbfileurl, pdbname)
+    else:
+        (pdbfilepath, pdbfileurl, pdbname) = save_pdbfile('dynamics', submission_id, uploadedfile)
+    # Create DyndbFile entry for this file
+    (up_filename, ext) = pdbname.rsplit('.', 1)
+    file_id = save_dyndbfile(pdbname, ext, pdbfilepath, pdbfileurl, creation_fields, update_fields)
     # Save DyndbFile intermediate tables
     save_dyndbfiles_intertables(dyn_id, submission_id, file_id, pdbname, pdbfileurl, pdbfilepath, file_type=0)
     # Count and save number of atoms in DyndbDynamics table using MDtraj
     count_and_save_atoms(dyn_id, submission_id)
     # If everyting was correct, go to step2
+    # except Exception as e:
+    #     print("Using the stored file in the step 1 caused by %s"% e)
+
     context = { 
         'step' : '2',
         'submission_id' : submission_id,
@@ -12329,7 +12343,7 @@ def save_complex_related(submission_id, id_model, prots, creation_fields, prot_i
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
-@test_if_closed        
+@test_if_closed
 def step3(request, submission_id):
     """
     Go to step3 of the submission form (the one about protein chains and mutations)
@@ -12881,50 +12895,66 @@ def step5_submit(request, submission_id):
     # Check whether the fdbREFF instance of dyndb_ReferenceForm is valid:
     SubmitRef=True
     qRFdoi=DyndbReferences.objects.filter(doi=request.POST['doi'])
-    FRpk = FRpk[0]
+    try:
+        FRpk = FRpk[0]
+    except:
+        FRpk = FRpk
     qSubmission=DyndbSubmission.objects.filter(id=submission_id)
-    qT=list(qSubmission.filter(dyndbsubmissionprotein__submission_id=submission_id,dyndbsubmissionmolecule__submission_id=submission_id,dyndbsubmissionmodel__submission_id=submission_id,dyndbdynamics__submission_id=submission_id).values('dyndbsubmissionprotein__protein_id','dyndbsubmissionmolecule__molecule_id','dyndbsubmissionmolecule__molecule_id__id_compound','dyndbsubmissionmodel__model_id','dyndbdynamics__id'))
-    dictprot={'id_protein':qT[0]['dyndbsubmissionprotein__protein_id'], 'id_references':FRpk}
-    dictmod={'id_model':qT[0]['dyndbsubmissionmodel__model_id'], 'id_references':FRpk }
-    dictdyn={'id_dynamics':qT[0]['dyndbdynamics__id'], 'id_references':FRpk }
-    refprot=dyndb_References_Protein(dictprot)
-    if SubmitRef:
-        if not qRFdoi.filter(dyndbreferencesprotein__id_protein=qT[0]['dyndbsubmissionprotein__protein_id'],dyndbreferencesprotein__id_references=FRpk).exists():
-            if refprot.is_valid():
-                refprot.save()
-            else:
-                print("refprot is not valid",refprot.errors.as_text())
-    refmod=dyndb_References_Model(dictmod)
-    if  SubmitRef:
-        if not qRFdoi.filter(dyndbreferencesmodel__id_model=qT[0]['dyndbsubmissionmodel__model_id'],dyndbreferencesmodel__id_references=FRpk).exists():
-            if refmod.is_valid():
-                refmod.save()
-            else:
-                print("refmod is not valid",refmod.errors.as_text())
-    refdyn=dyndb_References_Dynamics(dictdyn)
-    if SubmitRef:
-        if not qRFdoi.filter(dyndbreferencesdynamics__id_dynamics=qT[0]['dyndbdynamics__id'],dyndbreferencesdynamics__id_references=FRpk).exists():
-            if refdyn.is_valid():
-                refdyn.save()
-                print("refdyn may  be saved ",refdyn.errors.as_text())
-            else:
-                print("refdyn is not valid",refdyn.errors.as_text())
+    qT=list(qSubmission.filter(dyndbsubmissionprotein__submission_id=submission_id,dyndbsubmissionmodel__submission_id=submission_id,dyndbdynamics__submission_id=submission_id).values('dyndbsubmissionprotein__protein_id','dyndbsubmissionmodel__model_id','dyndbdynamics__id'))
+    qT_mol=list(qSubmission.filter(dyndbsubmissionmolecule__submission_id=submission_id).values('dyndbsubmissionmolecule__molecule_id','dyndbsubmissionmolecule__molecule_id__id_compound'))
+
+    print(qT)
+    print(qT_mol)
+    try:
+        dictprot={'id_protein':qT[0]['dyndbsubmissionprotein__protein_id'], 'id_references':FRpk}
+        refprot=dyndb_References_Protein(dictprot)
+        if SubmitRef:
+            if not qRFdoi.filter(dyndbreferencesprotein__id_protein=qT[0]['dyndbsubmissionprotein__protein_id'],dyndbreferencesprotein__id_references=FRpk).exists():
+                if refprot.is_valid():
+                    refprot.save()
+                else:
+                    print("refprot is not valid",refprot.errors.as_text())
+    except:
+        print("No protein references!")
+    try:
+        dictmod={'id_model':qT[0]['dyndbsubmissionmodel__model_id'], 'id_references':FRpk }
+        refmod=dyndb_References_Model(dictmod)
+        if  SubmitRef:
+            if not qRFdoi.filter(dyndbreferencesmodel__id_model=qT[0]['dyndbsubmissionmodel__model_id'],dyndbreferencesmodel__id_references=FRpk).exists():
+                if refmod.is_valid():
+                    refmod.save()
+                else:
+                    print("refmod is not valid",refmod.errors.as_text())
+    except:
+        print("No model references!")
+    try:
+        dictdyn={'id_dynamics':qT[0]['dyndbdynamics__id'], 'id_references':FRpk }
+        refdyn=dyndb_References_Dynamics(dictdyn)
+        if SubmitRef:
+            if not qRFdoi.filter(dyndbreferencesdynamics__id_dynamics=qT[0]['dyndbdynamics__id'],dyndbreferencesdynamics__id_references=FRpk).exists():
+                if refdyn.is_valid():
+                    refdyn.save()
+                    print("refdyn may  be saved ",refdyn.errors.as_text())
+                else:
+                    print("refdyn is not valid",refdyn.errors.as_text())
+    except:
+        print("No dynamics references!")
     dictmol={}
     dictcomp={}
     i=0
-    for l in qT:
-        dictmol[i]={'id_molecule':qT[i]['dyndbsubmissionmolecule__molecule_id'],  'id_references':FRpk}
+    for l in qT_mol:
+        dictmol[i]={'id_molecule':qT_mol[i]['dyndbsubmissionmolecule__molecule_id'],  'id_references':FRpk}
         refmol=dyndb_References_Molecule(dictmol[i])                                     
         if SubmitRef:
-            if not qRFdoi.filter(dyndbreferencesmolecule__id_molecule=qT[i]['dyndbsubmissionmolecule__molecule_id'],dyndbreferencesmolecule__id_references=FRpk).exists():
+            if not qRFdoi.filter(dyndbreferencesmolecule__id_molecule=qT_mol[i]['dyndbsubmissionmolecule__molecule_id'],dyndbreferencesmolecule__id_references=FRpk).exists():
                 if refmol.is_valid():                                                         
                     refmol.save()                                                             
                 else:                                                                         
                     print("refmol is not valid",refmol.errors.as_text())                      
-        dictcomp[i]={'id_compound':qT[i]['dyndbsubmissionmolecule__molecule_id__id_compound'],  'id_references':FRpk}
+        dictcomp[i]={'id_compound':qT_mol[i]['dyndbsubmissionmolecule__molecule_id__id_compound'],  'id_references':FRpk}
         refcomp=dyndb_References_Compound(dictcomp[i])
         if not SubmitRef:
-            if not qRFdoi.filter(dyndbreferencescompound__id_compound=qT[i]['dyndbsubmissionmolecule__molecule_id__id_compound'],dyndbreferencescompound__id_references=FRpk).exists():
+            if not qRFdoi.filter(dyndbreferencescompound__id_compound=qT_mol[i]['dyndbsubmissionmolecule__molecule_id__id_compound'],dyndbreferencescompound__id_references=FRpk).exists():
                 if refcomp.is_valid():
                     refcomp.save()
                 else:

@@ -374,7 +374,7 @@ def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,wid
       do_not_skip_on_debug = True
       raise
     finally:
-      try:
+      try: 
         response.close()
       except:
         pass

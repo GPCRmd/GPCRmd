@@ -62,7 +62,7 @@
               </label>
             </div>
             <div class="col-md-6 height-col">
-              <select {% if model_id %} readonly {%endif%} class="input_step select_input" id="id_type" name="type"
+              <select class="input_step select_input" id="id_type" name="type"
                 placeholder="   ">
                 {% if model_id or saved %}
                 <option value="{{type.0}}">{{type.1}}</option>
@@ -78,14 +78,14 @@
           <div class="row">
             <div class="col-md-3 label_div">
               <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title=""
-                data-original-title="Protein Data Bank identifier of the structure in which this simulation was based."></span>
+                data-original-title="Protein Data Bank identifier of the structure in which this simulation was based. Introduce '-' if you do not have a PDB id."></span>
               <label for="id_pdbid">
                 <p>PDB ID:</p>
               </label>
             </div>
             <div class="col-md-6">
               <input required id="id_pdbid" class="input_step" maxlength="6" name="pdbid" type="text"
-                {% if model_id or saved %} value="{{pdbid}}" {%endif%} {% if model_id %} readonly {%endif%}
+                {% if model_id or saved %} value="{{pdbid}}" {%endif%} 
                 placeholder="" />
             </div>
             <br>
@@ -116,10 +116,10 @@
               </label>
             </div>
             <div class="col-md-6 height-col">
-              <select required {% if model_id %} readonly {%endif%} id="id_source_type" name="source_type" placeholder=""
+              <select required id="id_source_type" name="source_type" placeholder=""
                 class="input_step select_input">
                 {% if model_id or saved  %}
-                <option readonly value="{{source.0}}">{{source.1}}</option>
+                <option value="{{source.0}}">{{source.1}}</option>
                 {% else %}
                 {% for i in fdbMF.Meta.model.SOURCE_TYPE %}
                 {% if forloop.counter > 2 and 5 > forloop.counter %}

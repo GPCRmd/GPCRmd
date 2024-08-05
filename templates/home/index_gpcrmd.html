@@ -15,6 +15,7 @@
 <body>
 
   {% block content %}
+  <button onclick="topFunction()" id="myBtn" title="Go to top">Top</button>
 
   <!-- Banner -->
   <div class="showcase">
@@ -40,12 +41,15 @@
     <div class="showtop" id="mouse-scroll">
       <div class="row " style="text-align: center;margin-top: 6%;">
         {% comment %} <a class="newsLink searchExamples lineUp aExamples" onclick="go_to_news()">Latest news</a>  {% endcomment %}
+        <a onclick="go_to_tools()"><img style="cursor: pointer; margin-left:10px; width:40px; filter:invert(100%);margin-top: 5px;" src="{% static 'home/images/tools/tools_icon.png' %}"></img></a>
         <a onclick="go_to_news()"><img style="cursor: pointer; margin-left:10px; width:40px; filter:invert(100%);margin-top: 5px;" src="{% static 'home/images/news/news_icon.png' %}"></img></a>
+        <a onclick="go_to_stats()"><img style="cursor: pointer; margin-left:10px; width:40px; filter:invert(100%);margin-top: 5px;" src="{% static 'home/images/news/stats_icon.png' %}"></img></a>
+
       </div>
       {% comment %} <div class="mouse">
         <div class="mouse-in"></div>
       </div> {% endcomment %}
-      <div>
+      <div style="margin-left: 42%;">
           <span class="down-arrow-1"></span>
           <span class="down-arrow-2"></span>
           <span class="down-arrow-3"></span>
@@ -66,51 +70,30 @@
 
     <!-- First row -->
     <div id="firstRowTools" class="toolRow row ">
-      {% comment %} <div class="tool col-xs-6 col-md-3 ">
-        <button id="analysis_ac_pan-button" class="thumbnail toolBox toolBox_hover active" onclick="openSearch1(this)"> 
+      <div class="tool col-xs-6 col-md-3 coming">
+        <button id="analysis_ac_pan-button" class="thumbnail toolBox toolBox_hover active" onclick=""> 
           <img class="toolImg" src="{% static 'home/images/tools/ac.png' %}" alt="AllostericCommunication">
           <div class="caption">
             <h3 class="toolTitle toolTitle_hover">Allosteric<br>communication</h3>
           </div>
         </button>
-      </div> {% endcomment %}
-
-      <div class="tool col-xs-6 col-md-3">
-        <button id="analysis_cs_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+      </div> 
+      <div class="tool col-xs-6 col-md-3 coming">
+        <button id="analysis_cs_pan-button" class="thumbnail toolBox toolBox_hover" onclick="">
           <img class="toolImg" src="{% static 'home/images/tools/cs.png' %}" alt="ChemicalShift">
           <div class="caption">
-            <h3 class="toolTitle toolTitle_hover">Chemical<br>shift (dev)</h3>
+              <h3 class="toolTitle toolTitle_hover">Chemical<br>shift</h3>
           </div>
         </button>
       </div>
-
-      <div class="tool col-xs-6 col-md-3 ">
-        <button id="analysis_pockets_pan" class="thumbnail toolBox toolBox_hover active" onclick="openSearch1(this)"> 
-          <img class="toolImg" src="{% static 'home/images/tools/po.png' %}" alt="Pockets">
-          <div class="caption">
-            <h3 class="toolTitle toolTitle_hover">Pockets</h3>
-          </div>
-        </button>
-      </div>
-
       <div class="tool col-xs-6 col-md-3">
-        <button id="analysis_variants_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
-          <img class="toolImg" src="{% static 'home/images/tools/gv.png' %}" alt="GeneticVariants">
+        <button id="analysis_dist_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/dist.png' %}" alt="Distance">
           <div class="caption">
-            <h3 class="toolTitle toolTitle_hover">Genetic<br>variants</h3>
-            </viv>
-        </button>
-      </div>
-
-      <div class="tool col-xs-6 col-md-3">
-        <button id="analysis_tunnels_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
-          <img class="toolImg" src="{% static 'home/images/tools/tc.png' %}" alt="TunnelsChannels">
-          <div class="caption">
-            <h3 class="toolTitle toolTitle_hover">Tunnels and<br>channels</h3>
+            <h3 class="toolTitle toolTitle_hover">Distance</h3>
           </div>
         </button>
       </div>
-
       <div class="tool col-xs-6 col-md-3">
         <button id="analysis_pharmacophores_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
           <img class="toolImg" src="{% static 'home/images/tools/dp.png' %}" alt="Pharmacophores">
@@ -119,6 +102,14 @@
           </div>
         </button>
       </div>
+      <div class="tool col-xs-6 col-md-3 ">
+        <button id="analysis_expden_pan-button" class="thumbnail toolBox toolBox_hover active" onclick="openSearch1(this)"> 
+          <img class="toolImg" src="{% static 'home/images/tools/exp_den.png' %}" alt="ExperimentalDensity">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Experimental<br>density maps</h3>
+          </div>
+        </button>
+      </div> 
 
     </div>
 
@@ -165,32 +156,13 @@
     <!-- Second row -->
     <div class="toolRow row">
       <div class="tool col-xs-6 col-md-3">
-        <button id="analysis_watermap_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
-          <img class="toolImg" src="{% static 'home/images/tools/wd.png' %}" alt="WaterVolume">
+        <button id="analysis_variants_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/gv.png' %}" alt="GeneticVariants">
           <div class="caption">
-            <h3 class="toolTitle toolTitle_hover">Water volume<br>distribution</h3>
-          </div>
+            <h3 class="toolTitle toolTitle_hover">Genetic<br>variants</h3>
+            </viv>
         </button>
       </div>
-
-      <div class="tool col-xs-6 col-md-3">
-        <button id="analysis_fplot_pan" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
-          <img class="toolImg" src="{% static 'home/images/tools/in.png' %}" alt="Interaction network">
-          <div class="caption">
-            <h3 class="toolTitle toolTitle_hover">Interaction<br>network</h3>
-          </div>
-        </button>
-      </div>
-
-      <div class="tool col-xs-6 col-md-3">
-        <button id="analysis_rmsd_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
-          <img class="toolImg" src="{% static 'home/images/tools/rmsd.png' %}" alt="RMSD">
-          <div class="caption">
-            <h3 class="toolTitle toolTitle_hover">RMSD</h3>
-          </div>
-        </button>
-      </div>
-
       <div class="tool col-xs-6 col-md-3">
         <button id="interaction_freqs_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
           <img class="toolImg" src="{% static 'home/images/tools/if.png' %}" alt="InteractionFrequencies">
@@ -199,12 +171,63 @@
           </div>
         </button>
       </div>
-
       <div class="tool col-xs-6 col-md-3">
-        <button id="analysis_dist_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
-          <img class="toolImg" src="{% static 'home/images/tools/dist.png' %}" alt="Distance">
+        <button id="analysis_fplot_pan" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/in.png' %}" alt="Interaction network">
           <div class="caption">
-            <h3 class="toolTitle toolTitle_hover">Distance</h3>
+            <h3 class="toolTitle toolTitle_hover">Interaction<br>network</h3>
+          </div>
+        </button>
+      </div>
+      <div class="tool col-xs-6 col-md-3 coming">
+        <button id="analysis_lipid_pan-button" class="thumbnail toolBox toolBox_hover active" onclick=""> 
+          <img class="toolImg" src="{% static 'home/images/tools/lipid_insertion.png' %}" alt="LipidInsertion">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Lipid<br>Insertion</h3>
+          </div>
+        </button>
+      </div> 
+      <div class="tool col-xs-6 col-md-3 ">
+        <button id="analysis_meta_pan-button" class="thumbnail toolBox toolBox_hover active" onclick="location.href = 'https://gpcrmd.org/contmaps/?itype=sb&cluster=2&prtn=prt_lg&rev=norev&stnd=stnd';"> 
+          <img class="toolImg" src="{% static 'home/images/tools/meta.png' %}" alt="MetaAnalysis">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Meta-Analysis</h3>
+          </div>
+        </button>
+      </div> 
+    </div>
+
+    <!-- Third row -->
+    <div class="toolRow row">
+      <div class="tool col-xs-6 col-md-3 ">
+        <button id="analysis_pockets_pan" class="thumbnail toolBox toolBox_hover active" onclick="openSearch1(this)"> 
+          <img class="toolImg" src="{% static 'home/images/tools/pockets.png' %}" alt="Pockets">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Pockets</h3>
+          </div>
+        </button>
+      </div>
+      <div class="tool col-xs-6 col-md-3">
+        <button id="analysis_rmsd_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/rmsd.png' %}" alt="RMSD">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">RMSD</h3>
+          </div>
+        </button>
+      </div>
+      <div class="tool col-xs-6 col-md-3">
+        <button id="analysis_tunnels_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/tc.png' %}" alt="TunnelsChannels">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Tunnels and<br>channels</h3>
+          </div>
+        </button>
+      </div>
+      <div class="tool col-xs-6 col-md-3">
+        <button id="analysis_watermap_pan-button" class="thumbnail toolBox toolBox_hover" onclick="openSearch1(this)">
+          <img class="toolImg" src="{% static 'home/images/tools/wd.png' %}" alt="WaterVolume">
+          <div class="caption">
+            <h3 class="toolTitle toolTitle_hover">Water volume<br>distribution</h3>
           </div>
         </button>
       </div>
@@ -372,7 +395,7 @@
   </div>
 
   <!-- Datasets -->
-  <div class="ds ft jumbotron jumbotron-fluid">
+  <div id="statsinfo" class="ds ft jumbotron jumbotron-fluid">
     <div class="row">
       <div class="dsets">
         <div class="famTextDiv col-xs-12 col-md-5 col-md-offset-1 vcenter">
@@ -750,13 +773,49 @@
     }
   </script> {% endcomment %}
   <script>
+
+    function scrollToJustAbove(element, margin) {
+      let dims = element.getBoundingClientRect();
+      window.scrollTo(window.scrollX, dims.top - margin);
+    }
+
+    function go_to_tools() {
+      const element = document.getElementById("tools");
+      scrollToJustAbove(element, 160);
+      //var targetSection = element;
+      //targetSection.scrollIntoView({behavior: 'smooth'});
+    }
     function go_to_news() {
       const element = document.getElementById("lastnews");
-      //var pos = element.parentNode.offsetTop; 
-      //window.scrollTo(0, pos);
 
-      var targetSection = element.parentNode;
-      targetSection.scrollIntoView({behavior: 'smooth'});
+      scrollToJustAbove(element, 140);
+    }
+    function go_to_stats() {
+      const element = document.getElementById("statsinfo");
+
+      scrollToJustAbove(element, 70);
+    }
+  </script>
+
+  <script>
+  // Get the button
+  let mybutton = document.getElementById("myBtn");
+
+  // When the user scrolls down 20px from the top of the document, show the button
+  window.onscroll = function() {scrollFunction()};
+
+  function scrollFunction() {
+    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+      mybutton.style.display = "block";
+    } else {
+      mybutton.style.display = "none";
+    }
+  }
+
+  // When the user clicks on the button, scroll to the top of the document
+  function topFunction() {
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
     }
   </script>
 

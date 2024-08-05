@@ -24,7 +24,7 @@ class Command(BaseCommand):
         )
     def handle(self, *args, **kwargs):
         l_errors = {} #Store possible errors & warnings to display them at the end
-        j_file = f"{MODULES_ROOT}/protein/management/tools/prot_data.json"
+        j_file = f"{MODULES_ROOT}/protein/management/tools/prot_data.json"      
         # Opening JSON file
         try:
             with open(j_file) as json_file:
@@ -43,7 +43,7 @@ class Command(BaseCommand):
             #Get data from GPCRdb services
             #Receptorlist   
             url = "https://gpcrdb.org/services/receptorlist/"
-        
+            
             try:
                 # urlData = requests.get(url).json()
                 urlData = requests.get(url)
@@ -62,8 +62,8 @@ class Command(BaseCommand):
             dic_species_file = open(mode="w", file=f"{MODULES_ROOT}/protein/management/tools/prot_data.json")
             dic_species_file.write(urltext)
             dic_species_file.close()
-            
-            #Structure 
+
+           #Structure 
             print("         > Writing info into ../modules/protein/management/tools/gpcrdb_pdb.json...")
             
             url = "https://gpcrdb.org/services/structure/"

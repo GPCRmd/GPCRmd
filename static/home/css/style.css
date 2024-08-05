@@ -843,6 +843,52 @@ g text {
     background-color: white;
 }
 
+.tool.new::before{
+    content: "New!";
+    position: absolute;
+    top: 10px;
+    right: 5px;
+    width: 75px;
+    transform: rotate(0deg);
+    background: #BF3C1F;
+    padding: 5px ;
+    text-align: center;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    border-color: #171010;
+    z-index: 99;
+    border-radius: 4px;
+}
+
+.tool.coming .toolBox{
+    border-color: #cccccc;
+
+} 
+
+.tool.coming .toolTitle{
+    color: #cccccc;
+
+} 
+
+.tool.coming::before{
+    content: "Coming soon!";
+    position: absolute;
+    top: 10px;
+    right: 5px;
+    width: 75px;
+    transform: rotate(0deg);
+    background: #cccccc;
+    padding: 5px ;
+    text-align: center;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    border-color: #171010;
+    z-index: 99;
+    border-radius: 4px;
+}
+
 .divHidden{
     display: none;
 }
@@ -1627,6 +1673,10 @@ label {
     font-weight: bold;
 }
 
+.newTitle a {
+    font-size: 30px;
+}
+
 .twPanel {
     padding-left: 0;
     padding-right: 0;
@@ -1745,15 +1795,12 @@ label {
 /* Home Statistics center labels */
 .centerLabel
 {
-    position: absolute;
-    width: 100%;
     text-align: center;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 20px;
     color: #BF3C1F;
     z-index: 10;
     top: 49%;
-    height: 100%;
 }
 
 #stats_time_AnnotationChart_legendContainer span{

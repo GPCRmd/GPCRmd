@@ -156,3 +156,72 @@ select{
     text-align: justify;
 } 
 
+/* Add your custom styles here */
+#progress-container {
+    margin-left: 20px;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 600px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#progress-bar {
+    width: 0;
+    height: 30px;
+    background-color: #4caf50;
+    text-align: center;
+    line-height: 30px;
+    color: white;
+    transition: width 0.3s;
+}
+
+#progress-message {
+    margin-top: 10px;
+    margin-left: 20px;
+    font-size: 1.1em;
+}
+
+#timer {
+    margin-left: 20px;
+    margin-top: 10px;
+    font-size: 1.1em;
+    display: none;  /* Initially hide the timer */
+}
+
+#dowload_dyns {
+    margin-top: 20px;
+    margin-left: 20px;
+}
+
+#dowload_dyns_link {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #4caf50;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+#dowload_dyns_link:hover {
+    background-color: #45a049;
+}
+
+#log_dyns {
+    margin-top: 20px;
+    margin-left: 20px;
+}
+
+#log_dyns_link {
+    display: inline-block;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+#loading-icon {
+    display: inline-block;
+    margin-left: 10px; /* Adjust as needed */
+}
+

@@ -16,3 +16,7 @@ class Command(BaseCommand):
 				totaltime += timesim
 
 		print("Accumulated simulated time in GPCRmd: %s microseconds" % "{:.3f}".format(totaltime/1000))
+		print(len(DyndbDynamics.objects.filter(submission_id__is_published=True)))
+		print(len(DyndbDynamics.objects.filter(submission_id__is_published=False)))
+		print(len(DyndbDynamics.objects.filter(is_published=True)))
+		print(len(DyndbDynamics.objects.filter(is_published=False)))

@@ -44,7 +44,7 @@ class Command(BaseCommand):
 
         print(f'Community contributions - Published ({len(list(dyn_pub_com_dyns))}) - Unpublished ({len(list(dyn_unpub_com_dyns))})')
         print(f'Individual contributions - Published ({len(list(dyn_pub_ind_dyns))}) - Unpublished ({len(list(dyn_unpub_ind_dyns))})')
-
+        
         ref_com = get_references(dyn_pub_com_dyns)
         ref_ind = get_references(dyn_pub_ind_dyns)
         

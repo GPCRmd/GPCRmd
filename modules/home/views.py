@@ -168,12 +168,12 @@ def gpcrmd_home(request):
                 sim_ind += d["frames"]*d["delta"]
         date_d[subm_date]["Simulation_time_com"]= sim_com
         date_d[subm_date]["Simulation_time_ind"] = sim_ind  
-
+            
     st=pd.DataFrame.from_dict(date_d,orient="index")
     st.index=pd.to_datetime(st.index).to_period('y')
     st = st[~st.index.duplicated(keep='last')]
     st.index= [st.strftime("%Y") for st in st.index] #  %b %Y
-    
+
     last_s=0
     last_t=0
     last_u=0
@@ -198,7 +198,7 @@ def gpcrmd_home(request):
 
         timesim_com = "{:.2f}".format(round(row["Simulation_time_com"]/1000, 2))
         timesim_ind = "{:.2f}".format(round(row["Simulation_time_ind"]/1000, 2))
-
+        
         # Avoid repetitive values
         if last_v == str(timesim_ind) and last_u == str(timesim_com):
             switch = 0
@@ -208,10 +208,10 @@ def gpcrmd_home(request):
             switch = 2
         else:
             switch = 3
-
+        
         if int(float(timesim_com)) == 0:
             timesim_com=last_u
-            leg_u=""         
+            leg_u=""
         else:   
             last_u=timesim_com
             leg_u=str(timesim_com)
@@ -303,9 +303,9 @@ def gpcrmd_home(request):
 
     mdsrv_url=obtain_domain_url(request)
     context["mdsrv_url"]=mdsrv_url
-
+    
     ### News
-    article_table = Article.objects.order_by('-id')[:5]
+    article_table = Article.objects.order_by('-pub_year')[:5]
     context["article_table"] = article_table
 
     return render(request, 'home/index_gpcrmd.html', context)
@@ -429,12 +429,12 @@ def gpcrtree(request):
                 sim_ind += d["frames"]*d["delta"]
         date_d[subm_date]["Simulation_time_com"]= sim_com
         date_d[subm_date]["Simulation_time_ind"] = sim_ind  
-
+            
     st=pd.DataFrame.from_dict(date_d,orient="index")
     st.index=pd.to_datetime(st.index).to_period('y')
     st = st[~st.index.duplicated(keep='last')]
     st.index= [st.strftime("%Y") for st in st.index] #  %b %Y
-    
+
     last_s=0
     last_t=0
     last_u=0
@@ -460,7 +460,7 @@ def gpcrtree(request):
 
         timesim_com = "{:.2f}".format(round(row["Simulation_time_com"]/1000, 2))
         timesim_ind = "{:.2f}".format(round(row["Simulation_time_ind"]/1000, 2))
-
+        
         # Avoid repetitive values
         if last_v == str(timesim_ind) and last_u == str(timesim_com):
             switch = 0
@@ -470,10 +470,10 @@ def gpcrtree(request):
             switch = 2
         else:
             switch = 3
-
+        
         if int(float(timesim_com)) == 0:
             timesim_com=last_u
-            leg_u=""         
+            leg_u=""
         else:   
             last_u=timesim_com
             leg_u=str(timesim_com)
@@ -497,7 +497,7 @@ def gpcrtree(request):
 
     context["subm_data"] =json.dumps(subm_data)
     context["time_data"] =json.dumps(time_data)
-    
+
     ################
     fam_count=0
     subt_count=0
@@ -565,7 +565,7 @@ def gpcrtree(request):
 def news(request):
     context = {}
     ### News
-    article_table = Article.objects.order_by('-id')
+    article_table = Article.objects.order_by('-pub_year')
     context["article_table"] = article_table
     return render(request, 'home/news.html', context )
 
@@ -622,7 +622,7 @@ def quickloadall_both(request):
             file_short=file_info[file_info.index("Dynamics"):]
         except:
             print("Not Dynamics")
-            continue        
+            continue                
         if dyn["file_is_traj"]:
             dyn_dict[dyn_id]["traj"].append(file_short)
         elif dyn["file_ext"]=="pdb":
@@ -650,7 +650,7 @@ def quickloadall_both(request):
             file_short=file_info[file_info.index("Covid19Dynamics"):]
         except:
             print("Not Dynamics")
-            continue
+            continue        
         if dyn["file_is_traj"]:
             dyn_dict[dyn_id]["traj"].append(file_short)
         elif dyn["file_ext"]in {"pdb","gro"}:

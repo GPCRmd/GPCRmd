@@ -126,7 +126,7 @@ def flareplot_template_gpcrgprot(df, jsonpath):
 
     # G-protein numbering for each of its loops and helices
     gprot_ind = {
-        'HN': (17),
+        'HN': 17,
         'hns1': 18,
         'S1': 19,
         's1h1': 20,
@@ -162,7 +162,8 @@ def flareplot_template_gpcrgprot(df, jsonpath):
         'h4s6': 50,
         'S6': 51,
         's6h5': 52,
-        'H5': 53}
+        'H5': 53
+        }
 
     # Color patterns for G protein 2ndary structures
     gprot_colors = {
