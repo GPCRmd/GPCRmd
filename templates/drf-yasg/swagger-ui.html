@@ -61,10 +61,10 @@
                         </section>
                     </div>
                     {% if user.is_authenticated %}
-                        <div id="downloader" class="wrapper">
-                            <p style="color:#BF3C1F"> TEMPORARY DISABLED DUE TECHNICAL PROBLEMS!!</p>
-                        </div>
                         {% comment %} <div id="downloader" class="wrapper">
+                            <p style="color:#BF3C1F"> TEMPORARY DISABLED DUE TECHNICAL PROBLEMS!!</p>
+                        </div> {% endcomment %}
+                        <div id="downloader" class="wrapper">
                             <section class="block col-12 block-desktop col-12-desktop">
                                 <div>
                                     <span>
@@ -148,7 +148,7 @@
                                     </span>
                                 </div>
                             </section>
-                        </div> {% endcomment %}
+                        </div>
                     {% else %}
                         <div id="downloader" class="wrapper">
                             <p style="color:#BF3C1F"> Log in to use these tools...</p>
@@ -200,6 +200,7 @@
             function startTimer() {
                 let startTime = Date.now();
                 $("#timer").show();  // Show the timer when the task starts
+                $("#progress-message").text(`Waiting for the worker, your request is in queue...`)
                 timerInterval = setInterval(function() {
                     let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
                     let minutes = Math.floor(elapsedTime / 60);

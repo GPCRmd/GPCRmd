@@ -108,7 +108,7 @@ class Command(BaseCommand):
                 #self.stdout.write(self.style.NOTICE("!!! missing pdb in dyn %s" % dyn_id))
                 print("!!! missing pdb in dyn %s" % dyn_id)
                 continue
-            if pdbid =="HOMO":
+            if pdbid =="HOMO" or pdbid == "AlphaFold":
                 continue
             pdbid=pdbid.split(".")[0].upper()
 

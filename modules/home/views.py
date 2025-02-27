@@ -81,7 +81,7 @@ def gpcrmd_home(request):
     context['tree_data']=json.dumps(tree_data)
     dynall=DyndbDynamics.objects.filter(is_published=True) #all().exclude(id=5) #I think dyn 5 is wrong
 
-    ################ Precompute & import    
+    ################ Precompute & import
     dynclass=dynall.annotate(subm_date=F('creation_timestamp'))
     # dynclass=dynclass.annotate(frames=Coalesce()
     dynclass=dynclass.annotate(frames=F('dyndbfilesdynamics__framenum'))
@@ -107,14 +107,14 @@ def gpcrmd_home(request):
         dyn_id=dyn["dyn_id"]
         pdbid=dyn["pdb_namechain"].split(".")[0]
         if pdbid:
-            if pdbid != "HOMO":
+            if pdbid != "HOMO" or pdbid != "AlphaFold":
                 pdb_id_set.add(pdbid)
         fam_slug=dyn["fam_slug"]
         if not fam_slug:
             fam_slug=dyn["fam_slug2"]
         fam=False
         if fam_slug:
-            if pdbid != "HOMO":
+            if pdbid != "HOMO" or pdbid != "AlphaFold":
                 subtype_set.add(fam_slug)
                 fam_set.add(fam_slug[:-4])
             fam_code=fam_slug.split("_")[0]
@@ -319,6 +319,14 @@ def disclaimer(request):
     context = {}
     return render(request, 'home/disclaimer.html', context )
 
+def terms(request):
+    context = {}
+    return render(request, 'home/terms.html', context )
+
+def legal_notice(request):
+    context = {}
+    return render(request, 'home/legal_notice.html', context )
+
 def cookies_policy(request):
     context = {}
     return render(request, 'home/cookies_policy.html', context )
@@ -326,10 +334,6 @@ def cookies_policy(request):
 def privacy_policy(request):
     context = {}
     return render(request, 'home/privacy_policy.html', context )
-
-def terms(request):
-    context = {}
-    return render(request, 'home/terms.html', context )
 
 def community(request):
     context = {}
@@ -341,6 +345,7 @@ def gpcrtree(request):
     with open(gpcrmdtree_path, 'rb') as filehandle:  
         tree_data = pickle.load(filehandle)
     context['tree_data']=json.dumps(tree_data)
+    #print(type(context['tree_data']))
     dynall=DyndbDynamics.objects.filter(is_published=True) #all().exclude(id=5) #I think dyn 5 is wrong
 
     ################ Precompute & import
@@ -368,14 +373,14 @@ def gpcrtree(request):
         dyn_id=dyn["dyn_id"]
         pdbid=dyn["pdb_namechain"].split(".")[0]
         if pdbid:
-            if pdbid != "HOMO":
+            if pdbid != "HOMO" or pdbid != "AlphaFold":
                 pdb_id_set.add(pdbid)
         fam_slug=dyn["fam_slug"]
         if not fam_slug:
             fam_slug=dyn["fam_slug2"]
         fam=False
         if fam_slug:
-            if pdbid != "HOMO":
+            if pdbid != "HOMO" or pdbid != "AlphaFold":
                 subtype_set.add(fam_slug)
                 fam_set.add(fam_slug[:-4])
             fam_code=fam_slug.split("_")[0]

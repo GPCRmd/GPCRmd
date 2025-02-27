@@ -31,7 +31,7 @@ from .complete import deprecate_current_app
 def memberpage(request):
     username = request.user.username
     username = username.replace(" ","")
-    context={'username':username}    
+    context={'username':username}
     if request.user.has_privilege_covid:
         context["user_covid"]=True
     return render(request, 'accounts/memberpage.html',context)
@@ -101,7 +101,7 @@ def register(request,
        extra_email_context=None, 
        ):     
     # if request.user.is_staff:
-        # """The user is registered and an activation email is sent"""
+    #     """The user is registered and an activation email is sent"""
     if request.method == 'POST':
         form = RegistrationForm(data=request.POST)
         email = form.fields["email"].to_python(form.data["email"])
@@ -213,8 +213,6 @@ def mail_reset(request,
 def mail_done(request):
     """a message informing that the user will receive a mail appears"""
     return render(request, 'accounts/mail/mail_done.html', context={'email': request.user.email})
-
-
 
 @sensitive_post_parameters()
 @never_cache
@@ -367,4 +365,7 @@ def user_submissions(request):
         if request.user.is_superuser:
             row_dict['username'] = subinfo['user_id__username']
         submission_table.append(row_dict)
+        for sub in submission_table:
+            if (sub['state']!="Open") and not sub['dynamics_id']: 
+                print('here',sub)
     return render(request, 'accounts/user_submissions.html', context={'submission_table':submission_table,'username':request.user.username,'superuser':request.user.is_superuser})

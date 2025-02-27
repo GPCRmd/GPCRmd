@@ -545,7 +545,8 @@ class DyndbModel(models.Model):
         (2,'Docking'),
         (3,'MD'),
         (4,'Electron microscopy (CryoEM)'),
-        (5,'Other')
+        (5,'Other'),
+        (6,'AlphaFold')
     )
 
     name =  models.TextField(max_length=100,null=False,blank=False) 
@@ -578,7 +579,8 @@ class DyndbModeledResidues(models.Model):
         (4,'Threading'),
         (5,'MD'),
         (6,'Other Computational Methods'),
-        (7,'Electron microscopy')
+        (7,'Electron microscopy'),
+        (8,'AlphaFold')
     )
     id_protein = models.ForeignKey('DyndbProtein',  models.DO_NOTHING, db_column='id_protein', null=True)
     id_model = models.ForeignKey('DyndbModel',  models.DO_NOTHING, db_column='id_model', null=True) 

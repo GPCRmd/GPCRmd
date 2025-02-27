@@ -58,6 +58,58 @@
     color: white;
 }
 
+    /* Style for the loading overlay */
+    #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 1000;
+        display: none; /* Hidden by default */
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    /* Style for the spinner */
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border-top-color: #BF3C1F;;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 20px; /* Space between spinner and cancel button */
+    }
+
+    /* Animation for the spinner */
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Style for the cancel button */
+    #cancel-button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #BF3C1F;;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    #cancel-button:disabled {
+        background-color: #a9a9a9;
+        cursor: not-allowed;
+    }
+    #cancel-button:hover:enabled {
+        background-color: #c0392b;
+    }
+
 </style>
 {% endblock %}
 
@@ -68,26 +120,33 @@
 
 <body style="padding:0">
 {% block content %}
+<!-- Loading spinner -->
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <br>
+    <button id="cancel-button" onclick="cancelLoading()">Cancel</button>
+</div>
 <div id = "colmenu" class="colSelection col-md-12" style="position: fixed;z-index: 10;background: white;padding-bottom: 10px;">
     <p>Show columns: </p>
-    <a class="searchCols textlink toggle-vis active" data-column="1">Receptor</a> - 
-    <a class="searchCols textlink toggle-vis " data-column="2">Uniprot entry name</a> - 
-    <a class="searchCols textlink toggle-vis active" data-column="3">Uniprot id</a> - 
-    <a class="searchCols textlink toggle-vis " data-column="4">Family</a> - 
-    <a class="searchCols textlink toggle-vis active" data-column="5">Class</a> - 
-    <a class="searchCols textlink toggle-vis active" data-column="6">PDB id</a> -
-    <a class="searchCols textlink toggle-vis active" data-column="7">State</a> - 
-    <a class="searchCols textlink toggle-vis " data-column="8">Species</a> -
-    <a class="searchCols textlink toggle-vis active" data-column="9">Model type</a> -
-    <a class="searchCols textlink toggle-vis " data-column="10">Ligand(s)</a> -
-    <a class="searchCols textlink toggle-vis " data-column="11">Model name</a> -
-    <a class="searchCols textlink toggle-vis " data-column="12">Num. of atoms</a> -
-    <a class="searchCols textlink toggle-vis " data-column="13">Membrane composition</a> -
-    <a class="searchCols textlink toggle-vis " data-column="14">Simulation time</a> -
-    <a class="searchCols textlink toggle-vis " data-column="15">Software</a> -
-    <a class="searchCols textlink toggle-vis " data-column="16">Force field</a> -
-    <a class="searchCols textlink toggle-vis " data-column="17">Submitted by</a>
-
+    <a class="searchCols textlink toggle-vis " data-column="1">Dynamic id</a> - 
+    <a class="searchCols textlink toggle-vis active" data-column="2">Receptor</a> - 
+    <a class="searchCols textlink toggle-vis " data-column="3">Uniprot entry name</a> - 
+    <a class="searchCols textlink toggle-vis active" data-column="4">Uniprot id</a> - 
+    <a class="searchCols textlink toggle-vis " data-column="5">Family</a> - 
+    <a class="searchCols textlink toggle-vis active" data-column="6">Class</a> - 
+    <a class="searchCols textlink toggle-vis active" data-column="7">PDB id</a> -
+    <a class="searchCols textlink toggle-vis active" data-column="8">State</a> - 
+    <a class="searchCols textlink toggle-vis " data-column="9">Species</a> -
+    <a class="searchCols textlink toggle-vis active" data-column="10">Model type</a> -
+    <a class="searchCols textlink toggle-vis " data-column="11">Source type</a> -
+    <a class="searchCols textlink toggle-vis " data-column="12">Ligand(s)</a> -
+    <a class="searchCols textlink toggle-vis " data-column="13">Model name</a> -
+    <a class="searchCols textlink toggle-vis " data-column="14">Num. of atoms</a> -
+    <a class="searchCols textlink toggle-vis " data-column="15">Membrane composition</a> -
+    <a class="searchCols textlink toggle-vis " data-column="16">Simulation time</a> -
+    <a class="searchCols textlink toggle-vis " data-column="17">Software</a> -
+    <a class="searchCols textlink toggle-vis " data-column="18">Force field</a> -
+    <a class="searchCols textlink toggle-vis " data-column="19">Submitted by</a> 
 </div>
 <br>
 <p >Search boxes accept regular expressions to filter (e.g. State box: "^active" returns words that startwith active only, "Active") </p>
@@ -95,7 +154,7 @@
     <thead>
         <tr>
             <th> </th>
-            <!--<th>Dyn ID</th>-->
+            <th>Dynamic id</th>
             <th>Receptor</th>
             <th>Uniprot entry name</th>
             <th>Uniprot ID</th>
@@ -105,6 +164,7 @@
             <th>State</th>
             <th>Species</th>
             <th>Model type</th>
+            <th>Source type</th>
             <th>Ligand(s)</th>
             <th>Model name</th>
             <th>Num. of atoms</th>
@@ -121,14 +181,14 @@
         <tr class="searchTable">
             <td class="links">
                 {% if data.not_GPCR %}
-                     <a style="width:105px;text-align:left" href="/view/nongpcr/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
+                     <a style="width:105px;text-align:left" id="/view/nongpcr/{{data.dyn_id}}/" onclick="startLoading(this)" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
                 {% else %}
-                     <a href="/view/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">View</a>
+                     <a id="/view/{{data.dyn_id}}/" onclick="startLoading(this)" class="submitBtn btn btn-default" role="button">View</a>
                  {% endif %}
             </td>
-            <!--<td>
+            <td>
                 {{data.dyn_id}}
-            </td>-->
+            </td>
             <td class="receptor">
                 {% if data.not_GPCR %}
                     {{data.prot_name}}
@@ -148,14 +208,15 @@
             </td>
             <td  class="family">{{data.fam_name}}</td>
             <td  class="gpcrclass">{{data.class_name}}</td>
-            {% if is_hm %}
-                <td  class="pdbid">{{data.pdb_namechain}}</td>
-            {% else %}
+            {% if is_pdb %}
                 <td class="pdbid"><a  class='searchLink' title="Go to PDB page"  target="_blank" href="https://www.rcsb.org/structure/{{data.pdbid}}" alt="Go to PDB page">{{data.pdb_namechain}}</a></td>
+            {% else %}
+                <td  class="pdbid">{{data.pdb_namechain}}</td>
             {% endif %}
             <td class="state">{{data.state}}</td>
             <td  class="species"><i>{{data.species}}</i></td>
             <td class="modeltype">{{data.modeltype}}</td>
+            <td class="sourcetype">{{data.sourcetype}}</td>
             <td class="ligands">
                 {% if data.not_GPCR %}
                     {% for lig in data.lig_li %}
@@ -188,11 +249,11 @@
             <td class="software">{{data.software}}</td>
             <td class="forcefield">{{data.forcefield}}</td>
             <td class="author">{{data.author}}</td>
-            <td class="links1">
+            <td class="links">
                 {% if data.not_GPCR %}
-                     <a  href="/view/nongpcr/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
+                     <a  id="/view/nongpcr/{{data.dyn_id}}/" onclick="startLoading(this)" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
                 {% else %}
-                     <a href="/dynadb/dynamics/id/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Report</a>
+                     <a id="/dynadb/dynamics/id/{{data.dyn_id}}/" onclick="startLoading(this)"  class="submitBtn btn btn-default" role="button">Report</a>
                  {% endif %}
             </td>
         </tr>
@@ -232,6 +293,55 @@
 
 
 <script type="text/javascript" src="{% static 'dynadb/searchtable.js' %}"></script>
+<script>
+    let isCanceled = false; // Track if the user clicked "Cancel"
+    let loadingTimeout; // Variable to hold the timeout ID
+
+    // Check sessionStorage on page load to see if loading overlay should display
+    window.addEventListener("load", () => {
+        if (sessionStorage.getItem("loading") === "false") {
+            document.getElementById("loading-overlay").style.display = "none";
+        }
+    });
+
+    function startLoading(button) {
+        isCanceled = false;
+        var simPath = button.getAttribute('id');
+        document.getElementById("loading-overlay").style.display = "flex";
+        document.getElementById("cancel-button").disabled = false; // Enable cancel button
+        sessionStorage.setItem("loading", "true"); // Set loading state to true
+
+        // Clear any existing timeout before setting a new one
+        if (loadingTimeout) {
+            clearTimeout(loadingTimeout);
+        }
+
+        // Simulate a delay for loading
+        loadingTimeout = setTimeout(() => {
+            if (!isCanceled) {
+                document.getElementById("cancel-button").disabled = true; // Disable cancel button
+                sessionStorage.setItem("loading", "false"); // Reset loading state to prevent spinner on back
+                // Proceed to next page or perform action
+                window.top.location.href = simPath; // Replace with your target URL
+            }
+        }, 3000); // 3-second delay
+    }
+
+    function cancelLoading() {
+        isCanceled = true;
+        document.getElementById("loading-overlay").style.display = "none";
+        sessionStorage.setItem("loading", "false"); // Ensure loading state is reset
+        clearTimeout(loadingTimeout); // Clear the timeout when canceling
+    }
+
+    // Reset loading state when navigating back to this page
+    window.addEventListener("pageshow", (event) => {
+        if (event.persisted) {
+            sessionStorage.setItem("loading", "false");
+            document.getElementById("loading-overlay").style.display = "none";
+        }
+    });
+</script>
 
 {% endblock %}
 </body>

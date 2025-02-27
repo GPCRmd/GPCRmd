@@ -1,3 +1,3 @@
 {% load i18n %}{% autoescape off %}
-{% blocktrans %}User activation on {{ site_name }}{% endblocktrans %}
+{% blocktrans %}[No-reply] User activation on {{ site_name }}{% endblocktrans %}
 {% endautoescape %}

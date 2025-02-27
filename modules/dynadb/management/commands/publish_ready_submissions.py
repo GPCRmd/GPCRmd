@@ -31,7 +31,7 @@ class Command(BaseCommand):
     __topre = re.compile(r'top',flags=re.IGNORECASE)
     __trjre = re.compile(r'tra?j',flags=re.IGNORECASE)
     __prmre = re.compile(r'(pa?ra?m)|(par)',flags=re.IGNORECASE)
-    __prt = re.compile(r'prt',flags=re.IGNORECASE)
+    __prt = re.compile(r'prt | Protocol',flags=re.IGNORECASE)
     __otherre = re.compile(r'other',flags=re.IGNORECASE)
     
     def add_arguments(self, parser):

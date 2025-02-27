@@ -61,6 +61,7 @@ def generate_gpcr_pdb (dyn_id, structure_file, retrieve_rel_dict=False):
             dprot_id=gpcr_Dprot.id
             dprot_name=gpcr_Dprot.name
             gen_num_res=obtain_gen_numbering(dyn_id, gpcr_Dprot,gpcr_Gprot)  #warning!! the problem is here
+            # print(gen_num_res)
             if len(gen_num_res) > 2:
                 (numbers, num_scheme, db_seq, current_class) = gen_num_res
                 gpcr_n_ex=""
@@ -68,6 +69,7 @@ def generate_gpcr_pdb (dyn_id, structure_file, retrieve_rel_dict=False):
                     if pos_gnum[1]: #We take the 1st instance of gpcr num as example, and check in which format it is (n.nnxnn or nxnn)
                         gpcr_n_ex=pos_gnum[1]
                         break
+                # print(gpcr_n_ex)
                 if "." in gpcr_n_ex: #For the moment we only accept n.nnxnn format
                     seq_pos_index=0
                     gpcr_pdb={}

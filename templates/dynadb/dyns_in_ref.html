@@ -15,12 +15,13 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="{% static 'home/logo/gpcrmd/main_circle.png' %}">
-  <!-- Bootstrap -->
+  {% comment %} <!-- Bootstrap -->
   <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
 
   <!-- Custom styles -->
   <link href="{% static 'home/css/style.css' %}" rel="stylesheet">
-  {% load dynadb %}
+  {% endcomment %}
+  {% load dynadb %} 
   {% block addon_css %}
   <style>
     .container{
@@ -63,12 +64,65 @@
         color: white;
     }
 
+    /* Style for the loading overlay */
+    #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 1000;
+        display: none; /* Hidden by default */
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    /* Style for the spinner */
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border-top-color: #BF3C1F;;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 20px; /* Space between spinner and cancel button */
+    }
+
+    /* Animation for the spinner */
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Style for the cancel button */
+    #cancel-button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #BF3C1F;;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    #cancel-button:disabled {
+        background-color: #a9a9a9;
+        cursor: not-allowed;
+    }
+    #cancel-button:hover:enabled {
+        background-color: #c0392b;
+    }
+
   </style>
   {% endblock %}
   {% comment %} <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css"> {% endcomment %}
   <base href="your_domain/" target="_PARENT">
 </head>
 
+<body style="padding:0">
 {% block content %}
 <div class="row regForm">
   <div class="col-md-10 col-md-offset-1">
@@ -83,7 +137,11 @@
       <div class="panel-body" style="overflow:auto">
 
         <div style="margin:40px">
-          <p>{{reference.authors}}. {{reference.pub_year}}. <span style="font-weight:bold;">{{reference.title}}</span>.
+          <p>
+          {%if reference.doi == ''%}
+              {{reference.authors}}. <span style="font-weight:bold;">{{reference.title}}</span>.
+          {%else%} 
+            {{reference.authors}}. {{reference.pub_year}}. <span style="font-weight:bold;">{{reference.title}}</span>.
             {{reference.journal}}{% if reference.volume %} {{reference.volume}}{%endif%}{% if reference.issue %}
             ({{reference.issue}}){%endif%}. {%if reference.doi%}doi: {{reference.doi}}.{% endif %}
             {%if reference.url%}
@@ -91,28 +149,37 @@
             {%elif reference.pmid%}
             (<a class="textlink"
               href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}
-              </a>) {%endif%} </p> <hr style="margin:40px 0">
+              </a>) 
+            {%endif%} 
+          {%endif%} 
+          </p> <hr style="margin:40px 0">
         </div>
-        <div id = "colmenu" class="colSelection col-md-12" style="padding-bottom: 10px;">
-            <p>Show columns: </p>
-            <a class="searchCols textlink toggle-vis active" data-column="1">Receptor</a> - 
-            <a class="searchCols textlink toggle-vis " data-column="2">Uniprot entry name</a> - 
-            <a class="searchCols textlink toggle-vis " data-column="3">Uniprot id</a> - 
-            <a class="searchCols textlink toggle-vis " data-column="4">Family</a> - 
-            <a class="searchCols textlink toggle-vis active" data-column="5">Class</a> - 
-            <a class="searchCols textlink toggle-vis active" data-column="6">PDB id</a> -
-            <a class="searchCols textlink toggle-vis " data-column="7">State</a> - 
-            <a class="searchCols textlink toggle-vis " data-column="8">Species</a> -
-            <a class="searchCols textlink toggle-vis " data-column="9">Model type</a> -
-            <a class="searchCols textlink toggle-vis " data-column="10">Ligand(s)</a> -
-            <a class="searchCols textlink toggle-vis " data-column="11">Model name</a> -
-            <a class="searchCols textlink toggle-vis " data-column="12">Num. of atoms</a> -
-            <a class="searchCols textlink toggle-vis " data-column="13">Membrane composition</a> -
-            <a class="searchCols textlink toggle-vis " data-column="14">Simulation time</a> -
-            <a class="searchCols textlink toggle-vis " data-column="15">Software</a> -
-            <a class="searchCols textlink toggle-vis " data-column="16">Force field</a> -
-            <a class="searchCols textlink toggle-vis active" data-column="17">Submitted by</a>
-
+        <!-- Loading spinner -->
+        <div id="loading-overlay">
+          <div class="spinner"></div>
+          <br>
+          <button id="cancel-button" onclick="cancelLoading()">Cancel</button>
+        </div>
+        <div id = "colmenu" class="col-md-12" style="background: white;">
+          <p>Show columns: </p>
+          <a class="searchCols textlink toggle-vis " data-column="1">Dynamic id</a> - 
+          <a class="searchCols textlink toggle-vis active" data-column="2">Receptor</a> - 
+          <a class="searchCols textlink toggle-vis " data-column="3">Uniprot entry name</a> - 
+          <a class="searchCols textlink toggle-vis active" data-column="4">Uniprot id</a> - 
+          <a class="searchCols textlink toggle-vis " data-column="5">Family</a> - 
+          <a class="searchCols textlink toggle-vis active" data-column="6">Class</a> - 
+          <a class="searchCols textlink toggle-vis active" data-column="7">PDB id</a> -
+          <a class="searchCols textlink toggle-vis active" data-column="8">State</a> - 
+          <a class="searchCols textlink toggle-vis " data-column="9">Species</a> -
+          <a class="searchCols textlink toggle-vis " data-column="10">Model type</a> -
+          <a class="searchCols textlink toggle-vis " data-column="11">Ligand(s)</a> -
+          <a class="searchCols textlink toggle-vis " data-column="12">Model name</a> -
+          <a class="searchCols textlink toggle-vis " data-column="13">Num. of atoms</a> -
+          <a class="searchCols textlink toggle-vis " data-column="14">Membrane composition</a> -
+          <a class="searchCols textlink toggle-vis " data-column="15">Simulation time</a> -
+          <a class="searchCols textlink toggle-vis " data-column="16">Software</a> -
+          <a class="searchCols textlink toggle-vis " data-column="17">Force field</a> -
+          <a class="searchCols textlink toggle-vis " data-column="18">Submitted by</a> 
         </div>
         {% if tabledata %}
         <div style="padding:20px">
@@ -120,7 +187,7 @@
             <thead>
               <tr>
                 <th> </th>
-                <!--<th>Dyn ID</th>-->
+                <th>Dynamic id</th>
                 <th>Receptor</th>
                 <th>Uniprot entry name</th>
                 <th>Uniprot ID</th>
@@ -146,14 +213,14 @@
              <tr class="searchTable">
                   <td class="links">
                       {% if data.not_GPCR %}
-                          <a style="width:105px;text-align:left" href="/view/nongpcr/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
+                     <a style="width:105px;text-align:left" id="/view/nongpcr/{{data.dyn_id}}/" onclick="startLoading(this)" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
                       {% else %}
-                          <a href="/view/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">View</a>
+                     <a id="/view/{{data.dyn_id}}/" onclick="startLoading(this)" class="submitBtn btn btn-default" role="button">View</a>
                       {% endif %}
                   </td>
-                  <!--<td>
+                  <td>
                       {{data.dyn_id}}
-                  </td>-->
+                  </td>
                   <td class="receptor">
                       {% if data.not_GPCR %}
                           {{data.prot_name}}
@@ -173,10 +240,10 @@
                   </td>
                   <td  class="family">{{data.fam_name}}</td>
                   <td  class="gpcrclass">{{data.class_name}}</td>
-                  {% if is_hm %}
-                      <td  class="pdbid">{{data.pdb_namechain}}</td>
+                  {% if is_pdb %}
+                    <td class="pdbid"><a  class='searchLink' title="Go to PDB page"  target="_blank" href="https://www.rcsb.org/structure/{{data.pdbid}}" alt="Go to PDB page">{{data.pdb_namechain}}</a></td>
                   {% else %}
-                      <td class="pdbid"><a  class='searchLink' title="Go to PDB page"  target="_blank" href="https://www.rcsb.org/structure/{{data.pdbid}}" alt="Go to PDB page">{{data.pdb_namechain}}</a></td>
+                    <td  class="pdbid">{{data.pdb_namechain}}</td>
                   {% endif %}
                  <td class="state">{{data.state}}</td>
                   <td  class="species"><i>{{data.species}}</i></td>
@@ -213,11 +280,11 @@
                   <td class="software">{{data.software}}</td>
                   <td class="forcefield">{{data.forcefield}}</td>
                   <td class="author">{{data.author}}</td>
-                  <td class="links1">
+                  <td class="links">
                       {% if data.not_GPCR %}
-                          <a  href="/view/nongpcr/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
+                     <a  id="/view/nongpcr/{{data.dyn_id}}/" onclick="startLoading(this)" class="submitBtn btn btn-default" role="button">Open in MDsrv</a>
                       {% else %}
-                          <a href="/dynadb/dynamics/id/{{data.dyn_id}}/" class="submitBtn btn btn-default" role="button">Report</a>
+                     <a id="/dynadb/dynamics/id/{{data.dyn_id}}/" onclick="startLoading(this)"  class="submitBtn btn btn-default" role="button">Report</a>
                       {% endif %}
                   </td>
               </tr>
@@ -277,4 +344,71 @@
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 
 <script type="text/javascript" src="{% static 'dynadb/searchtable.js' %}"></script>
+
+<script>
+  let isCanceled = false; // Track if the user clicked "Cancel"
+  let loadingTimeout; // Variable to hold the timeout ID
+
+  // Check sessionStorage on page load to see if loading overlay should display
+  window.addEventListener("load", () => {
+      if (sessionStorage.getItem("loading") === "false") {
+          document.getElementById("loading-overlay").style.display = "none";
+      }
+  });
+
+  function startLoading(button) {
+      isCanceled = false;
+      var simPath = button.getAttribute('id');
+      document.getElementById("loading-overlay").style.display = "flex";
+      document.getElementById("cancel-button").disabled = false; // Enable cancel button
+      sessionStorage.setItem("loading", "true"); // Set loading state to true
+
+      // Clear any existing timeout before setting a new one
+      if (loadingTimeout) {
+          clearTimeout(loadingTimeout);
+      }
+
+      // Simulate a delay for loading
+      loadingTimeout = setTimeout(() => {
+          if (!isCanceled) {
+              document.getElementById("cancel-button").disabled = true; // Disable cancel button
+              sessionStorage.setItem("loading", "false"); // Reset loading state to prevent spinner on back
+              // Proceed to next page or perform action
+              window.top.location.href = simPath; // Replace with your target URL
+          }
+      }, 3000); // 3-second delay
+  }
+
+  function cancelLoading() {
+      isCanceled = true;
+      document.getElementById("loading-overlay").style.display = "none";
+      sessionStorage.setItem("loading", "false"); // Ensure loading state is reset
+      clearTimeout(loadingTimeout); // Clear the timeout when canceling
+  }
+
+  // Reset loading state when navigating back to this page
+  window.addEventListener("pageshow", (event) => {
+      if (event.persisted) {
+          sessionStorage.setItem("loading", "false");
+          document.getElementById("loading-overlay").style.display = "none";
+      }
+  });
+
+  $('.dropdown-toggle').on('click', function(e) {
+    var $el = $(this).next('.dropdown-menu');
+    var isVisible = $el.is(':visible');
+    
+    // Ocultar todos los menús y cerrar el 'open' en otros dropdowns
+    $('.dropdown-menu').slideUp('400').removeClass('open');
+    
+    // Si el menú no estaba visible, abrirlo
+    if (!isVisible) {
+        $el.stop(true, true).slideDown('400').addClass('open');
+    }
+    
+    e.stopPropagation();
+});
+
+</script>
 {% endblock %}
+</body>

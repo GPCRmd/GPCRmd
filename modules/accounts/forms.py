@@ -1,7 +1,7 @@
 from django.conf import settings
 from django import forms
 from modules.accounts.models import User
-from modules.dynadb.models import DyndbDynamics
+from modules.dynadb.models import DyndbDynamics, DyndbSubmission
 
 from django.forms import ModelForm, PasswordInput
 from django.contrib.auth import authenticate, get_user_model
@@ -124,11 +124,13 @@ class AuthenticationFormSub(forms.Form): #Login submission unpublished
         self.cleaned_data["access"] = True
         # user.set_password(self.cleaned_data['passsub1'])
         dyn_data = DyndbDynamics.objects.get(id=d_id)
-        user_id = dyn_data.created_by 
+        subm_data = DyndbSubmission.objects.get(id=dyn_data.submission_id.id)
+        user_id = subm_data.user_id.id
         protec_sub_pass = User.objects.filter(id=user_id).values("protec_sub_pass")[0]["protec_sub_pass"].encode('utf-8')
         if not bcrypt.checkpw(passsub, protec_sub_pass):
             raise forms.ValidationError("Invalid password access.")
         return self.cleaned_data
+    
 class ChangeForm(forms.ModelForm):
     """Form to change the personal data of a user"""
     class Meta:

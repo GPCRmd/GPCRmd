@@ -31,6 +31,57 @@
     font-size:16px;
     margin:10px 0;
 }
+    /* Style for the loading overlay */
+    #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 1000;
+        display: none; /* Hidden by default */
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    /* Style for the spinner */
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border-top-color: #BF3C1F;;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 20px; /* Space between spinner and cancel button */
+    }
+
+    /* Animation for the spinner */
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Style for the cancel button */
+    #cancel-button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #BF3C1F;;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    #cancel-button:disabled {
+        background-color: #a9a9a9;
+        cursor: not-allowed;
+    }
+    #cancel-button:hover:enabled {
+        background-color: #c0392b;
+    }
 </style>
 {% endblock %}
 
@@ -40,6 +91,12 @@
 
 <body style="padding:0">
 {% block content %}
+<!-- Loading spinner -->
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <br>
+    <button id="cancel-button" onclick="cancelLoading()">Cancel</button>
+</div>
 <table id="table_id" class="display" style="display: none;">
     <thead>
         <tr>
@@ -82,7 +139,7 @@
             </td>
             <td  class="family">{{data.fam_name}}</td>
             <td  class="gpcrclass">{{data.class_name}}</td>
-            {% if tabledata.is_hm %}
+            {% if tabledata.is_pdb %}
                 <td  class="pdbid">{{data.pdb_namechain}}</td>
             {% else %}
                 <td class="pdbid">
@@ -140,13 +197,58 @@
 
 <!-- Selected simulation, go to workbench with the corresponding tab visible -->
 <script>
+    let isCanceled = false; // Track if the user clicked "Cancel"
+    let loadingTimeout; // Variable to hold the timeout ID
+
+    // Check sessionStorage on page load to see if loading overlay should display
+    window.addEventListener("load", () => {
+        if (sessionStorage.getItem("loading") === "false") {
+            document.getElementById("loading-overlay").style.display = "none";
+        }
+    });
+
   function go_to_tool(button) {
     var simPath = button.getAttribute('id');
     // get the tool name from the iframe URL
     var toolid = location.href.split('?')[1];
-    console.log(simPath+ '#' + toolid)
+        console.log(simPath+ '#' + toolid);
+        // window.top.location.href = simPath+ '#' + toolid;//NOT WORKING
+        isCanceled = false; // Reset cancellation state
+        document.getElementById("loading-overlay").style.display = "flex";
+        document.getElementById("cancel-button").disabled = false; // Enable cancel button
+        sessionStorage.setItem("loading", "true"); // Set loading state to true
+
+         // Clear any existing timeout before setting a new one
+        if (loadingTimeout) {
+            clearTimeout(loadingTimeout);
+        }
+
+        // Start the "loading" process, allowing cancel before proceeding
+        loadingTimeout = setTimeout(() => {
+                if (!isCanceled) {
+                    document.getElementById("cancel-button").disabled = true; // Disable cancel button
+                    sessionStorage.setItem("loading", "false"); // Reset loading state to prevent spinner on back
+
+                    // If not canceled, proceed to next page or form submission
     window.top.location.href = simPath+ '#' + toolid;//NOT WORKING
   }
+            }, 3000); // Simulate a delay (e.g., 3 seconds)
+    }
+
+    function cancelLoading() {
+        isCanceled = true; // Mark as canceled
+        document.getElementById("loading-overlay").style.display = "none";
+        sessionStorage.setItem("loading", "false"); // Ensure loading state is reset
+        clearTimeout(loadingTimeout); // Clear the timeout when canceling
+    }
+
+    // Reset loading state when navigating back to this page
+    window.addEventListener("pageshow", (event) => {
+        if (event.persisted) {
+            sessionStorage.setItem("loading", "false");
+            document.getElementById("loading-overlay").style.display = "none";
+        }
+    });
 </script>
 {% endblock %}
 </body>

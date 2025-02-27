@@ -33,8 +33,8 @@ DATABASES = {
 }
 
 # Quick-start development settings - unsuitable for production
-QUERY_CHECK_PUBLISHED = False
-FILES_NO_LOGIN = False
+# QUERY_CHECK_PUBLISHED = False
+# FILES_NO_LOGIN = False
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_TRANSACTIONAL_HEADERS = {}

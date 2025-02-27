@@ -342,8 +342,7 @@ nav .dropdown-menu {
 
 .showcase {
     position: relative;
-    margin-left: -15px;
-    width: 103%;
+    width: 100%;
 }
 
 /* banner animation */
@@ -360,6 +359,23 @@ nav .dropdown-menu {
     to {
         margin-bottom: 0%;
         width: 100%;
+    }
+}
+
+.comeUp {
+    opacity: 0;
+    transform: translateY(50px);
+    animation: showUp 1.5s ease-out forwards;
+}
+
+@keyframes showUp {
+    0% {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
@@ -903,21 +919,23 @@ g text {
         height: 0%;
     }
     to {/*review*/
-        height: 100%;
+        height: 80%;
     }
 }
 
 .searchTool{
     background-color: #171010;
     text-align: center;
-    width: 110%;
-    margin-left: -5%;
-    margin-bottom:2%;
+    width: 100%;
+    position: fixed;
+    top: 15%;
+    z-index: 999;
+    height: 80%;
+    left: 0px;
 }
 
 .searchBarToolDiv{
-    padding-top:4%;
-    padding-bottom: 3%;
+    padding-top:2%;
 }
 
 .datasetPanel{
@@ -960,7 +978,9 @@ g text {
 
 .closeSearch{
     color: white !important;
-    margin-top: 6%;
+    position: fixed;
+    top: 17%;
+    right: 2%;
 }
 
 .closeSearch:hover{
@@ -970,8 +990,8 @@ g text {
 
 /*jumbotrons*/
 .jumbotron {
-    width: 103%;
-    margin-left: -2%;
+    /* width: 103%;
+    margin-left: -2%; */
 }
 
 .leftRight {
@@ -1174,11 +1194,13 @@ a.buttonNews {
 
 /* Family tree page */
 .famTreeBlock {
-    padding: 5% 0%;
+    padding: 2% 0%;
+    display: flex;
+    justify-content: center;
 }
 
 .ftDiv {
-    margin: 0 0 10% 5%;
+    margin: 0 0 0% 5%;
 }
 
 .ftImg {

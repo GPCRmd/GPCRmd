@@ -128,10 +128,10 @@
   
 </head>
 
-<body>
+<body id="parentbody">
   {% mainmenu %}
 
-  <div class="container" id="content" style="height:auto">
+  <div class="container" id="content" style="height:auto;padding:0px">
 
     <div class="alert alert-warning alert-dismissible" id='update_warning'
       style="padding:5px 30px 5px 10px;margin:0 20px;position:absolute;z-index:10; display: none !important;">
@@ -139,11 +139,12 @@
       <span class="glyphicon glyphicon-warning-sign"></span> Due to a recent server update, this page will be slow for
       the next 1-2 hours. We apologize for any inconvenience this may cause.
     </div>
+
     {% block content %}{% endblock %}
 
 
     <!-- Footer -->
-    <div class="row main_section foot_section" id="partners_section">
+    <div class="row main_section foot_section" id="partners_section" style="margin-left: 0px;margin-right: 0px;">
 
       <!-- Parters -->
       <div class="col-md-4" style="padding:20px 30px 0 30px;margin-bottom: 20px;text-align: center">
@@ -193,6 +194,15 @@
         
         
       </div>
+      {% comment %} <div style="padding:20px 30px;margin-bottom: 20px;text-align: center;overflow: hidden" class="col-md-12">
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/" rel="license">
+          <img decoding="async" style="border-width: 0;" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" alt="Creative Commons License">
+        </a> 
+        <p style="text-align: center;color:white;margin-top: 10px;">GPCRmd is licensed under a 
+          <a href="http://creativecommons.org/licenses/by-sa/4.0/" rel="license">Creative Commons Attribution-ShareAlike 4.0 International License
+          </a>.
+        </p>
+      </div> {% endcomment %}
 
     </div>
   </div>

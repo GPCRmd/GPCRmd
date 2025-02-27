@@ -140,6 +140,8 @@
                               {% if pdbid %}
                                 {% if pdbid == "HOMO" %}
                                   (<span id="pdbid">Homology modeling</span>)
+                                {% elif pdbid == "AlphaFold" %}
+                                  (<span id="pdbid">AlphaFold modeling</span>)
                                 {% else %}
                                   (<span id="pdbid">{{pdbid}}</span>)
                                 {% endif %}
@@ -3526,7 +3528,7 @@
                                   </div>
                                 </div>
 
-                                <div id="water_analysis" class="collapse {% if ligprotint_def %}in{% endif %}"
+                                <div id="water_analysis" class="collapse {% if watervol_def %}in{% endif %}"
                                 style="padding-left:15px;">    
 
                                 <!-- ============= Subsec: volume Analysis =========== -->      

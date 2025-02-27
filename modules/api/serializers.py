@@ -8,12 +8,12 @@ from collections import OrderedDict
 class DynsClassSerializer(serializers.ModelSerializer):
     classname = serializers.SerializerMethodField()
     dyn_id = serializers.SerializerMethodField()
-
+    
     def get_classname(self,obj):
         classname = f'Class {obj["classname"]}' 
-
+    
         return classname
-
+    
     def get_dyn_id(self,obj):
         fam_ids = obj["fam_ids"] 
         protids = Protein.objects.filter(family_id__in=fam_ids).values_list("id", flat = True)
@@ -24,7 +24,7 @@ class DynsClassSerializer(serializers.ModelSerializer):
         dynids.sort()
 
         return dynids
-
+    
     class Meta:
         model = DyndbDynamics
         fields = ['classname', 
@@ -34,12 +34,12 @@ class DynsClassSerializer(serializers.ModelSerializer):
 class CompRoleSerializer(serializers.ModelSerializer):
     ligrole = serializers.SerializerMethodField()
     liginfo = serializers.SerializerMethodField()
-
+    
     def get_ligrole(self,obj):
         ligrole = obj["ligrole"] 
 
         return ligrole
-
+    
     def get_liginfo(self,obj):
         lig_info = {}
         mol_ids = obj["molecule_ids"] 
@@ -59,22 +59,22 @@ class CompRoleSerializer(serializers.ModelSerializer):
                 mol_ind["inchikey"] = inchikey
                 lig_info[name] = mol_ind
         return lig_info
-
+    
     class Meta:
         model = DyndbSubmissionMolecule
         fields = ['ligrole', 
             'liginfo']
-        
+
 # search_dyn_lig_type/ 
 class DynsLigTypeSerializer(serializers.ModelSerializer):
     ligtype = serializers.SerializerMethodField()
     dyn_id = serializers.SerializerMethodField()
-
+    
     def get_ligtype(self,obj):
         ligtype = obj["ligtype"] 
 
         return ligtype
-
+    
     def get_dyn_id(self,obj):
         model_ids = obj["model_ids"] 
         ldynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True)
@@ -82,7 +82,7 @@ class DynsLigTypeSerializer(serializers.ModelSerializer):
         dynids.sort()
 
         return dynids
-
+    
     class Meta:
         model = DyndbDynamics
         fields = ['ligtype', 
@@ -209,7 +209,7 @@ class DynsSearchSerializer(serializers.ModelSerializer):
             'forcefield', 
             'forcefield_version', 
             ] 
-
+        
 class SubsSearchSerializer(serializers.ModelSerializer):
     dyn_id = serializers.IntegerField(source='id') 
     class Meta:

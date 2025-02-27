@@ -54,8 +54,21 @@ def get_size(path):
 
 @shared_task(bind=True)
 def prepare_file(self, obj, *args, **kwargs):
-
+    
     obj = json.loads(obj)
+    
+    # Save request
+    downfileobj=AllDownloads(
+        tmpname = obj['zip'],
+        dyn_ids = obj['dyns'],
+        creation_timestamp = timezone.now(),
+        created_by_dbengine = settings.DB_ENGINE,
+        created_by = obj['user'],
+        filepath = obj['tmpdir'] + ".zip",
+    )
+    
+    downfileobj.save()
+    
     #Log file
     progress_recorder = ProgressRecorder(self)
     os.umask(0)
@@ -128,17 +141,7 @@ def prepare_file(self, obj, *args, **kwargs):
 
     f.write((f"    > Success! - {timezone.now()} \n"))
     f.close()
-    
-    downfileobj=AllDownloads(
-        tmpname = obj['zip'],
-        dyn_ids = obj['dyns'],
-        creation_timestamp = timezone.now(),
-        created_by_dbengine = settings.DB_ENGINE,
-        created_by = obj['user'],
-        filepath = obj['tmpdir'] + ".zip",
-    )
-    downfileobj.save()
-    
+        
     progress_recorder.set_progress(step, total, description="Step 2 - Compressing files into zip...")
     step = step + 1
 

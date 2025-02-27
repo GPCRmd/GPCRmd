@@ -10340,12 +10340,12 @@ def datasets(request):
         dyn_id=dyn["dyn_id"]
         if dyn_id not in dyn_dict:
             dyn_dict[dyn_id]={}
-        is_hm=False
+        is_pdb=True
         dyn_id=dyn["dyn_id"]
         pdbid=dyn["pdb_namechain"].split(".")[0]
         if pdbid:
-            if pdbid == "HOMO":
-                is_hm=True
+            if pdbid == "HOMO" or pdbid == "AlphaFold":
+                is_pdb=False
         prot_slug=dyn["fam_slug"]
         if not prot_slug:
             prot_slug=dyn["fam_slug2"]
@@ -10357,7 +10357,7 @@ def datasets(request):
             dyn_dict[dyn_id]["subtype_slug"]=subtype_slug
             dyn_dict[dyn_id]["class_slug"]=class_slug
             dyn_dict[dyn_id]["prot_slug"]=prot_slug
-        dyn_dict[dyn_id]["is_hm"]=is_hm
+        dyn_dict[dyn_id]["is_pdb"]=is_pdb
         dyn_dict[dyn_id]["pdbid"]=pdbid
         dyn_dict[dyn_id]["modelname"]=dyn["modelname"]
         if dyn["modeltype"]==0:
@@ -10481,12 +10481,13 @@ def searchtable_data(dynobj,nongpcr=True):
     dynprot=dynprot.annotate(uprot_entry2=F('id_model__id_protein__receptor_id_protein__entry_name'))
     dynprot=dynprot.annotate(modelname=F('id_model__name'))
     dynprot=dynprot.annotate(modeltype=F('id_model__type'))
+    dynprot=dynprot.annotate(sourcetype=F("id_model__source_type"))
     dynprot=dynprot.annotate(user_id=F('submission_id__user_id__id'))
     dynprot=dynprot.annotate(is_gpcrmd_community=F('submission_id__is_gpcrmd_community'))
     dynprot=dynprot.annotate(user_fname=F('submission_id__user_id__first_name'))
     dynprot=dynprot.annotate(user_lname=F('submission_id__user_id__last_name'))
     dynprot=dynprot.annotate(user_institution=F('submission_id__user_id__institution'))
-    dynall_values=dynprot.values("dyn_id","fam_slug","fam_slug2","modelname","modeltype","user_id","user_fname","user_lname","is_gpcrmd_community","user_institution","uniprot","uniprot2","protname","protname2","species","species2","mysoftware","software_version","forcefield","forcefield_version","pdb_namechain","comp_name","dyncomp_resname","comp_type","fam_name","fam_name2","class_name","class_name2","protid","protid2","molecule_id","atom_num","dyncomp_type","dyncomp_id","uprot_entry","uprot_entry2")
+    dynall_values=dynprot.values("dyn_id","fam_slug","fam_slug2","modelname","modeltype", "sourcetype","user_id","user_fname","user_lname","is_gpcrmd_community","user_institution","uniprot","uniprot2","protname","protname2","species","species2","mysoftware","software_version","forcefield","forcefield_version","pdb_namechain","comp_name","dyncomp_resname","comp_type","fam_name","fam_name2","class_name","class_name2","protid","protid2","molecule_id","atom_num","dyncomp_type","dyncomp_id","uprot_entry","uprot_entry2")
     dyn_dict = {}
     for dyn in dynall_values:
         dyn_id=dyn["dyn_id"]
@@ -10500,16 +10501,18 @@ def searchtable_data(dynobj,nongpcr=True):
             dyn_dict[dyn_id]["simtime"]=0
         dyn_dict[dyn_id]["atom_num"]=dyn["atom_num"]
         pdb_namechain=dyn["pdb_namechain"]
-        is_hm=False
+        is_pdb=True
         if pdb_namechain=="HOMO":
             pdb_namechain="Homology model"
-            is_hm=True
+            is_pdb=False
+        elif pdb_namechain=="AlphaFold":
+            pdb_namechain="AlphaFold model"
         else:
             pdbid=pdb_namechain.split(".")[0]
             dyn_dict[dyn_id]["pdbid"]=pdbid
             dyn_dict[dyn_id]["state"]=pdb_state.get(pdbid)
         dyn_dict[dyn_id]["pdb_namechain"]=pdb_namechain
-        dyn_dict[dyn_id]["is_hm"]=is_hm
+        dyn_dict[dyn_id]["is_pdb"]=is_pdb
         mol_id=dyn["molecule_id"]
         if dyn["comp_type"]==1:
             molname=dyn["comp_name"].capitalize()
@@ -10553,6 +10556,12 @@ def searchtable_data(dynobj,nongpcr=True):
             modeltype="Apoform"
         else:
             modeltype="Complex"
+            
+        ST = DyndbModel.SOURCE_TYPE
+        for st in ST: 
+            if st[0] == dyn["sourcetype"]:
+                dyn_dict[dyn_id]["sourcetype"]=st[1]
+                break
         dyn_dict[dyn_id]["modeltype"]=modeltype
         user_id=dyn["user_id"]
         if dyn['is_gpcrmd_community']:
@@ -10632,7 +10641,10 @@ def dyns_in_ref(request, ref_id):
     context={}
     context["tabledata"]=searchtable_data(dynobj,None)
     refobj=DyndbReferences.objects.get(id=ref_id)
-    context["reference"]={'doi':refobj.doi,'title':refobj.title,'authors':refobj.authors,'url':refobj.url,'journal':refobj.journal_press,'issue':refobj.issue,'pub_year':refobj.pub_year,'volume':refobj.volume}
+    if not "doi.org" in str(refobj.url): 
+        context["reference"]={'doi':'','title':refobj.title,'authors':refobj.authors,'url':'','journal':'','issue':'','pub_year':'','volume':''}
+    else:
+        context["reference"]={'doi':refobj.doi,'title':refobj.title,'authors':refobj.authors,'url':refobj.url,'journal':refobj.journal_press,'issue':refobj.issue,'pub_year':refobj.pub_year,'volume':refobj.volume}
     return render(request, 'dynadb/dyns_in_ref.html', context)
 
 def close__submission(request, submission_id):
@@ -10989,9 +11001,13 @@ def step1_submit(request, submission_id):
         description = dictpost['description']
     dictfiles=request.FILES
     
-    # Add none pdb id 
+    # Add pdb id when is not available
     if "-" in dictpost['pdbid']:
         pdbid = "NONE"
+    elif "HOMO" in dictpost['pdbid'].upper():
+        pdbid = "Homology model"
+    elif "ALPHAFOLD" in dictpost['pdbid'].upper() or "ALPHA" in dictpost['pdbid'].upper():
+        pdbid = "AlphaFold model"
     else:
         pdbid = dictpost['pdbid']
     
@@ -11065,30 +11081,41 @@ def step1_submit(request, submission_id):
         dyn_id = Dd.id
     ##### Submit crystal and simulated PDB structures, uploaded in this step
     DFD = DyndbFilesDynamics.objects.filter(id_dynamics=dyn_id, type=0)
-    DSDF = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=0,is_deleted=False)  
-    # try: 
-    # Retreat PDB file from request
-    uploadedfile = request.FILES['dynamics']
-    if DSDF:
-        # If a copy of this file is already avalible for this submission
-        pdbfilepath = DSDF[0].filepath
-        pdbfileurl = DSDF[0].url 
-        pdbname = DSDF[0].filename 
-    # Save uploaded PDB files in server
-        (pdbfilepath, pdbfileurl, pdbname) = save_pdbfile('dynamics', submission_id, uploadedfile, pdbfilepath, pdbfileurl, pdbname)
+    DSDF = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=0,is_deleted=False)      
+    
+    #Checkfilename:
+    if len(DSDF) and os.path.isfile(settings.MEDIA_ROOT[:-1] + DSDF.values_list('filepath',flat=True)[0]):
+        uploaded_filename = True
     else:
-        (pdbfilepath, pdbfileurl, pdbname) = save_pdbfile('dynamics', submission_id, uploadedfile)
-    # Create DyndbFile entry for this file
-    (up_filename, ext) = pdbname.rsplit('.', 1)
-    file_id = save_dyndbfile(pdbname, ext, pdbfilepath, pdbfileurl, creation_fields, update_fields)
-    # Save DyndbFile intermediate tables
-    save_dyndbfiles_intertables(dyn_id, submission_id, file_id, pdbname, pdbfileurl, pdbfilepath, file_type=0)
-    # Count and save number of atoms in DyndbDynamics table using MDtraj
-    count_and_save_atoms(dyn_id, submission_id)
-    # If everyting was correct, go to step2
-    # except Exception as e:
-    #     print("Using the stored file in the step 1 caused by %s"% e)
-
+        uploaded_filename = False
+    try: # This is to let the user change general information without upload again the pdb
+        # Retreat PDB file from request
+        uploadedfile = request.FILES['dynamics']
+    
+        if DSDF:
+            # If a copy of this file is already avalible for this submission
+            pdbfilepath = DSDF[0].filepath
+            pdbfileurl = DSDF[0].url 
+            pdbname = DSDF[0].filename 
+        # Save uploaded PDB files in server
+            (pdbfilepath, pdbfileurl, pdbname) = save_pdbfile('dynamics', submission_id, uploadedfile, pdbfilepath, pdbfileurl, pdbname)
+        else:
+            (pdbfilepath, pdbfileurl, pdbname) = save_pdbfile('dynamics', submission_id, uploadedfile)
+        # Create DyndbFile entry for this file
+        (up_filename, ext) = pdbname.rsplit('.', 1)
+        file_id = save_dyndbfile(pdbname, ext, pdbfilepath, pdbfileurl, creation_fields, update_fields)
+        # Save DyndbFile intermediate tables
+        save_dyndbfiles_intertables(dyn_id, submission_id, file_id, pdbname, pdbfileurl, pdbfilepath, file_type=0)
+        # Count and save number of atoms in DyndbDynamics table using MDtraj
+        count_and_save_atoms(dyn_id, submission_id)
+        # If everyting was correct, go to step2
+        # except Exception as e:
+        #     print("Using the stored file in the step 1 caused by %s"% e)
+    except: #Check some file was uploaded 
+        if uploaded_filename == False: #In this case the html step1.html has the required option if never a file was uploaded.
+            print("File not uploaded!")
+        if uploaded_filename == True:
+            print("Change of the general information!")
     context = { 
         'step' : '2',
         'submission_id' : submission_id,
@@ -11327,6 +11354,7 @@ def save_compound(dictpost, initfiles, molnum, DCom=None, mode='create'):
         id_comp = dcom.id
     else:
         # If there is, and its standard molecule is the current molecule, update it
+        # print(DCom[0])
         creation_submission_id = DCom[0].std_id_molecule.molecule_creation_submission_id.id if DCom[0].std_id_molecule.molecule_creation_submission_id else None
         if (DCom[0].std_id_molecule.molecule_creation_submission_id == dictpost['submission_id']) and (mode=='update'):
             DCom.update(**comp_dict)
@@ -11377,7 +11405,7 @@ def save_intermoltables(dictpost, molnum, id_mol, id_model, id_dyn, pdb_model, p
     # Equivalences between molecule types in DyndbSubmissionMolecules and the ones in Component tables
     types_dict = {'0' : '1', '1' : '1', '2' : '0', '3' : '2', '4' : '3', '5' : '4', '6' : '3', '7' : '2', '8' : '0', '9' : '4'}
     def count_mols(pdb, resname):
-        nummol = len({pdb.atom(a).residue for a in pdb.select('resname '+resname) })
+        nummol = len({pdb.atom(a).residue for a in pdb.select('resname "'+resname+'"') })
         # MDtraj has problems counting residues whose name starts with an integer
         if not nummol:
             for resname_i in {pdb.atom(a).residue for a in pdb.select('not protein') }:
@@ -11669,6 +11697,7 @@ def step2_submit(request, submission_id,):
                 else:
                     search = qobj
             DC = DyndbCompound.objects.filter(search)
+            print(DC)
             # Create and save a new compound object in the database, if required
             if len(DC):
                 id_comp = save_compound(dictpost, update_fields, molnum, DC, mode="update")
@@ -11730,9 +11759,9 @@ def get_mutseq(pdb_path, segdict):
     prev_resname = ''
     with open(settings.MEDIA_ROOT + pdb_path,'r') as myfile:
         for line in myfile:
-            if line.startswith(('ATOM','HETATM')):
-                resname = line[17:20].replace(' ','')
-                chain = line[21]
+            if line.startswith(('ATOM','HETATM')):# THR A 543 // ATOM   5403  HA  THR A 543      59.770  44.980  55.040  1.00  0.00           H
+                resname = line[17:21].replace(' ','')
+                chain = line[21].replace(' ','')
                 resid = line[22:26].replace(' ','')
                 seg = line[72:76].replace(' ','')
                 # Obtain sequence from proteins
@@ -11741,6 +11770,13 @@ def get_mutseq(pdb_path, segdict):
                     insegment = False
                     for i in segdict:
                         segdict_i = segdict[i]
+                        if segdict_i['segid'] == "-":# Cases of non segid 
+                            segdict_i['segid'] = ""
+                        if segdict_i['chain'] == "-":# Cases of non chainid 
+                            segdict_i['chain'] = ""
+                        if segdict_i['chain'] == "" and segdict_i['segid'] == "":#Need of chainid or segid 
+                            print("> Chain or Segment ID not indicated")
+                            return('')
                         insegment = (insegment) or (
                             (segdict_i['chain'] == chain) and
                             (segdict_i['segid'] == seg) and 
@@ -11767,15 +11803,17 @@ def get_alignment_URL(request):
     segdict = {}
     for i in dictpost['segnums'].split(','):
         segdict['seg'+i] = {
-            'chain' : dictpost['chain'+i],
-            'segid' : dictpost['segid'+i],
+            'chain' : dictpost['chain'+i].replace(' ',''),
+            'segid' : dictpost['segid'+i].replace(' ',''),
             'from' : int(dictpost['from'+i]),
             'to' : int(dictpost['to'+i]),
         }
+    # print(segdict)
     # Load dynamics PDB file of this submission
     pdb_path = DyndbFilesDynamics.objects.get(id_dynamics__submission_id=dictpost['submission_id'], type=0).id_files.filepath
     # Get mutant sequence in the specified segemnts
     mutseq = get_mutseq(pdb_path, segdict)
+    # print(mutseq)
     # Check if uniseq and mutseq were properly extracted, and send error otherwise
     if not mutseq:
         error_msg = "<b>Alignment error: </b><p>Protein sequence with specified segment coordinates was not found in previoulsy submitted PDB file. Please ensure your segment coordinates are correct.</p>"
@@ -11785,6 +11823,7 @@ def get_alignment_URL(request):
         return HttpResponse(error_msg, status=500)
     # Align sequences
     result=align_wt_mut_global(uniseq,mutseq)
+    # print(result)
     alignment='>uniprot:\n'+result[0]+'\n>system_seq:\n'+result[1]
     # Convert alignment from fasta to phylip
     p_alignment = fasta_to_phylip(alignment)
@@ -11802,13 +11841,13 @@ def prot_info(request):
     (data,errdata) = retreive_data_uniprot(uniprotkbac,isoform=isoform, columns="id,accession,organism_id,protein_name,organism_name,sequence,protein_families")
 
     # Find protein type in a quite crappy way
-    uniname = data['Protein names']
+    uniname = data['Protein names'].lower()
     # Determine protein type of this chain
     if (('ceptor' in uniname) or ('rhodopsin' in uniname) or ('frizzled' in uniname)):
         prot_type = 1 # GPCR
-    elif ('Guanine nucleotide-binding protein' in uniname):
+    elif ('guanine nucleotide-binding protein' in uniname):
         prot_type = 2 # G-protein subunit
-    elif ('Beta-arrestin' in uniname):
+    elif ('arrestin' in uniname):
         prot_type = 3 # Beta arrestin
     else:
         prot_type = 4 # We'lll assume any other protein as a peptide ligand 
@@ -12015,6 +12054,7 @@ def get_seq_coordinates(id_model, prot_id, resid_from, resid_to, chain, segid):
         }}
         dynseq = get_mutseq(pdb_path,segdict)
         # Perform alignment
+        print("Chains")
         print(uniseq,dynseq)
         alig=align_wt_mut_global(uniseq,dynseq)
         print("Alineame")
@@ -12080,10 +12120,13 @@ def apply_mutations(dictpost, mutation_ids, entry_id, tomutseq):
     """
     seq_ary = list(tomutseq)
     gapcounter = 1
+    print(seq_ary)
+    print(mutation_ids)
     for mut_id in mutation_ids[entry_id]:
         resid = int(dictpost[mut_id+"resid"+entry_id])
         resletter_from = dictpost[mut_id+"from"+entry_id]
         resletter_to = dictpost[mut_id+"to"+entry_id]
+        print(resid, resletter_from, resletter_to)
         # if deletion
         if resletter_to=='-':
             seq_ary[resid-gapcounter] = ''

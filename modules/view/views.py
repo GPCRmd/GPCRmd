@@ -1676,10 +1676,10 @@ def obtain_tunnel_data(dyn_id,traj_list):
                         radius_atoms=[line[i:i+n] for i in range(0, len(line), n)]
                         frame_radius.append(radius_atoms)
                 radius_d[cluster_num]=frame_radius
-                if 6 in radius_d.keys():
-                    print(radius_d[6])
-                elif "6" in radius_d.keys():
-                    print(radius_d["6"])
+                # if 6 in radius_d.keys():
+                #     print(radius_d[6])
+                # elif "6" in radius_d.keys():
+                #     print(radius_d["6"])
         if os.path.isdir(traj_rep):
             for filenm in os.listdir(traj_rep):
                 cluster_num=int(filenm.split("_")[2])
@@ -2587,7 +2587,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                         dist_dict=dist_data["dist_dict"]
                         new_id=dist_data["new_id"]
                         no_rv_l=no_rv.split(",")
-                        to_rv=[];
+                        to_rv=[]
                         for d_id in dist_dict.keys():
                             if (d_id not in no_rv_l):
                                 to_rv.append(d_id)
@@ -3033,6 +3033,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
                     try:
                         gen_num_res=obtain_gen_numbering(dyn_id, gpcr_Dprot,gpcr_Gprot)  #warning!! the problem is here
                     except Exception as e:
+                        print("Genomic numbering error!")
                         print(e)
                         gen_num_res = None
                         break

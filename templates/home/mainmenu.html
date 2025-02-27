@@ -16,16 +16,34 @@
       <a href="/home/" class="navbar-brand" alt="{{ site_title }}" style="padding:0px 0px; margin-left: 23px;"><img id="logo" src="{% static logo_path %}" class="main-logo" style="float:left;margin-right:5px"></a>
     </div>
     {% if prog_maintenance == 1 %}
-      <div class="alert alert-warning alert-dismissible show" role="alert"  style="padding:5px 30px 5px 10px;margin:0 20px;position:absolute;z-index:10; width: 40%;">
+      <div id="maintenanceAlert" class="alert alert-warning alert-dismissible show" role="alert"  style="padding:5px 30px 5px 10px;margin:0 20px;position:absolute;z-index:10; width: 40%;">
         <i class="glyphicon glyphicon-warning-sign warnicon"></i>
-        [INFO] This is a notice to alert you that we will be conducting scheduled maintenance. Down time is scheduled as follows: 10am (GMT+1) Monday, August 5th, 2024 - 8pm (GMT+1) Friday, August 9th, 2024. 
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        [INFO] This is a notice to alert you that we will be conducting scheduled maintenance. Down time is scheduled as follows: 10am (GMT+1) Monday, February 9th, 2025 - 8pm (GMT+1) Friday, February 13th, 2025. 
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="dismissAlert()">
           <span aria-hidden="true">&times;</span>
         </button>
       </div> 
+      
     {% endif %}
     <div id="navbar" class="navbar-collapse collapse">
       {% include menu_template %}
     </div><!--/.nav-collapse -->
   </div>
 </nav>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      // Check if the alert has already been dismissed
+      if (localStorage.getItem("alertDismissed")) {
+        document.getElementById("maintenanceAlert").classList.remove("show");
+        document.getElementById("maintenanceAlert").style.display = "none";
+      }
+  });
+
+  function dismissAlert() {
+      // Hide the alert and store the dismissal in localStorage
+      document.getElementById("maintenanceAlert").classList.remove("show");
+      document.getElementById("maintenanceAlert").style.display = "none";
+      localStorage.setItem("alertDismissed", "true");
+  }
+</script>

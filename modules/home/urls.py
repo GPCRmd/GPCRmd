@@ -22,7 +22,10 @@ urlpatterns = [
     re_path(r'^disclaimer/$', views.disclaimer, name="disclaimer"),
     re_path(r'^privacy-policy/$', views.privacy_policy, name="privacy_policy"),
     re_path(r'^terms&conditions/$', views.terms, name="terms"),
+    re_path(r'^legal-notice/$', views.legal_notice, name="legal_notice"),
     re_path(r'^cookies-policy/$', views.cookies_policy, name="cookies_policy"),
 
 
 ]
+
+#RedirectView.as_view(url='/legal-notice/', permanent=False)

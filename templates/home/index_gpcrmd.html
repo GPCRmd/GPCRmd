@@ -121,7 +121,7 @@
             <span id="searchTool1_close" onclick=closeSrch(this) class="closeSearch glyphicon glyphicon-remove"></span>
           </div>
         </div>
-        <div class="row">
+        <div class="" style="height: 120%;">
           <div class="col-md-10 col-md-offset-1 searchBarToolDiv">
             <div class="panel panel-primary">
               <h2 class="panel-heading">Select a simulation to see the tool</h2>
@@ -650,6 +650,7 @@
         for (let i = 0; i < myToolsTitle.length; i++) {
           myToolsTitle[i].classList.add('toolTitle_hover');
         }
+      window.parent.$('#parentbody').css('overflow', 'auto');
       
     }      
   </script>

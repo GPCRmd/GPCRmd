@@ -5,12 +5,13 @@ Django settings for GPCRmd project.
 
 #Defaults
 QUERY_CHECK_PUBLISHED = True
-FILES_NO_LOGIN = False
+FILES_NO_LOGIN = True
 
 #Determine http or https (ssl)
 SSL=True
 DEV = False
 MAINTENANCE_MODE = 0 # 0 False 1 True
+MAINTENANCE_PROG = 0
 
 #Settings selection
 if DEV == False:
@@ -33,11 +34,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
-    'rest_framework',
+    'django_celery_results',
+    'celery_progress',
     'drf_yasg',
+    'rest_framework',
     'revproxy',
     'sendfile',
     'modules.accounts.apps.AccountsConfig',
+    'modules.admin_panel',
     'modules.api',
     'modules.common',
     'modules.contact_maps',
@@ -51,7 +55,6 @@ INSTALLED_APPS = [
     'modules.gpcr_gprot',
     'modules.interaction',
     'modules.ligand',
-    'modules.manage_db',
     'modules.mutation',
     'modules.news',
     'modules.protein',
@@ -104,6 +107,7 @@ ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
 # Analytics
 GOOGLE_ANALYTICS_KEY = False
 
@@ -116,6 +120,16 @@ USE_TZ = True
 
 #DATABASE
 DB_ENGINE = 'gpcrmd_admin'
+
+#CELERY
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# Limit the number of concurrent workers
+CELERY_WORKER_CONCURRENCY = 1
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'

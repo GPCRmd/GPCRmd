@@ -7,7 +7,7 @@
       <ul class="dropdown-menu" data-pointto="document">            
         <li id="document"><a href="https://gpcrmd-docs.readthedocs.io/en/latest/" target="_blank">User guide</a></li>
         <li id="contact"><a href="/contact/">Contact</a></li>
-        <li id="faqs"><a href="https://gpcrmd-docs.readthedocs.io/en/latest/faqs.html">FAQs</a></li>
+        <li id="faqs"><a href="https://gpcrmd-docs.readthedocs.io/en/latest/faqs.html" target="_blank">FAQs</a></li>
       </ul> 
     </li>
     <!-- Tools -->
@@ -96,11 +96,14 @@
           case "search":
             activate_option("simulations");
             break
+          case "publications":
+            activate_option("simulations");
+            break
           case "datasets":
             activate_option("simulations");
             break
           default:
-            activate_option("submission");
+            activate_option("Submission_li");
         }
 
     }

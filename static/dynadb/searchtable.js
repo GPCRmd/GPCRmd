@@ -13,7 +13,7 @@ $(document).ready( function () {
             //"scrollY": 100,
             //"scrollX": true,
             "columnDefs": [ 
-                { "orderable": false, "searchable": false, "targets": 0 },   //Don't give option to sort or search by column 0
+                { "orderable": false, "searchable": false, "targets":[0,20] },   //Don't give option to sort or search by column 0
                 // {"targets": 2,"visible": false},
                 // {"targets": 4,"visible": false},
                 // {"targets": 8,"visible": false},
@@ -26,8 +26,7 @@ $(document).ready( function () {
                 // {"targets": 15,"visible": false},
                 // {"targets": 16,"visible": false},
                 // {"targets": 17,"visible": false},
-                { "orderable": false, "searchable": false, "targets": 18 },   //Don't give option to sort or search by column 0
-
+                //{ "orderable": false, "searchable": false, "targets": 19 },   //Don't give option to sort or search by column 0
             ],
             // dom:"<'myfilter'f><'mylength'l>rtip",
             dom: 'B<"mylength"l>rtip',
@@ -41,7 +40,7 @@ $(document).ready( function () {
                     .columns()
                     .eq(0)
                     .each(function (colIdx) {
-                        if (!(colIdx==0 || colIdx==18)) {
+                        if (!(colIdx==0 || colIdx==20)) {
                             // Set the header cell to contain the input element
                             var cell = $('.filters th').eq(
                                 $(api.column(colIdx).header()).index()
@@ -115,7 +114,7 @@ $(document).ready( function () {
     }
     var table = $('#table_id').DataTable();
     var table_len = table.columns().nodes().length;
-    var l_hide = Array.from(range(1, table_len));
+    var l_hide = Array.from(range(1, table_len-1));
     for (l in l_hide){
         var column = table.column(l_hide[l]);
         if (!l_vis.includes(parseInt(l))) {

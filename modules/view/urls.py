@@ -6,7 +6,7 @@ app_name = "view"
 
 urlpatterns = [
     re_path(r'^(?P<dyn_id>[0-9]+)/$', views.index, name='index'),
-    re_path(r'^pockets/$', views.index,{"pocket_id":"[15,4]", "dyn_id":"90"}, name='index'), #pockets default selection
+    re_path(r'^pockets/$', views.index,{"pocket_id":"[9,5,1,15,4]", "dyn_id":"90"}, name='index'), #pockets default selection
     re_path(r'^subid/(?P<sub_id>[0-9]+)/$', views.sub_id_redirect, name='sub_id_redirect'),
     re_path(r'^network/$', views.index,{"network_def":True, "dyn_id":"90"}, name='index'),
     re_path(r'^watermap/$', views.index,{"watervol_def":True, "dyn_id":"90"}, name='index'),

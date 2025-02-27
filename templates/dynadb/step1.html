@@ -64,12 +64,21 @@
             <div class="col-md-6 height-col">
               <select class="input_step select_input" id="id_type" name="type"
                 placeholder="   ">
-                {% if model_id or saved %}
+                {% comment %} {% if model_id or saved %}
                 <option value="{{type.0}}">{{type.1}}</option>
                 {% else %}
                 <option value="{{ fdbMF.Meta.model.MODEL_TYPE.1.0}}"> {{ fdbMF.Meta.model.MODEL_TYPE.1.1 }}</option>
                 <option value="{{ fdbMF.Meta.model.MODEL_TYPE.0.0}}"> {{ fdbMF.Meta.model.MODEL_TYPE.0.1 }}</option>
-                {% endif %}
+                {% endif %} {% endcomment %}
+
+                {% if model_id or saved %}
+                <option value="{{type.0}}" selected>{{type.1}}</option>
+                {%endif%}
+                {% for i in fdbMF.Meta.model.MODEL_TYPE %}
+                  {% if i.1 != type.1 %}
+                  <option value="{{i.0}}"> {{i.1}}</option>
+                  {%endif%}
+                {% endfor %}
               </select>
             </div>
             <br>
@@ -118,7 +127,7 @@
             <div class="col-md-6 height-col">
               <select required id="id_source_type" name="source_type" placeholder=""
                 class="input_step select_input">
-                {% if model_id or saved  %}
+                {% comment %} {% if model_id or saved  %}
                 <option value="{{source.0}}">{{source.1}}</option>
                 {% else %}
                 {% for i in fdbMF.Meta.model.SOURCE_TYPE %}
@@ -127,6 +136,21 @@
                 <option value="{{i.0}}"> {{i.1}}</option>
                 {%endif%}
                 {% endfor %}
+                {%endif%} {% endcomment %}
+
+                {% if model_id or saved %}
+                <option value="{{source.0}}" selected>{{source.1}}</option>
+                {%endif%}
+                {% for i in fdbMF.Meta.model.SOURCE_TYPE %}
+                  {% if forloop.counter > 2 and 5 > forloop.counter %}
+                  {%else%} 
+                    {% if i.1 != source.1 or i.0 != 5 %}
+                    <option value="{{i.0}}"> {{i.1}}</option>
+                    {%endif%}
+                  {%endif%}
+                {% endfor %}
+                {% if i.0 == 5 %}
+                    <option value="{{i.0}}"> {{i.1}}</option>
                 {%endif%}
               </select>
             </div>
@@ -326,7 +350,7 @@
               </label>
             </div>
             <div class="col-md-2">
-              <input required id="id_delta" name="delta" type="number" class="input_step" step="any" placeholder="" min = "0" max = "20"
+              <input required id="id_delta" name="delta" type="number" class="input_step" step="any" placeholder="" min = "0" max = "30"
                 {%if model_id or saved%} value="{{delta}}" {%endif%} />
             </div>
             <br>

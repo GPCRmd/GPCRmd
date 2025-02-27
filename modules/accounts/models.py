@@ -45,7 +45,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     protec_sub_pass = models.CharField(max_length=256) # Password to protect unpublish simulations
 
     USERNAME_FIELD = 'username'
-      
+
     def get_full_name(self):
         return self.full_name
 

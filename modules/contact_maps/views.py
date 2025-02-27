@@ -173,7 +173,7 @@ def customized_heatmap(request, foo):
 
 	#Getting GPCR long-names (improved names)
 	(partial_db_dict,df_ts,gennum)=improve_receptor_names(df_ts,db_dict)
-
+    
 	# Create new column with both residue names and generic numbering of both residues interacting
 	df_ts = df_ts.apply(lambda x: find_resnames_resids(x, db_dict, three_to_one),axis=1)
         
@@ -232,7 +232,7 @@ def customized_heatmap(request, foo):
 	#==================================
 
 	mdsrv_url=obtain_domain_url(request)
-	
+		
 	basepath = settings.MEDIA_ROOT + "Precomputed/get_contacts_files/"
 	basedir = "%scontmaps_inputs/%s/%s/%s/" % (basepath,itype,stnd,ligandonly)
 

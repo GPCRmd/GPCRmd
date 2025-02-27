@@ -234,7 +234,7 @@ class IDDownloader():
         try:
             id = AllDownloads.objects.latest('id').id
         except:
-            id = 0
+            return JsonResponse({'error': 'Task not completed or failed.'}, status=400)
         self.outfile = f"download_all_{id}"
         self.zip = f"{self.outfile}.zip"
 
