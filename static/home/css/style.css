@@ -40,8 +40,9 @@ button {
     border-color: #BF3C1F;
     color: white;
     font-weight: bold;
-    font-size: 21px;
+    font-size: 19px;
     border-radius: 25px 25px;
+    padding: 5px;
 }
 
 .btn{
@@ -254,6 +255,18 @@ select {
     font-size: 20px;
     text-align: justify;
 }
+
+table.table-condensed p, 
+table.table-condensed a, 
+table.table-condensed th, 
+table.table-condensed td, 
+table.table-condensed button{
+    font-family: Arial, Helvetica, sans-serif;
+    color:white;
+    font-size: 12px;
+    text-align: justify;
+}
+
 input{
     font-size: 20px;
 }

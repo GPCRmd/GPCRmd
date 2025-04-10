@@ -6,6 +6,8 @@
 
 {% block content %}
 <div class="regForm">
+	<br>
+	<br>
 	<form class="row" method="post" action="{{ action }}" enctype="multipart/form-data">
 
 		<!-- description column -->
@@ -19,16 +21,11 @@
 			<div class="col-md-12 panel panel-primary">
 				<div class="panel-body">
 					<p>Follow the 5 steps for uploading simulations.</p>
-				</div>
-			</div>
-
-			<!-- link to docs -->
-			<div class="col-md-12 panel panel-primary">
-				<div class="panel-body">
 					<p>For more information on this form, see the <a class="textlink" href="https://gpcrmd-docs.readthedocs.io/en/latest/">docs</a>.
 					</p>
 				</div>
 			</div>
+
 			<a id='selection-button' href="/accounts/submissions/">Back to list of submissions</a>
 
 		</div>
@@ -37,11 +34,7 @@
 		<!-- middle column -->
 		<div class="col-md-6">
 			<!-- filters -->
-			<div class="col-md-12 panel panel-primary">
-
-				<div style="text-align:center; margin-top:3%; margin-bottom:3%">
-					<h3 class="orangeTit">Molecular Dynamics Database for Crystallized GPCR Complexes</h3>
-				</div>
+			<div class="col-md-12 panel panel-primary" style="border: none;">
 
 				<div class="panel-body" id="selection-">
 					<a id='selection-button' href="/dynadb/step1/{{submission_id}}/"

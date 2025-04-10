@@ -535,6 +535,7 @@ class DyndbFunctional(models.Model):
 #  
    
 class DyndbModel(models.Model):
+    # Step 1 options 
     MODEL_TYPE=(
         (0,'Apoform (one single protein monomer)'),
         (1,'Complex')
@@ -548,12 +549,19 @@ class DyndbModel(models.Model):
         (5,'Other'),
         (6,'AlphaFold')
     )
+    STATE_TYPE=(
+        (0,'Unespecified'),
+        (1,'Active'),
+        (2,'Intermediate'),
+        (3,'Inactive')
+    )
 
     name =  models.TextField(max_length=100,null=False,blank=False) 
     type = models.SmallIntegerField(choices=MODEL_TYPE, default=0,null=False) 
     id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING,  db_column='id_protein',blank=True, null=True) 
     id_complex_molecule = models.ForeignKey(DyndbComplexMolecule, models.DO_NOTHING, db_column='id_complex_molecule',blank=True, null=True) 
     source_type = models.SmallIntegerField(choices=SOURCE_TYPE, default=0) 
+    state_type = models.SmallIntegerField(choices=STATE_TYPE, default=0)
     pdbid = models.CharField(max_length=6, blank=True, null=True)
     description = models.CharField(max_length=200, blank=True, null=True)
     model_creation_submission_id=models.OneToOneField('DyndbSubmission', models.DO_NOTHING, db_column='model_creation_submission_id', blank=True, null=True)
@@ -581,7 +589,7 @@ class DyndbModeledResidues(models.Model):
         (6,'Other Computational Methods'),
         (7,'Electron microscopy'),
         (8,'AlphaFold')
-    )
+    ) #Set these options on step3_functions line ~375
     id_protein = models.ForeignKey('DyndbProtein',  models.DO_NOTHING, db_column='id_protein', null=True)
     id_model = models.ForeignKey('DyndbModel',  models.DO_NOTHING, db_column='id_model', null=True) 
     chain = models.CharField(max_length=1,blank=True, null=False,default='')
@@ -737,6 +745,7 @@ class DyndbProteinSequence(models.Model):
 
 
 class DyndbReferences(models.Model):
+    pub_code = models.CharField("GPCRmd publication code", help_text="Publication code to identify unpublish submission that are together.", unique=False, max_length=16, blank=True, null=True)
     doi = models.CharField("DOI", help_text="Digital object identifier.", unique=True, max_length=80, blank=True, null=True)
     authors = models.CharField("Authors", help_text="List of the authors separated by semicolon.", max_length=1000, blank=True, null=True)
     title = models.CharField("Title",help_text="Title of the paper.", max_length=900, blank=True, null=True)

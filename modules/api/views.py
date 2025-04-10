@@ -174,7 +174,7 @@ class SearchByDyn(generics.ListAPIView):
         dyn_id = dyn_id.split(",")
         dyn_id = list(filter(None, dyn_id)) # Remove empty strings in list
         dyn_id = [ int(x) for x in dyn_id ] # Convert to int
-        queryset = DyndbDynamics.objects.filter(id__in=dyn_id)
+        queryset = DyndbDynamics.objects.filter(id__in=dyn_id).filter(submission_id__is_published=True)
         return queryset
 
 # search_sub
@@ -190,7 +190,7 @@ class SearchBySub(generics.ListAPIView):
         sub_id = sub_id.split(",")
         sub_id = list(filter(None, sub_id)) # Remove empty strings in list
         sub_id = [ int(x) for x in sub_id ] # Convert to int
-        queryset = DyndbDynamics.objects.filter(submission_id__in=sub_id)
+        queryset = DyndbDynamics.objects.filter(submission_id__in=sub_id).filter(submission_id__is_published=True)
         return queryset
 
 # NOT API TOOLS ###############################################################################################################################################################

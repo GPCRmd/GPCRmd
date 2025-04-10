@@ -5007,7 +5007,7 @@ $("#show_nearby_residues").on("change", function() {
 
     $("body").on("click",".zoom_to_nglsel",function(){
         var mysel=$(this).data("nglsel")
-        $('#embed_mdsrv')[0].contentWindow.zoomandreptorsel(mysel);
+        $('#embed_mdsrv')[0].contentWindow.zoomandreptorsel(mysel, namerep='zoomrep');
     })
 
     function toggleButtonGetStatus(button) {
@@ -5344,7 +5344,7 @@ $("#show_nearby_residues").on("change", function() {
             showH=true;
         } 
         var url_load_heavy=false;
-        if (cp_load_heavy || water_check || hbdb_load_heavy){
+        if (cp_load_heavy || water_check || hbdb_load_heavy || lip_check){
             url_load_heavy=true;
         }
         /*block_loadh_custom_checkbox=false;
@@ -7151,11 +7151,19 @@ $("#show_nearby_residues").on("change", function() {
 //-------- Allosteric Paths
 
     // If allosteric com option is clicked, update download link
-    $(".ap_option input").on("change", function(){
-        ap_value = $(this).attr('id');
-        ap_download = $("#download_ac");
+    $("#ap_form").on("submit", function(){
+        ap_value = $("#ap_numpaths").val()
+        ap_download = $("#download_ap");
+        if (ap_value){
+            ap_download.attr('href',"/dynadb/files/Precomputed/allosteric_path/dyn"+dyn_id+"/"+ap_value+"paths.csv");
+        }
+        else{
+            rank = $("#ap_pathrank").val()
+            sink = $("#ap_pathsink").val()
+            rep = $("#ap_pathrep").val()
+            ap_download.attr('href',"/view/ap_dwpath/"+dyn_id+"/"+rank+'&'+sink+'&'+rep);
+        }
         ap_download.show()
-        ap_download.attr('href',"/dynadb/files/Precomputed/allosteric_com/dyn"+dyn_id+"/"+ap_value+".csv");
     })
 
     //On click of "show only AC selected" button
@@ -7163,6 +7171,33 @@ $("#show_nearby_residues").on("change", function() {
         //Get selected pairs
         allsels = $(this).attr('data-selreps')
         $('#embed_mdsrv')[0].contentWindow.$('body').trigger('ap_load', [JSON.parse(allsels)]);            
+    })
+    
+    //On click, show as licorice all residues in our paths
+    $("#ap_show_all").change(function(){
+
+        //Check if unchecked or checked
+        checked = $(this).is(':checked')
+        if (checked){
+                // Extract information regarding all paths
+            allsels = $("#ap_clearsel").attr('data-allreps')
+            jsonData = JSON.parse(allsels)
+    
+            // Loop through each object in the JSON array
+            let uniqueResidues = new Set();
+            $.each(jsonData, function(index, item) {
+                uniqueResidues.add(item.resid1.trim()); // Add resid1 (and trim spaces!)
+                uniqueResidues.add(item.resid2.trim()); // Add resid2 (so neat! UwU)
+            });
+    
+            // Convert the Set into an array and join with ' and ' 
+            let residues_sel = '.CA and ((' + Array.from(uniqueResidues).join(') or (') + '))';
+            $('#embed_mdsrv')[0].contentWindow.spacefillrep(residues_sel, color='#CEA2FD', namerep='AP_allres');
+
+        } else { // if checkbox unchecked, remove representation by sending an empty sel
+            $('#embed_mdsrv')[0].contentWindow.removerep('AP_allres');
+        }
+
     })
 
     //On click, remove AC interactions selection and restore original representatoin
@@ -7177,7 +7212,30 @@ $("#show_nearby_residues").on("change", function() {
     //On click, clear all representation and results from structure and table
     $("#ap_clear").click(function(){
         $("#ap_results").hide()
+        $("#ap_plot_resids,#ap_plotpaths_u,#ap_plotpaths_w").empty()
         $('#embed_mdsrv')[0].contentWindow.$('body').trigger('acap_clear', 'AP');
+    })
+
+    //On change, change plot being visible in Allosteric paths
+    $('#ap_plotpaths_sel').change(function(){
+        // Get the selected value
+        var selectedValue = $(this).val();
+
+        // Hide all divs initially
+        $('#ap_plotpaths_w,#ap_plotpaths_u').hide();
+
+        // Show the div based on the selected value
+        $('#'+selectedValue).show();
+    })
+
+    //On change of any of the two allosteric paths selectors, leave the other one unselected
+    $('#ap_numpaths,#ap_pathrank,#ap_pathsink,#ap_pathrep').change(function(){
+        clicked_id = $(this).attr('id')
+        if (clicked_id=='ap_numpaths') {
+            $('#ap_pathrank').val("")
+        } else {
+            $('#ap_numpaths').val('')
+        }
     })
 
     //On click of any of the AC/AP table checkboxes
@@ -7220,19 +7278,29 @@ $("#show_nearby_residues").on("change", function() {
         loadingdiv.show()
         seloptdiv.hide()
         
+        //Remove previous plot
+        $("#ap_plot_resids,#ap_plotpaths_u,#ap_plotpaths_w").empty()
+        
         $.ajax({
             url: "../ap_update/"+dyn_id+"/",
             data_type: 'json',
             type: 'POST',
             data: form.serialize(),
             success: function(ap_dict) {
+                //Serialize info in dict
                 ap_dict = JSON.parse(ap_dict)
                 if ('filenotfound' in ap_dict){
                     nofilediv.show()
                 }
                 else{
                     ap_data = ap_dict['ap_data']
-                    $('#embed_mdsrv')[0].contentWindow.$('body').trigger('ap_load', [ap_data]);
+                    sink_sel = ap_dict['sinks']
+                    $('#embed_mdsrv')[0].contentWindow.$('body').trigger('ap_load', [ap_data,sink_sel]);
+
+                    //PLotting time
+                    Bokeh.embed.embed_item(ap_dict["plot_resids"], "ap_plot_resids");
+                    Bokeh.embed.embed_item(ap_dict["plot_paths_u"], "ap_plotpaths_u");
+                    Bokeh.embed.embed_item(ap_dict["plot_paths_w"], "ap_plotpaths_w");
                     
                     //Save ap_data in "clear selection" button (to restore original representations if required)
                     $("#ap_clearsel").attr('data-allreps', JSON.stringify(ap_data))
@@ -7264,6 +7332,12 @@ $("#show_nearby_residues").on("change", function() {
 
                     //Put name of selected ap type in appropiate div, so the user knows which one is aptive
                     $("#ap_sel_opt_name").html("<b>Selected option: </b>"+ap_dict['sel_opt'])
+
+                    // Trigger the cylinder diameter slider to adjust new representations
+                    $("#ap_slider").trigger('input')
+
+                    //Reset all-residue repressentations
+                    $("#ap_show_all").trigger('change');
 
                     //Show
                     resultsdiv.show()

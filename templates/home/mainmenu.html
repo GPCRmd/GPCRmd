@@ -18,13 +18,28 @@
     {% if prog_maintenance == 1 %}
       <div id="maintenanceAlert" class="alert alert-warning alert-dismissible show" role="alert"  style="padding:5px 30px 5px 10px;margin:0 20px;position:absolute;z-index:10; width: 40%;">
         <i class="glyphicon glyphicon-warning-sign warnicon"></i>
-        [INFO] This is a notice to alert you that we will be conducting scheduled maintenance. Down time is scheduled as follows: 10am (GMT+1) Monday, February 9th, 2025 - 8pm (GMT+1) Friday, February 13th, 2025. 
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="dismissAlert()">
+        [INFO] This is a notice to alert you that we will be conducting scheduled maintenance. Down time is scheduled as follows: 10am (GMT+1) Tuesday, April 8th, 2025 - 6pm (GMT+1) Thursday, April 10th, 2025. 
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="maintdismissAlert()">
           <span aria-hidden="true">&times;</span>
         </button>
       </div> 
       
     {% endif %}
+
+    {% if new_notice == 1 %}
+    <div id="noticeAlert" class="alert alert-warning alert-dismissible show" role="alert"  style="padding:5px 30px 5px 10px;margin:0 20px;position:absolute;z-index:10; width: 40%;">
+      <i class="glyphicon glyphicon-warning-sign warnicon"></i>
+      <div style="background-color: #ffefc1; color: #444; padding: 15px; border: 1px solid #f0c36d; border-radius: 5px; text-align: center; font-family: Arial, sans-serif;">
+        <strong>Notice:</strong> If you experience slower performance, please note that it may be due to high demand following the recent publication of the 
+        <strong>2nd round</strong> at 
+        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11868581/" target="_blank" style="color: #d48806; text-decoration: underline;">PMC11868581</a>.
+        Thank you for your patience!
+      </div>      <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="notidismissAlert()">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div> 
+  {% endif %}
+
     <div id="navbar" class="navbar-collapse collapse">
       {% include menu_template %}
     </div><!--/.nav-collapse -->
@@ -32,18 +47,64 @@
 </nav>
 
 <script>
+  function setWithExpiry(key, value, ttl) {
+    const now = new Date()
+  
+    // `item` is an object which contains the original value
+    // as well as the time when it's supposed to expire
+    const item = {
+      value: value,
+      expiry: now.getTime() + ttl,
+    }
+    localStorage.setItem(key, JSON.stringify(item))
+  }
+
+  function getWithExpiry(key) {
+    const itemStr = localStorage.getItem(key)
+    // if the item doesn't exist, return null
+    if (!itemStr) {
+      return null
+    }
+    const item = JSON.parse(itemStr)
+    const now = new Date()
+    // compare the expiry time of the item with the current time
+    if (now.getTime() > item.expiry) {
+      // If the item is expired, delete the item from storage
+      // and return null
+      localStorage.removeItem(key)
+      return null
+    }
+    return item.value
+  }
+
   document.addEventListener("DOMContentLoaded", function() {
+      getWithExpiry("maintalertDismissed");
       // Check if the alert has already been dismissed
-      if (localStorage.getItem("alertDismissed")) {
+      if (localStorage.getItem("maintalertDismissed")) {
         document.getElementById("maintenanceAlert").classList.remove("show");
         document.getElementById("maintenanceAlert").style.display = "none";
       }
+      
+      getWithExpiry("notialertDismissed");
+      if (localStorage.getItem("notialertDismissed")) {
+        document.getElementById("noticeAlert").classList.remove("show");
+        document.getElementById("noticeAlert").style.display = "none";
+      }
   });
 
-  function dismissAlert() {
+  function maintdismissAlert() {
       // Hide the alert and store the dismissal in localStorage
+      const expirationDuration = 1000 * 60 * 60 * 12; // 12 hours
       document.getElementById("maintenanceAlert").classList.remove("show");
       document.getElementById("maintenanceAlert").style.display = "none";
-      localStorage.setItem("alertDismissed", "true");
+      setWithExpiry("maintalertDismissed", "true", expirationDuration);
   }
+
+  function notidismissAlert() {
+    const expirationDuration = 1000 * 60 * 60 * 12; // 12 hours
+    // Hide the alert and store the dismissal in localStorage
+    document.getElementById("noticeAlert").classList.remove("show");
+    document.getElementById("noticeAlert").style.display = "none";
+    setWithExpiry("notialertDismissed", "true", expirationDuration);
+}
 </script>

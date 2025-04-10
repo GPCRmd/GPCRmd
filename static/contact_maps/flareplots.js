@@ -240,6 +240,15 @@ $(document).ready(function(){
             $('#ngl_iframe'+id)[0].contentWindow.$('body').trigger('flareplot_changed');
 
         });
+
+        //A small trick for when long labels get hidden under the color boxes (e.g.: s17s18_09 in Arrestin-GPCR tool)
+        $(fpdiv+' g.node').each(function() {
+            if ($(this).attr('id').length > 10) {
+                console.log('yesssss',$(this))
+                $(this).find('text').attr('dx', '0');
+            }
+        });
+        
     }
 
     function hoverlabels(id){
@@ -280,6 +289,19 @@ $(document).ready(function(){
         });
     };
 
+    function fix_long_labels(id){
+
+        //A small trick for when long labels get hidden under the color boxes (e.g.: s17s18_09 in Arrestin-GPCR tool)
+        $('#flare-container'+id+' g.node').each(function() {
+            txt = $(this).find('text')
+            if ($(this).attr('id').length > 10) {
+                txt.attr('dx', '0');
+            }
+            var updatedText = txt.html().replace("_", '.');
+            txt.html(updatedText);
+        });
+    }
+
 	////////////////////
 	//Flare plots time!!
 	////////////////////
@@ -302,6 +324,9 @@ $(document).ready(function(){
                 //Put hoverlabels to flareplot
                 hoverlabels(0)
 
+                //Long labels give problems, move them a bit
+                fix_long_labels(0)
+
                 //Add click-on-edges
                 plots[0].addEdgeToggleListener( function(d){
                     clickEdgeSelectNodes(d,plots[0]);
@@ -315,6 +340,9 @@ $(document).ready(function(){
                 //Put hoverlabels to flareplot
                 hoverlabels(1)
 
+                //Long labels give problems, move them a bit
+                fix_long_labels(1)
+                
                 //Add click-on-edges
                 plots[1].addEdgeToggleListener( function(d){
                     clickEdgeSelectNodes(d, plots[1]);

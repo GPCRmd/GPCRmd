@@ -3096,13 +3096,14 @@ def query_dynamics(request,dynamics_id):
     dyna_dic["mut_sel"]=mut_sel
 
     for match in DyndbReferencesDynamics.objects.select_related('id_references').filter(id_dynamics=dynamics_id):
-        ref={'id':match.id_references.id,'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
+        ref={'id':match.id_references.id, 'pub_code':match.id_references.pub_code, 'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
         counter=0
         for element in ref:
             if element is None:
                 ref[counter]=''
             counter+=1            
         dyna_dic['references'].append(ref)
+        break #Only the first one for now
     filestraj=dict()
     num_replicates=0
     accum_framenum=0
@@ -7281,10 +7282,17 @@ def db_inputformMAIN(request, submission_id=None):
         submission_id = fdbsubobj.pk
     elif is_submission_owner(request.user,submission_id):
         DSM=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
-        DD=DyndbDynamics.objects.filter(submission_id=submission_id)        
+        #DD=DyndbDynamics.objects.filter(submission_id=submission_id) 
+        DR_values = DyndbReferences.objects.filter(dyndbreferencesdynamics__id_dynamics__submission_id=submission_id).values('pub_code')
         disable_3 = (not len(DSM))
-        disable_4 = (not len(DD))
-        disable_5 = (not len(DD))
+        try:
+            qSubmission=DyndbSubmission.objects.filter(id=submission_id)
+            qT=list(qSubmission.filter(dyndbsubmissionprotein__submission_id=submission_id,dyndbsubmissionmolecule__submission_id=submission_id,dyndbsubmissionmodel__submission_id=submission_id,dyndbdynamics__submission_id=submission_id).values('dyndbsubmissionprotein__protein_id','dyndbsubmissionmolecule__molecule_id','dyndbsubmissionmolecule__molecule_id__id_compound','dyndbsubmissionmodel__model_id','dyndbdynamics__id'))
+            qT[0]['dyndbsubmissionprotein__protein_id']
+            disable_4 = False
+        except:
+            disable_4 = True
+        disable_5 = (not len(DR_values))
     else:
         return HttpResponseRedirect(reverse('dynadb:db_inputform'))
     return render(request,'dynadb/dynadb_inputformMAIN.html', context={'submission_id':submission_id, 'disable_3':disable_3 , 'disable_4':disable_4, 'disable_5' : disable_5 } )
@@ -9801,7 +9809,14 @@ def submission_summaryiew(request,submission_id):
         fh.write("".join(["\n\t\tDelta: ", str(qDSs.delta)])) 
         fh.write("".join(["\n\t\tAdditional Info: ", qDSs.description]))
         submission_closed = DyndbSubmission.objects.filter(pk=submission_id).values_list('is_closed',flat=True)
-    return render(request,'dynadb/SUBMISSION_SUMMARY.html', { 'dynid': dyn_id, 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0,'p':p,'SType':SType,'TypeM':TypeM, 'ddown':ddown,'qDC':qDC, 'dctypel':dctypel, "lcompname":lcompname, 'lcompname':l_ord_mol, 'compl':compl, 'qDS':qDS, 'data':data, 'model_id':model_id, 'SUMMARY':True, 'urlsummary':summaryurl,'submission_closed':submission_closed})
+        
+        # Get GPCRmd publication page for summary: 
+        DR_values = DyndbReferences.objects.filter(dyndbreferencesdynamics__id_dynamics__submission_id=submission_id).values('pub_code')
+        pub_code = DR_values[0]['pub_code']
+        qRFcode=DyndbReferences.objects.filter(pub_code=pub_code)
+        pub_page = qRFcode.values_list('id',flat=True)[0]
+        
+    return render(request,'dynadb/SUBMISSION_SUMMARY.html', { 'dynid': dyn_id, 'pub_page':pub_page, 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0,'p':p,'SType':SType,'TypeM':TypeM, 'ddown':ddown,'qDC':qDC, 'dctypel':dctypel, "lcompname":lcompname, 'lcompname':l_ord_mol, 'compl':compl, 'qDS':qDS, 'data':data, 'model_id':model_id, 'SUMMARY':True, 'urlsummary':summaryurl,'submission_closed':submission_closed})
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
@@ -10505,7 +10520,7 @@ def searchtable_data(dynobj,nongpcr=True):
         if pdb_namechain=="HOMO":
             pdb_namechain="Homology model"
             is_pdb=False
-        elif pdb_namechain=="AlphaFold":
+        elif pdb_namechain=="ALPHA":
             pdb_namechain="AlphaFold model"
         else:
             pdbid=pdb_namechain.split(".")[0]
@@ -10641,10 +10656,11 @@ def dyns_in_ref(request, ref_id):
     context={}
     context["tabledata"]=searchtable_data(dynobj,None)
     refobj=DyndbReferences.objects.get(id=ref_id)
-    if not "doi.org" in str(refobj.url): 
-        context["reference"]={'doi':'','title':refobj.title,'authors':refobj.authors,'url':'','journal':'','issue':'','pub_year':'','volume':''}
-    else:
-        context["reference"]={'doi':refobj.doi,'title':refobj.title,'authors':refobj.authors,'url':refobj.url,'journal':refobj.journal_press,'issue':refobj.issue,'pub_year':refobj.pub_year,'volume':refobj.volume}
+    # if not "doi.org" in str(refobj.url): 
+    #     context["reference"]={'doi':'', 'pub_code':refobj.pub_code, 'title':refobj.title,'authors':refobj.authors,'url':'','journal':'','issue':'','pub_year':'','volume':''}
+    # else:
+    context["reference"]={'doi':refobj.doi,'pub_code':refobj.pub_code,'title':refobj.title,'authors':refobj.authors,'url':refobj.url, 'pmid':refobj.pmid,
+                          'journal':refobj.journal_press,'issue':refobj.issue,'pub_year':refobj.pub_year,'volume':refobj.volume}
     return render(request, 'dynadb/dyns_in_ref.html', context)
 
 def close__submission(request, submission_id):
@@ -10834,6 +10850,7 @@ def step1(request, submission_id):
             context['pdbid'] = DM.pdbid
             context['description'] = DM.description
             context['source'] = DM.SOURCE_TYPE[DM.source_type]
+            context['state'] = DM.STATE_TYPE[DM.state_type]
         # Dynamics information from previous submission (if any)
         if DD:
             context['method'] = (DD.id_dynamics_methods.id, DD.id_dynamics_methods.type_name)
@@ -11005,9 +11022,9 @@ def step1_submit(request, submission_id):
     if "-" in dictpost['pdbid']:
         pdbid = "NONE"
     elif "HOMO" in dictpost['pdbid'].upper():
-        pdbid = "Homology model"
+        pdbid = "HOMO"
     elif "ALPHAFOLD" in dictpost['pdbid'].upper() or "ALPHA" in dictpost['pdbid'].upper():
-        pdbid = "AlphaFold model"
+        pdbid = "ALPHA"
     else:
         pdbid = dictpost['pdbid']
     
@@ -11031,6 +11048,7 @@ def step1_submit(request, submission_id):
             'name' : dictpost['name'],
             'type' : dictpost['type'],
             'source_type' : dictpost['source_type'],
+            'state_type' : dictpost['state_type'],
             'pdbid' : pdbid,
             'description' : description,
             'template_id_model' : None,
@@ -11697,7 +11715,7 @@ def step2_submit(request, submission_id,):
                 else:
                     search = qobj
             DC = DyndbCompound.objects.filter(search)
-            print(DC)
+            # print(DC)
             # Create and save a new compound object in the database, if required
             if len(DC):
                 id_comp = save_compound(dictpost, update_fields, molnum, DC, mode="update")
@@ -11781,7 +11799,7 @@ def get_mutseq(pdb_path, segdict):
                             (segdict_i['chain'] == chain) and
                             (segdict_i['segid'] == seg) and 
                             (segdict_i['to'] >= int(resid)) and 
-                            (segdict_i['from'] <= int(resid))) 
+                            (segdict_i['from'] <= int(resid)))
                     # If it is, add it to our sequence
                     if insegment:
                         if resname in d:
@@ -11811,9 +11829,10 @@ def get_alignment_URL(request):
     # print(segdict)
     # Load dynamics PDB file of this submission
     pdb_path = DyndbFilesDynamics.objects.get(id_dynamics__submission_id=dictpost['submission_id'], type=0).id_files.filepath
+    print(segdict)
     # Get mutant sequence in the specified segemnts
     mutseq = get_mutseq(pdb_path, segdict)
-    # print(mutseq)
+    print(mutseq)
     # Check if uniseq and mutseq were properly extracted, and send error otherwise
     if not mutseq:
         error_msg = "<b>Alignment error: </b><p>Protein sequence with specified segment coordinates was not found in previoulsy submitted PDB file. Please ensure your segment coordinates are correct.</p>"
@@ -11863,7 +11882,7 @@ def find_prots(request,submission_id):
     #(AKA this is not the first time step3 is being done for this submission_id)
     dyn_id = DyndbDynamics.objects.get(submission_id=submission_id).pk 
     DP = DyndbProtein.objects.filter(dyndbsubmissionprotein__submission_id=submission_id)
-    prottoseg_types = ['0','1','6','5','7','6']
+    prottoseg_types = ['0','1','6','5','7','6','8']
     prots_data = []
     if len(DP)>0:
         # Add an empty element for every DP instance found
@@ -12054,10 +12073,10 @@ def get_seq_coordinates(id_model, prot_id, resid_from, resid_to, chain, segid):
         }}
         dynseq = get_mutseq(pdb_path,segdict)
         # Perform alignment
-        print("Chains")
-        print(uniseq,dynseq)
+        # print("Chains")
+        # print(uniseq,dynseq)
         alig=align_wt_mut_global(uniseq,dynseq)
-        print("Alineame")
+        # print("Alineame")
         alig_uniseq = alig[0]
         alig_mutseq = alig[1]
         seg_alig = alig.aligned # Returns segments aligned (((0, 1), (2, 3), (4, 5)), ((0, 1), (1, 2), (2, 3)))
@@ -12120,13 +12139,13 @@ def apply_mutations(dictpost, mutation_ids, entry_id, tomutseq):
     """
     seq_ary = list(tomutseq)
     gapcounter = 1
-    print(seq_ary)
-    print(mutation_ids)
+    # print(seq_ary)
+    # print(mutation_ids)
     for mut_id in mutation_ids[entry_id]:
         resid = int(dictpost[mut_id+"resid"+entry_id])
         resletter_from = dictpost[mut_id+"from"+entry_id]
         resletter_to = dictpost[mut_id+"to"+entry_id]
-        print(resid, resletter_from, resletter_to)
+        # print(resid, resletter_from, resletter_to)
         # if deletion
         if resletter_to=='-':
             seq_ary[resid-gapcounter] = ''
@@ -12460,7 +12479,7 @@ def step3_submit(request, submission_id,):
         else:
             prot_id_receptor = False
         # Delete any previous mutations before saving new ones
-        DyndbModeledResidues.objects.filter(id_protein=prot_id).delete()
+        DyndbModeledResidues.objects.filter(id_protein=prot_id).filter(id_model=id_model).delete()
         # Save modeled residues (segments, as I call them) entries
         modelres_id = None
         for seg_id in segments_ids[entry_id]:
@@ -12487,12 +12506,23 @@ def step3_submit(request, submission_id,):
     return render(request,'dynadb/step4.html', context, status=200)
 
 ###### STEP 4: SImulation files
+def get_pub_code(length=16):
+    import secrets
+    import string
+
+    characters = string.ascii_letters + string.digits
+    
+    pub_code = ''.join(secrets.choice(characters) for _ in range(length))
+        
+    return pub_code
+
 def get_fdbREFF(submission_id):
     """
     Get References form for step5
     """
     # Find if there are already references for this submission
     DR_values = DyndbReferences.objects.filter(dyndbreferencesdynamics__id_dynamics__submission_id=submission_id).values(
+        'pub_code',
         'doi',
         'authors',
         'title', 
@@ -12508,7 +12538,16 @@ def get_fdbREFF(submission_id):
     if len(DR_values):
         fdbREFF = dyndb_ReferenceForm(initial=DR_values[0]) 
     else:
-        fdbREFF = dyndb_ReferenceForm()
+        pub_code = get_pub_code() # To avoid the use of doi as reference for publication page
+        pub_search = DyndbReferences.objects.filter(pub_code = pub_code)
+        if len(pub_search): #Check if exist the publication code
+            while pub_search.pub_code == pub_code: #Avoid duplications
+                print(f"- Publication code {pub_code} already in the dabase.")
+                pub_code = get_pub_code()
+                pub_search = DyndbReferences.objects.filter(pub_code = pub_code)
+            fdbREFF = dyndb_ReferenceForm(initial={'pub_code': pub_code})
+        else:    
+            fdbREFF = dyndb_ReferenceForm(initial={'pub_code': pub_code})
     return(fdbREFF)
 
 @login_required
@@ -12699,12 +12738,86 @@ def step4_submit(request, submission_id):
                 dfd.framenum = framenum
                 dsdf.save()
                 dfd.save()
+    
+    # Pre generate the publication page for the next step 5.
+    def_user_dbengine=settings.DATABASES['default']['USER']
+    def_user=request.user.id       
+    fdbREFF = get_fdbREFF(submission_id)
+    initREFF={'dbname':None, 'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
+    DR_values = DyndbReferences.objects.filter(dyndbreferencesdynamics__id_dynamics__submission_id=submission_id).values('pub_code')
+    if len(DR_values): #Publication page already created
+        SubmitRef=False
+    else:
+        SubmitRef=True
+    if SubmitRef: #New reference
+        # process the data in form.cleaned_data as required
+        formREFF=fdbREFF.save(commit=False)
+        for (key,value) in initREFF.items():
+            setattr(formREFF, key, value)
+        formREFF.save()
+        FRpk = formREFF.pk
+        
+        # Also related dynamics, models an protein ids with the submission id on references
+        qSubmission=DyndbSubmission.objects.filter(id=submission_id)
+        qT=list(qSubmission.filter(dyndbsubmissionprotein__submission_id=submission_id,dyndbsubmissionmolecule__submission_id=submission_id,dyndbsubmissionmodel__submission_id=submission_id,dyndbdynamics__submission_id=submission_id).values('dyndbsubmissionprotein__protein_id','dyndbsubmissionmolecule__molecule_id','dyndbsubmissionmolecule__molecule_id__id_compound','dyndbsubmissionmodel__model_id','dyndbdynamics__id'))
+        dictprot={'id_protein':qT[0]['dyndbsubmissionprotein__protein_id'], 'id_references':FRpk}
+        dictmod={'id_model':qT[0]['dyndbsubmissionmodel__model_id'], 'id_references':FRpk }
+        dictdyn={'id_dynamics':qT[0]['dyndbdynamics__id'], 'id_references':FRpk }
+        refprot=dyndb_References_Protein(dictprot)
+        if refprot.is_valid():
+            refprot.save()
+        else:
+            print("refprot is not valid",refprot.errors.as_text())
+        refmod=dyndb_References_Model(dictmod)
+        if refmod.is_valid():
+            refmod.save()
+        else:
+            print("refmod is not valid",refmod.errors.as_text())
+        refdyn=dyndb_References_Dynamics(dictdyn)
+        if refdyn.is_valid():
+            refdyn.save()
+            print("refdyn may  be saved ",refdyn.errors.as_text())
+        else:
+            print("refdyn is not valid",refdyn.errors.as_text())
+        dictmol={}
+        dictcomp={}
+        i=0
+        for l in qT:
+            dictmol[i]={'id_molecule':qT[i]['dyndbsubmissionmolecule__molecule_id'],  'id_references':FRpk}
+            refmol=dyndb_References_Molecule(dictmol[i])                                     
+            if refmol.is_valid():                                                         
+                refmol.save()                                                             
+            else:                                                                         
+                print("refmol is not valid",refmol.errors.as_text())                      
+            dictcomp[i]={'id_compound':qT[i]['dyndbsubmissionmolecule__molecule_id__id_compound'],  'id_references':FRpk}
+            refcomp=dyndb_References_Compound(dictcomp[i])
+            if refcomp.is_valid():
+                refcomp.save()
+            else:
+                print("refcomp is not valid",refcomp.errors.as_text())
+            i=i+1
+
+    # Get pub_page & check is correctly created 
+    DR_values = DyndbReferences.objects.filter(dyndbreferencesdynamics__id_dynamics__submission_id=submission_id).values('pub_code')     
+    print(DR_values)
+    try: #Preference to doi vs pub_code
+        doi = DR_values[0]['doi']
+        qRFdoi=DyndbReferences.objects.filter(doi=doi)
+        if len(qRFdoi):
+            pub_page = qRFdoi.values_list('id',flat=True)[0]
+    except: # Doi is not save or submit is unpublished 
+        pub_code = DR_values[0]['pub_code']
+        qRFcode=DyndbReferences.objects.filter(pub_code=pub_code)
+        if len(qRFcode): #This code is always saved can not be empty
+            pub_page = qRFcode.values_list('id',flat=True)[0]
+            
     # Once everything is done, go to step 5
     context = { 
         'step' : '5',
         'submission_id' : submission_id,
         'max_step' : check_submission_status(submission_id),
-        "fdbREFF" : get_fdbREFF(submission_id),
+        "fdbREFF" : fdbREFF,
+        'pub_page': pub_page,
         'repeated_step' : False, #Repeated step?,
     }
     return render(request,'dynadb/step5.html', context, status=200)
@@ -12867,7 +12980,10 @@ def doi_info(request):
     # doi = "10.1093/bioinformatics/btaa117"
     doi = request.GET['doi_in'].replace(' ','')
     submission_id = request.GET['submission_id']
+    DR_values = DyndbReferences.objects.filter(dyndbreferencesdynamics__id_dynamics__submission_id=submission_id).values('pub_code')
+    pub_code = DR_values[0]['pub_code']
     (data,errdata) = doitobib(doi)
+    data["pub_code"] = pub_code #Add GPCRmd publication code
     return HttpResponse(json.dumps(data),content_type='step5/'+submission_id)   
 
 @login_required
@@ -12876,12 +12992,84 @@ def doi_info(request):
 def step5(request, submission_id):
     """
     Go to step5 of the submission form (the one about references and publications)
-    """
+    """   
+    # Pre generate the publication page for the step 5.
+    def_user_dbengine=settings.DATABASES['default']['USER']
+    def_user=request.user.id       
+    fdbREFF = get_fdbREFF(submission_id)
+    initREFF={'dbname':None, 'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
+    DR_values = DyndbReferences.objects.filter(dyndbreferencesdynamics__id_dynamics__submission_id=submission_id).values('pub_code')
+    if len(DR_values): #Publication page already created
+        SubmitRef=False
+    else:
+        SubmitRef=True
+    if SubmitRef: #New reference
+        # process the data in form.cleaned_data as required
+        formREFF=fdbREFF.save(commit=False)
+        for (key,value) in initREFF.items():
+            setattr(formREFF, key, value)
+        formREFF.save()
+        FRpk = formREFF.pk
+        
+        # Also related dynamics, models an protein ids with the submission id on references
+        qSubmission=DyndbSubmission.objects.filter(id=submission_id)
+        qT=list(qSubmission.filter(dyndbsubmissionprotein__submission_id=submission_id,dyndbsubmissionmolecule__submission_id=submission_id,dyndbsubmissionmodel__submission_id=submission_id,dyndbdynamics__submission_id=submission_id).values('dyndbsubmissionprotein__protein_id','dyndbsubmissionmolecule__molecule_id','dyndbsubmissionmolecule__molecule_id__id_compound','dyndbsubmissionmodel__model_id','dyndbdynamics__id'))
+        dictprot={'id_protein':qT[0]['dyndbsubmissionprotein__protein_id'], 'id_references':FRpk}
+        dictmod={'id_model':qT[0]['dyndbsubmissionmodel__model_id'], 'id_references':FRpk }
+        dictdyn={'id_dynamics':qT[0]['dyndbdynamics__id'], 'id_references':FRpk }
+        refprot=dyndb_References_Protein(dictprot)
+        if refprot.is_valid():
+            refprot.save()
+        else:
+            print("refprot is not valid",refprot.errors.as_text())
+        refmod=dyndb_References_Model(dictmod)
+        if refmod.is_valid():
+            refmod.save()
+        else:
+            print("refmod is not valid",refmod.errors.as_text())
+        refdyn=dyndb_References_Dynamics(dictdyn)
+        if refdyn.is_valid():
+            refdyn.save()
+            print("refdyn may  be saved ",refdyn.errors.as_text())
+        else:
+            print("refdyn is not valid",refdyn.errors.as_text())
+        dictmol={}
+        dictcomp={}
+        i=0
+        for l in qT:
+            dictmol[i]={'id_molecule':qT[i]['dyndbsubmissionmolecule__molecule_id'],  'id_references':FRpk}
+            refmol=dyndb_References_Molecule(dictmol[i])                                     
+            if refmol.is_valid():                                                         
+                refmol.save()                                                             
+            else:                                                                         
+                print("refmol is not valid",refmol.errors.as_text())                      
+            dictcomp[i]={'id_compound':qT[i]['dyndbsubmissionmolecule__molecule_id__id_compound'],  'id_references':FRpk}
+            refcomp=dyndb_References_Compound(dictcomp[i])
+            if refcomp.is_valid():
+                refcomp.save()
+            else:
+                print("refcomp is not valid",refcomp.errors.as_text())
+            i=i+1
+
+    # Get pub_page & check is correctly created 
+    DR_values = DyndbReferences.objects.filter(dyndbreferencesdynamics__id_dynamics__submission_id=submission_id).values('pub_code')     
+    try: #Preference to doi vs pub_code
+        doi = DR_values[0]['doi']
+        qRFdoi=DyndbReferences.objects.filter(doi=doi)
+        if len(qRFdoi):
+            pub_page = qRFdoi.values_list('id',flat=True)[0]
+    except: # Doi is not save or submit is unpublished 
+        pub_code = DR_values[0]['pub_code']
+        qRFcode=DyndbReferences.objects.filter(pub_code=pub_code)
+        if len(qRFcode): #This code is always saved can not be empty
+            pub_page = qRFcode.values_list('id',flat=True)[0]
+
     context = { 
         'step' : '5',
         'submission_id' : submission_id,
         'max_step' : check_submission_status(submission_id),
-        "fdbREFF" : get_fdbREFF(submission_id)
+        "fdbREFF" : fdbREFF,
+        'pub_page': pub_page
      }
     
     #Repeated step?
@@ -12896,17 +13084,36 @@ def step5_submit(request, submission_id):
     Save references for this submission
     Juanma's code. No idea what's going on here
     """
-    sub = submission_id
-    action="/".join(["/dynadb/REFERENCEfilled",sub])
-    now=timezone.now()
-    dynamics_id = DyndbDynamics.objects.get(submission_id=submission_id).pk
-    user=User.objects.get(dyndbsubmission__dyndbdynamics=dynamics_id) 
-    author=user.first_name + " "+ user.last_name+", "+user.institution     
+    #sub = submission_id
+    #action="/".join(["/dynadb/REFERENCEfilled",sub])
+    #now=timezone.now()
+    #dynamics_id = DyndbDynamics.objects.get(submission_id=submission_id).pk
+    #user=User.objects.get(dyndbsubmission__dyndbdynamics=dynamics_id) 
+    #author=user.first_name + " "+ user.last_name+", "+user.institution     
     def_user_dbengine=settings.DATABASES['default']['USER']
     def_user=request.user.id
     initREFF={'dbname':None, 'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
-    fdbREFF = dyndb_ReferenceForm(request.POST)
+    #fdbREFF = dyndb_ReferenceForm(request.POST)
     SubmitRef=True
+    # if not (request.POST['doi']) and (request.POST['pub_code']): #Skip step 5 and save the GPCRmd publication code
+    #     if fdbREFF.is_valid(): 
+    #         # process the data in form.cleaned_data as required
+    #         formREFF=fdbREFF.save(commit=False)
+    #         for (key,value) in initREFF.items():
+    #             setattr(formREFF, key, value)
+    #         formREFF.save()
+    #     else:
+    #         iii=fdbREFF.errors.as_text()
+    #         response = HttpResponse(iii,status=422,sreason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+    #         return response
+    #     return submission_summaryiew(request,submission_id)
+    if (request.POST['pub_code']):
+        qRFcode=DyndbReferences.objects.filter(pub_code=request.POST['pub_code'])
+        if qRFcode.exists():
+            iii1="Please, Note that the reference you are trying to submit has a GPCRmd publication code previously stored in the GPCRmd. Check if the stored entry corresponds to the one you are submitting. Click 'ok' to continue to the stored reference. In case of error in the stored data, contact the GPCRmd administrator"
+            response = HttpResponse(iii1,content_type='text/plain; charset=UTF-8')
+            FRpk = qRFcode.values_list('id',flat=True)
+            SubmitRef=False
     if (request.POST['doi']):
         qRFdoi=DyndbReferences.objects.filter(doi=request.POST['doi'])
         if qRFdoi.exists():
@@ -12923,7 +13130,8 @@ def step5_submit(request, submission_id):
             SubmitRef=False
             FRpk = qRFpmid.values_list('id',flat=True)
            # return response
-    if SubmitRef:
+    if SubmitRef: #New reference
+        fdbREFF = dyndb_ReferenceForm(request.POST)
         if fdbREFF.is_valid(): 
             # process the data in form.cleaned_data as required
             formREFF=fdbREFF.save(commit=False)
@@ -12935,76 +13143,77 @@ def step5_submit(request, submission_id):
             iii=fdbREFF.errors.as_text()
             response = HttpResponse(iii,status=422,sreason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             return response
-    # Check whether the fdbREFF instance of dyndb_ReferenceForm is valid:
-    SubmitRef=True
-    qRFdoi=DyndbReferences.objects.filter(doi=request.POST['doi'])
     try:
         FRpk = FRpk[0]
     except:
         FRpk = FRpk
-    qSubmission=DyndbSubmission.objects.filter(id=submission_id)
-    qT=list(qSubmission.filter(dyndbsubmissionprotein__submission_id=submission_id,dyndbsubmissionmodel__submission_id=submission_id,dyndbdynamics__submission_id=submission_id).values('dyndbsubmissionprotein__protein_id','dyndbsubmissionmodel__model_id','dyndbdynamics__id'))
-    qT_mol=list(qSubmission.filter(dyndbsubmissionmolecule__submission_id=submission_id).values('dyndbsubmissionmolecule__molecule_id','dyndbsubmissionmolecule__molecule_id__id_compound'))
+    if not SubmitRef: #Modify reference
+        getREFF=DyndbReferences.objects.get(id=FRpk)
+        fdbREFF = dyndb_ReferenceForm(request.POST, instance=getREFF)
+        if fdbREFF.is_valid(): 
+            # Django now handles the updating for you
+            getREFF = fdbREFF.save(commit=False)
 
-    print(qT)
-    print(qT_mol)
-    try:
-        dictprot={'id_protein':qT[0]['dyndbsubmissionprotein__protein_id'], 'id_references':FRpk}
-        refprot=dyndb_References_Protein(dictprot)
-        if SubmitRef:
-            if not qRFdoi.filter(dyndbreferencesprotein__id_protein=qT[0]['dyndbsubmissionprotein__protein_id'],dyndbreferencesprotein__id_references=FRpk).exists():
-                if refprot.is_valid():
-                    refprot.save()
-                else:
-                    print("refprot is not valid",refprot.errors.as_text())
-    except:
-        print("No protein references!")
-    try:
-        dictmod={'id_model':qT[0]['dyndbsubmissionmodel__model_id'], 'id_references':FRpk }
-        refmod=dyndb_References_Model(dictmod)
-        if  SubmitRef:
-            if not qRFdoi.filter(dyndbreferencesmodel__id_model=qT[0]['dyndbsubmissionmodel__model_id'],dyndbreferencesmodel__id_references=FRpk).exists():
-                if refmod.is_valid():
-                    refmod.save()
-                else:
-                    print("refmod is not valid",refmod.errors.as_text())
-    except:
-        print("No model references!")
-    try:
-        dictdyn={'id_dynamics':qT[0]['dyndbdynamics__id'], 'id_references':FRpk }
-        refdyn=dyndb_References_Dynamics(dictdyn)
-        if SubmitRef:
-            if not qRFdoi.filter(dyndbreferencesdynamics__id_dynamics=qT[0]['dyndbdynamics__id'],dyndbreferencesdynamics__id_references=FRpk).exists():
-                if refdyn.is_valid():
-                    refdyn.save()
-                    print("refdyn may  be saved ",refdyn.errors.as_text())
-                else:
-                    print("refdyn is not valid",refdyn.errors.as_text())
-    except:
-        print("No dynamics references!")
+            # Set any extra fields if needed
+            getREFF.update_timestamp = timezone.now()
+            getREFF.last_update_by_dbengine = def_user_dbengine
+            getREFF.last_update_by = def_user
+
+            getREFF.save()
+        else:
+            iii=fdbREFF.errors.as_text()
+            response = HttpResponse(iii,status=422,sreason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+            return response
+
+    # Check whether the fdbREFF instance of dyndb_ReferenceForm is valid:
+    qRFcode=DyndbReferences.objects.filter(pub_code=request.POST['pub_code'])
+    qSubmission=DyndbSubmission.objects.filter(id=submission_id)
+    qT=list(qSubmission.filter(dyndbsubmissionprotein__submission_id=submission_id,dyndbsubmissionmolecule__submission_id=submission_id,dyndbsubmissionmodel__submission_id=submission_id,dyndbdynamics__submission_id=submission_id).values('dyndbsubmissionprotein__protein_id','dyndbsubmissionmolecule__molecule_id','dyndbsubmissionmolecule__molecule_id__id_compound','dyndbsubmissionmodel__model_id','dyndbdynamics__id'))
+    dictprot={'id_protein':qT[0]['dyndbsubmissionprotein__protein_id'], 'id_references':FRpk}
+    dictmod={'id_model':qT[0]['dyndbsubmissionmodel__model_id'], 'id_references':FRpk }
+    dictdyn={'id_dynamics':qT[0]['dyndbdynamics__id'], 'id_references':FRpk }
+    refprot=dyndb_References_Protein(dictprot)
+    if not qRFcode.filter(dyndbreferencesprotein__id_protein=qT[0]['dyndbsubmissionprotein__protein_id'],dyndbreferencesprotein__id_references=FRpk).exists():
+        if refprot.is_valid():
+            refprot.save()
+        else:
+            print("refprot is not valid",refprot.errors.as_text())
+    refmod=dyndb_References_Model(dictmod)
+    if not qRFcode.filter(dyndbreferencesmodel__id_model=qT[0]['dyndbsubmissionmodel__model_id'],dyndbreferencesmodel__id_references=FRpk).exists():
+        if refmod.is_valid():
+            refmod.save()
+        else:
+            print("refmod is not valid",refmod.errors.as_text())
+    refdyn=dyndb_References_Dynamics(dictdyn)
+    if not qRFcode.filter(dyndbreferencesdynamics__id_dynamics=qT[0]['dyndbdynamics__id'],dyndbreferencesdynamics__id_references=FRpk).exists():
+        if refdyn.is_valid():
+            refdyn.save()
+            print("refdyn may  be saved ",refdyn.errors.as_text())
+        else:
+            print("refdyn is not valid",refdyn.errors.as_text())
     dictmol={}
     dictcomp={}
     i=0
-    for l in qT_mol:
-        dictmol[i]={'id_molecule':qT_mol[i]['dyndbsubmissionmolecule__molecule_id'],  'id_references':FRpk}
+    for l in qT:
+        dictmol[i]={'id_molecule':qT[i]['dyndbsubmissionmolecule__molecule_id'],  'id_references':FRpk}
         refmol=dyndb_References_Molecule(dictmol[i])                                     
         if SubmitRef:
-            if not qRFdoi.filter(dyndbreferencesmolecule__id_molecule=qT_mol[i]['dyndbsubmissionmolecule__molecule_id'],dyndbreferencesmolecule__id_references=FRpk).exists():
+            if not qRFcode.filter(dyndbreferencesmolecule__id_molecule=qT[i]['dyndbsubmissionmolecule__molecule_id'],dyndbreferencesmolecule__id_references=FRpk).exists():
                 if refmol.is_valid():                                                         
                     refmol.save()                                                             
                 else:                                                                         
                     print("refmol is not valid",refmol.errors.as_text())                      
-        dictcomp[i]={'id_compound':qT_mol[i]['dyndbsubmissionmolecule__molecule_id__id_compound'],  'id_references':FRpk}
+        dictcomp[i]={'id_compound':qT[i]['dyndbsubmissionmolecule__molecule_id__id_compound'],  'id_references':FRpk}
         refcomp=dyndb_References_Compound(dictcomp[i])
         if not SubmitRef:
-            if not qRFdoi.filter(dyndbreferencescompound__id_compound=qT_mol[i]['dyndbsubmissionmolecule__molecule_id__id_compound'],dyndbreferencescompound__id_references=FRpk).exists():
+            if not qRFcode.filter(dyndbreferencescompound__id_compound=qT[i]['dyndbsubmissionmolecule__molecule_id__id_compound'],dyndbreferencescompound__id_references=FRpk).exists():
                 if refcomp.is_valid():
                     refcomp.save()
                 else:
                     print("refcomp is not valid",refcomp.errors.as_text())
         i=i+1
     # Set submissions as publshed
-    DS = DyndbSubmission.objects.filter(pk=submission_id)
-    DD = DyndbDynamics.objects.filter(submission_id=submission_id)
+    # DS = DyndbSubmission.objects.filter(pk=submission_id)
+    # DD = DyndbDynamics.objects.filter(submission_id=submission_id)
     # End of submission    
     return submission_summaryiew(request,submission_id)

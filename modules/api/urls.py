@@ -17,7 +17,11 @@ schema_view = get_schema_view(
    openapi.Info(
       title="GPCRmd API",
       default_version='v1.3',
-      description="Tools related with values stored into the GPCRmd database (e.g. dynamic ids, pdb ids, uniprot ids, state,...)",
+      description="This is the GPCRmd REST API. " +
+      "This API grants programmatic access to the GPCRmd database. It may retrieve files and metadata. " +
+      "Below, API endpoints are listed and documented. Click on any endpoint to drop more information such as the description and accepted parameters. " +
+      "Use the 'try it out' button to test any endpoint at the moment. " +
+      "For the large-scale downloader is necessary to access via log-in account. This measure is to avoid unwanted massive requests from unrecognized devices.",
    ),
    public=True,
 )
@@ -27,13 +31,13 @@ schema_view = get_schema_view(
 urlpatterns = [
    re_path(r'^$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
    # re_path(r'^', include(router.urls)),
-   re_path(r'^search_all_pdbs/$', views.SearchAllPdbs.as_view()),
-   re_path(r'^search_all_uniprots/$', views.SearchAllUniprots.as_view()),
-   re_path(r'^search_dyn_class/(?P<classname>.*)$', views.SearchByClass.as_view()),
-   re_path(r'^search_dyn_lig_type/$', views.SearchByLigType.as_view()),
-   re_path(r'^search_dyn_pdbs/(?P<pdbid>.*)$', views.SearchByPdbs.as_view()),
-   re_path(r'^search_dyn_uniprots/(?P<uniprotid>.*)$', views.SearchByUniprots.as_view()),
-   re_path(r'^search_dyn/(?P<dyn_id>.*)$', views.SearchByDyn.as_view()),
+   re_path(r'^search_all/pdbs/$', views.SearchAllPdbs.as_view()),
+   re_path(r'^search_all/uniprots/$', views.SearchAllUniprots.as_view()),
+   re_path(r'^search_dyn/info/(?P<dyn_id>.*)$', views.SearchByDyn.as_view()),
+   re_path(r'^search_dyn/class/(?P<classname>.*)$', views.SearchByClass.as_view()),
+   re_path(r'^search_dyn/lig_type/$', views.SearchByLigType.as_view()),
+   re_path(r'^search_dyn/pdbs/(?P<pdbid>.*)$', views.SearchByPdbs.as_view()),
+   re_path(r'^search_dyn/uniprots/(?P<uniprotid>.*)$', views.SearchByUniprots.as_view()),
    re_path(r'^search_sub/(?P<sub_id>.*)$', views.SearchBySub.as_view()),
    re_path(r'^search_comp/(?P<ligroleids>.*)$', views.SearchCompound.as_view()),
    path('download_id/', views.download_id, name="download_id"),

@@ -252,6 +252,7 @@
               <h3 class="dyn_info_title techinfo_title" style="text-align:center">References</h3>
               <div class="techinfo_content">
                 {%for reference in answer.references%}
+                  {% if reference.doi != None %}
                 <p>{{reference.authors}}. {{reference.pub_year}}. <span
                     style="font-weight:bold;">{{reference.title}}</span>.
                   {{reference.journal}}{% if reference.volume %}
@@ -267,8 +268,18 @@
                   <br>
                   <p> Find a list of all simulations published in this paper:
                   <a class="textlink"
-                    href=/dynadb/publications/{{reference.id}}> GPCRmd publication id {{reference.id}}
-                    </a> </p> {%endif%}   
+                      href=/dynadb/publications/{{reference.id}}>{{reference.id}}
+                      </a> 
+                    {%endif%}  
+                  {% else %}
+                    {%if reference.id%}
+                    <br>
+                    <p> Find a list of all simulations published in this paper:
+                    <a class="textlink"
+                      href=/dynadb/publications/{{reference.id}}>{{reference.id}}
+                    </a> 
+                    {%endif%}
+                  {%endif%}
                 {%endfor%}
               </div>
             </div>

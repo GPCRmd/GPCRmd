@@ -140,7 +140,7 @@
                               {% if pdbid %}
                                 {% if pdbid == "HOMO" %}
                                   (<span id="pdbid">Homology modeling</span>)
-                                {% elif pdbid == "AlphaFold" %}
+                                {% elif pdbid == "ALPHA" %}
                                   (<span id="pdbid">AlphaFold modeling</span>)
                                 {% else %}
                                   (<span id="pdbid">{{pdbid}}</span>)
@@ -3441,7 +3441,7 @@
                                 <div id="breathing_pan" class="section_pan" data-toggle="collapse"
                                   data-target="#analysis_breathing"
                                   style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0;">
-                                  <span>Breathing motions </span><span id="analysis_breathing_icon" style="float:right;margin-right:5px;"
+                                  <span>Intracellular core conformations </span><span id="analysis_breathing_icon" style="float:right;margin-right:5px;"
                                     class="glyphicon glyphicon-chevron-down arrow"></span>
                                 </div>
                               </div>                              
@@ -3804,7 +3804,7 @@
                                   <div id="lip_analysis_pan" class="section_pan" data-toggle="collapse"
                                     data-target="#lip_analysis"
                                     style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b2b2;border-radius:0;">
-                                    <span>Lipid distribution</span><span id="lip_analysis_icon"
+                                    <span>Allosteric sites via lipid insertion</span><span id="lip_analysis_icon"
                                 style="float:right;margin-right:5px;"
                                       class="glyphicon {% if lipvol_def %}glyphicon-chevron-up{% else %}glyphicon-chevron-down{% endif %} arrow">
                                     </span>
@@ -4301,7 +4301,7 @@
                                     <div class="row text-center" style="margin-bottom:10px">
                                       <button id="filter_only_disease" type="button"
                                         class="btn btn-default variant_filter_button" style="padding:2px 5px 2px 5px;">
-                                        <img src="https://www.disgenetplus.com/images/logo_disgenet_plus.png"
+                                        <img src={% static 'view/images/LogoDisgenet.png' %}
                                           style="height:2em; margin-right:1em">
                                         <span>Show only disease-associated variants</span>
                                       </button>
@@ -5084,15 +5084,12 @@
                               <form id="ap_form" method="post">
                                 {% csrf_token %}
                                 <div id="analysis_ap" class="row collapse">
-      
                                   <div class="container-fluid">
-      
                                     <br>
-                                    <div class="col-md-6">
-                                      <div class="row">
-                                        <p class="col-md-12"><b>Number of paths</b></p>
-                                        <div class="dropdown col-md-12">
-                                          <select class="btn" id="ap_numpaths" name="numpaths" type="button"
+                                    <div class="row ap_row">
+                                      <div class="col-md-5 ap_seldivs">
+                                        <label for="numpaths">Number of paths</label>
+                                        <select class="btn ap_select" id="ap_numpaths" name="numpaths" type="button"
                                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             None selected <span class="caret"></span>
                                             {% for optnum in ap_options %}
@@ -5100,33 +5097,107 @@
                                             {% endfor %}
                                           </select>
                                         </div>
+                                      <div class="col-md-1">
+                                        <p><i>or</i></p>
+                                      </div>
+                                      <div class="col-md-6 ap_seldivs">
+      
+                                        <label>Individual path</label>
+                                        <div class="row">
+                                          <label class='ital_label col-md-6' for="pathrank">Path rank (1 to 100)</label>
+                                    <div class="col-md-6">
+                                            <input name="pathrank" type="number" class="ap_input" id="ap_pathrank" placeholder="None selected" min="1" max="100"></input>
+                                          </div>
+                                        </div>
+                                      <div class="row">
+                                          <label class='ital_label col-md-6' for="pathsink">Path sink</label>
+                                          <div class="col-md-6">
+                                            <select class="btn ap_input" id="ap_pathsink" name="pathsink" type="button"
+                                              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" placeholder="None selected">
+                                              None selected <span class="caret"></span>
+                                              {% for sink in ap_sinks %}  
+                                              <option data-btn="ap_pathsink" class="ap_option ap_inoption" value="{{sink}}">{{sink}}</option>
+                                              {% endfor %}
+                                            </select>
+                                          </div>
+                                        </div>
+                                        <div class="row">
+                                          <label class='ital_label col-md-6' for="pathrep">Trajectory id</label>
+                                          <div class="col-md-6">
+                                            <select class="btn ap_input" id="ap_pathrep" name="pathrep" type="button"
+                                              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" placeholder="None selected">
+                                              None selected <span class="caret"></span>
+                                              {% for traj in traj_list %}
+                                              <option data-btn="ap_pathrep" class="ap_option ap_inoption" value="{{forloop.counter}}">{{traj.2}}</option>
+                                              {% endfor %}
+                                            </select>
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
-      
-                                    <div class="col-md-6">
-                                      <div class="row">
+        
+                                    <div class="row ap_row">
                                         <button class="btn btn-success" id="ap_submit" type="submit">Show in structure</button>
                                         <button class="btn btn-danger" id="ap_clear"  type="button">Clear</button>
+                                      <hr>
                                       </div>
-                                      <a href="/dynadb/files/Precomputed/allosteric_communication/dyn{{dyn_id}}/" id="download_ap" class="hidden_div">Download AP data <span
-                                          class="glyphicon glyphicon-download-alt"></span></a>
+                                    
+                                    <div id="ap_results">
+                                      <p><b>Results</b></p>
+                                      <div class="row">
+                                        <div class="col-md-5"><p>Representations diameter proportion: </p></div>
+                                        <div class="col-md-3">
+                                          <input id='ap_slider' class="slider edslider" value="1" min="0.1" max="10" step="0.1" type="range">
                                     </div>
+                                        <div class="col-md-1"><p id="slider_val">1</p></div>
                                   </div>
-      
-                                  <br>
-                                  <!-- <div id="ap_placeholder"></div> -->
-                                  <div id="ap_results" class="container-fluid">
-      
-                                    <h4 style="text-align: center"><b>Results</b></h4>
+                                      <div class="row">
+                                        <a href="/dynadb/files/Precomputed/allosteric_communication/dyn{{dyn_id}}/" id="download_ap" class="col-md-4 hidden_div">
+                                          Download AP data <span class="glyphicon glyphicon-download-alt ap_input"></span>
+                                        </a>
+                                      </div>
+                                      <div class="row">
+                                        <label for="ap_show_all" class="col-md-4"> 
+                                          <input id="ap_show_all" type="checkbox" class="ap_input"> Show all residues
+                                        </label>
+                                      </div> 
+                                      <br>
+                                      <div id="ap_plots">
+                                        <ul class="nav nav-tabs tab_list">
+                                          <li id="ap_tab_paths" class="active"><a data-toggle="tab"
+                                              href="#ap_plot_paths">Path lengths</a>
+                                          </li>
+                                          <li id="ap_tab_resids" class=""><a data-toggle="tab"
+                                            href="#ap_plot_resids">Residues in paths</a>
+                                          </li>
+                                        </ul>
+                                        <div class="row">
+                                          <div class="col-md-12">
+                                            <select class="btn" id="ap_plotpaths_sel" name="plotpaths" type="button"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                              <option data-btn="plotpaths" value="ap_plotpaths_u">Unweighted paths</option>
+                                              <option data-btn="plotpaths" value="ap_plotpaths_w">Weighted paths</option>
+                                            </select>
+                                          </div>
+                                        </div>
+                                        <div class="row tab-content">
+                                          <div id="ap_plot_paths" class="tab-pane active">
+                                            <div id="ap_plotpaths_u"></div>
+                                            <div id="ap_plotpaths_w" class="hidden_div"></div>
+                                          </div>
+                                          <div id="ap_plot_resids" class="tab-pane"></div>
+                                        </div>
+                                      </div>
+        
+                                      <hr>
                                     <div class="col-md-10">
                                       <div id="ap_table_container" class="row"></div>
+                                        <br>
                                       <div class="row">
                                         <div data-selreps="[]" id="ap_show_selected" class="btn btn-info btn-sm">Show
-                                          selected
-                                                only</div>
+                                            selected only</div>
                                         <div data-allreps="[]" id="ap_clearsel" class="btn btn-danger btn-sm">Clear
-                                    selection
-                                        </div>
+                                            selection</div>
                                       </div>
                                     </div>
                                     <div id="ap_legends">
@@ -5161,6 +5232,7 @@
                                     </div>
                                     <div id="ap_nofile" class="alert alert-warning">
                                       No AP values are avaliable yet for this parameters selection.
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
@@ -5199,9 +5271,9 @@
   <script>
     //Hide footer
     $(document).ready(function () {
-      console.log('iep')
+      //console.log('iep')
       var oooo=document.getElementById("partners_section");
-      console.log(oooo);
+      //console.log(oooo);
       document.getElementById("partners_section").style.display = 'none';
     });
 
@@ -5339,6 +5411,29 @@
               document.getElementById("toolAlert").style.display = 'block';
           }
           break;
+
+        // breathing motions
+        case "#breathing_pan":
+        var bData = "{{breath_sel}}";
+        if (bData != 'False') {
+          scroll_to_tool(myTool.slice(1));
+        //show_tool_icon("analysis_breathing_icon");
+        //show_tool("analysis_breathing");
+        //setTimeout(function(){
+        //  $(document.getElementById("breathing_pan")).trigger("click"); 
+        //}, 2000);
+        hide_icon("analysis_fplot_icon");
+        hide_panel("analysis_fplot");
+        setTimeout(function(){
+          $(document.getElementById("breathing_pan")).trigger("click"); 
+        }, 2000);      
+        ///setTimeout(function(){
+        //  $("#BreathDisplay").trigger('click');
+        //}, 4000);     
+        } else {
+            document.getElementById("toolAlert").style.display = 'block';
+        }
+        break;
         // interaction network
         case "#analysis_fplot_pan":
           scroll_to_tool(myTool.slice(1));
@@ -5356,7 +5451,7 @@
           hide_panel("analysis_ac");
           hide_icon("analysis_fplot_icon");
           hide_panel("analysis_fplot");
-            console.log('EIIII')
+            //console.log('EIIII')
           break;
         // interaction frequencies, expand first section, 'bonds'
         case "#interaction_freqs_pan":

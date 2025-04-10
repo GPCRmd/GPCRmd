@@ -1,0 +1,116 @@
+/* Add some basic styling to our admin panel */
+body {
+    display: flex;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    max-width: 1800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.container div {
+    margin-top: 20px;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px; /* Optional: Adds space between buttons */
+    justify-content: left;
+    align-items: center;
+}
+
+.label {
+    margin-right: 20px; /* Adds space between the label and buttons */
+}
+
+.button-container button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.info-container {
+    gap: 10px; /* Optional: Adds space between buttons */
+    justify-content: left;
+    align-items: center;
+}
+
+.plot-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Optional: Adds space between buttons */
+    justify-content: center;
+    align-items: center;
+}
+
+/* Basic table styles */
+.admin-table {
+    width: 50%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    background-color: #f9f9f9;
+    margin: 20px 0;
+    text-align: center;
+}
+
+/* Table header styles */
+.admin-table thead {
+    background-color: #007BFF;
+    color: #fff;
+}
+
+.admin-table thead th {
+    padding: 12px 15px;
+    text-align: center;
+    border-bottom: 2px solid #0056b3;
+    text-transform: uppercase;
+}
+
+/* Table body styles */
+.admin-table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.admin-table tbody td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Responsive table styles */
+@media screen and (max-width: 768px) {
+    .admin-table, .admin-table thead, .admin-table tbody, .admin-table th, .admin-table td, .admin-table tr {
+        display: block;
+    }
+    
+    .admin-table thead tr {
+        display: none;
+    }
+
+    .admin-table tbody tr {
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .admin-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 15px;
+        position: relative;
+        text-align: left;
+    }
+
+    .admin-table tbody td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+}
+
+

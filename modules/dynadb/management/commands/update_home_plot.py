@@ -83,7 +83,7 @@ class Command(BaseCommand):
         if kwargs['dynamics_id']:
             dynobj=dynobj.filter(id__in=kwargs['dynamics_id'])
         else:
-            dynobj=DyndbDynamics.objects.filter(is_published=True)
+            dynobj=DyndbDynamics.objects.filter(submission_id__is_published=True)
         if dynobj == []:
             self.stdout.write(self.style.NOTICE("No dynamics found with specified conditions."))
             return
@@ -108,7 +108,7 @@ class Command(BaseCommand):
                 #self.stdout.write(self.style.NOTICE("!!! missing pdb in dyn %s" % dyn_id))
                 print("!!! missing pdb in dyn %s" % dyn_id)
                 continue
-            if pdbid =="HOMO" or pdbid == "AlphaFold":
+            if pdbid =="HOMO" or pdbid == "ALPHA":
                 continue
             pdbid=pdbid.split(".")[0].upper()
 

@@ -19,10 +19,10 @@ class DynsClassSerializer(serializers.ModelSerializer):
         protids = Protein.objects.filter(family_id__in=fam_ids).values_list("id", flat = True)
         dynprotids = DyndbProtein.objects.filter(receptor_id_protein__in=protids).values_list("id", flat = True)
         model_ids = DyndbModel.objects.filter(id_protein__in=dynprotids).values_list("id", flat = True)
-        ldynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True)
+        ldynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True).filter(submission_id__is_published=True)
         dynids = list(ldynids)
         dynids.sort()
-
+        
         return dynids
     
     class Meta:
@@ -77,7 +77,7 @@ class DynsLigTypeSerializer(serializers.ModelSerializer):
     
     def get_dyn_id(self,obj):
         model_ids = obj["model_ids"] 
-        ldynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True)
+        ldynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True).filter(submission_id__is_published=True)
         dynids = list(ldynids)
         dynids.sort()
 
@@ -106,7 +106,7 @@ class DynsPdbsSerializer(serializers.ModelSerializer):
     
     def get_dyn_id(self,obj):
         model_ids = obj["mol_ids"]
-        dynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True)
+        dynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True).filter(submission_id__is_published=True)
 
         return dynids
     class Meta:
@@ -121,7 +121,8 @@ class DynsUniprotsSerializer(serializers.ModelSerializer):
     
     def get_dyn_id(self,obj):
         model_ids = DyndbModel.objects.filter(id_protein=obj.id).values_list('id', flat=True)
-        dynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True)
+        dynids = DyndbDynamics.objects.filter(id_model__in=model_ids).values_list("id", flat = True).filter(submission_id__is_published=True)
+
         return dynids
     
     class Meta:

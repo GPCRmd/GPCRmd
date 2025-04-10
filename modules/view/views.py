@@ -2774,7 +2774,17 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
 
         # Check if Allosteric communication data is avaliable for this entry
         ap_data_avail = os.path.exists(settings.MEDIA_ROOT + "Precomputed/allosteric_path/dyn"+str(dyn_id)) # Example file 
-        
+
+        if ap_data_avail:
+            # Load path information, for "select individual path" option
+            df_ap = pd.read_csv(settings.MEDIA_ROOT + 'Precomputed/allosteric_path/dyn%s/paths_data.csv'%(dyn_id))
+
+            # Select sink nodes (we'll make a dropwodn from them)
+            ap_sinks = df_ap['sink'].unique()
+
+        else:
+            ap_sinks = {}
+
         #### ------Getting GPCR and Gprot chains---
         (gprot_name_alpha, gprot_chain_a, gprot_chain_b, gprot_chain_g) = get_gprot(dyn_id)
         (gpcr_chain,dbprot_gpcr,prot_gpcr) = get_gpcr(dyn_id)
@@ -2873,6 +2883,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False, network_def=False, wat
             "ac_options_codes" : ac_options_codes,
             "ap_data_avail" : ap_data_avail,
             "ap_options" : ap_options,
+            'ap_sinks' : ap_sinks,
             "bind_domain":bind_domain,
             "breath_sel" : breath_sel,
             'cs_data_avail' : cs_data_avail,
@@ -4587,7 +4598,7 @@ def quickloadall(request):
         try:
             file_short=file_info[file_info.index("Dynamics"):]
         except:
-            print(file_info)
+            #print(file_info)
             continue
         if dyn["file_is_traj"]:
             dyn_dict[dyn_id]["traj"].append(file_short)
@@ -4603,8 +4614,9 @@ def quickloadall(request):
     return render(request, 'view/quickloadall.html', context)
 
 def into_ngl(inline):
+    #We'll omit residue names, they give too many issues with protonation and stuff
     inary = inline.split(':')
-    return(":%s and %s and %s" % (inary[0], inary[1], inary[-1])) 
+    return(":%s and %s" % (inary[0], inary[-1])) 
 
 def get_color(weight, max_w, min_w):
     """
@@ -4632,6 +4644,7 @@ def get_color(weight, max_w, min_w):
         dif_range = max_w - min_w
         dif_weight = weight-min_w
         colorindex = abs(int(round(totalcolors*dif_weight/dif_range)))-1
+        colorindex = 0 if colorindex < 0 else colorindex
         color = myscale[colorindex].upper()
         return color
 
@@ -4650,11 +4663,13 @@ def get_cyldiam(weight, max_w, min_w):
 
     dif_range = max_w - min_w
     max_diam = 0.9
+    min_diam = 0.1
     if min_w == max_w: 
         return(max_diam)
     else:
         dif_weight = weight-min_w
         diam = (max_diam*dif_weight)/dif_range
+        diam = min_diam if diam < min_diam else diam
         return(diam)
 
 
@@ -4798,6 +4813,158 @@ def format_perc(num):
     round_num = round(num, 2)
     return round_num
 
+def ap_plot_paths(df,my_num,weight):
+    """
+    Make density histogram with length of top "numpath" shortest paths
+    """
+
+    #  Split the `sink` column into `chain`, `resname`, and `resid` of said sink
+    df[['chain', 'resname', 'resid']] = df['sink'].str.split(':', expand=True)
+
+    # Remove rows after certain index
+    df = df.iloc[:int(my_num)]
+
+    # Count paths length
+    counts = df[weight].value_counts().to_dict()
+    counts_sorted = dict(sorted(counts.items()))
+    paths_count = list(counts_sorted.values())
+
+    # Customizing data differentially for weighted paths (histogram with bins) and unweighted (just a common categorical barplot)
+    paths_length = [a for a in counts_sorted.keys()] 
+    if (weight == 'u_path_length'):
+        barwidth = 0.9
+        xrang = [ str(a) for a in range(min(paths_length),max(paths_length)+1)]
+        tops = paths_count
+        xs = [str(a) for a in paths_length]
+
+    # A weird shennanigan to properly visualize the shortest path weight plot
+    elif (weight == 'w_path_length' and my_num==1):
+        barwidth = 0.9
+        tops = paths_count
+        xs = [str(a) for a in paths_length]
+        xrang = xs
+    # Weighted plots
+    else:
+        nbins = my_num if my_num<10 else 10
+        hist, edges = np.histogram(paths_length, bins=nbins)  # Adjust bins for granularity
+        barwidth = np.diff(edges) * 0.9 
+        margin = barwidth[0]*0.1 
+        xrang = Range1d(start=min(paths_length)-margin, end=max(paths_length)+margin)
+        tops = hist
+        xs = (edges[:-1] + edges[1:]) / 2 
+
+    # instantiating the figure object for histogram and creating its plot
+    graph = figure(width=800, height=300, x_range=xrang, title = "Path length distribution")
+    graph.vbar(x=xs,top=tops, color='#404387',width=barwidth)
+    graph.xaxis.axis_label = 'Path length (residues)' if weight == 'u_path_length' else 'Topological distance'
+    graph.yaxis.axis_label = 'Nº of paths'
+
+    # displaying the model
+    p = column(graph, sizing_mode='scale_width')
+    p_json = json_item(p)
+
+    return(p_json)
+
+def ap_plot_resids(df):
+    """
+    Make histogram with x as residue and y as number of appeareances in shortest paths
+    """
+
+    #  Split the `resid` column into `chain`, `resname`, and `resid`
+    df[['chain', 'resname', 'resid']] = df['resid'].str.split(':', expand=True)
+
+    # Remove rows where `resid_gennum` is "LIG"
+    df = df[df['resid_gennum'] != 'LIG']
+
+    # Convert `resid` to integer and sort by `resid`
+    df['resid'] = df['resid'].astype(int)
+    df = df.sort_values(by='resid')
+
+    # Reset index for a clean output
+    df = df.reset_index(drop=True)
+
+    # instantiating the figure object for histogram and creating its plot
+    graph = figure(width=800, height=300,title = "Presence of residues in selected paths",)
+    source = ColumnDataSource(df)
+    graph.vbar(x='resid', top='count', source=source, color='#404387')
+    graph.xaxis.axis_label = 'Residue ID'
+    graph.yaxis.axis_label = 'Counts'
+
+    # Add HoverTool
+    hover = HoverTool(tooltips =  [
+        ("Residue name", "@resname"),
+        ("Residue ID", "@resid"),
+        ("Counts", "@count"),
+        ],mode='vline'
+    )
+    graph.add_tools(hover)
+
+    # displaying the model
+    p = column(graph, sizing_mode='scale_width')
+    p_json = json_item(p)
+
+    return(p_json)
+
+def prepare_single_path(dyn_id, rank, sink, rep):
+    """
+    Extract information to show a single individual path
+    """
+
+    # Load general path info
+    infile = settings.MEDIA_ROOT + 'Precomputed/allosteric_path/dyn%s/paths_data.csv'%(dyn_id)
+    df = pd.read_csv(infile)
+
+    # Load path interaction info
+    infile = settings.MEDIA_ROOT + 'Precomputed/allosteric_path/dyn%s/100paths.csv'%(dyn_id)
+    df_intinfo = pd.read_csv(infile)
+
+    # Select line with our path
+    row = df.loc[(df['sink']==sink) & (df['rank']==int(rank)) & (df['replica']==int(rep)) ]
+
+    # Extract the value of a specific column and turn it into a string! 
+    rank_value = str(row['path'].values[0])
+    residues = eval(rank_value)  # Converts the string representation of a list into a Python list
+
+    # Generate residue pairs (neighbors)
+    residue_pairs = [f"{residues[i]} {residues[i+1]}" for i in range(len(residues) - 1)]
+
+    # Match residue pairs against the second CSV
+    matching_rows = []
+    for pair in residue_pairs:
+        resid1, resid2 = pair.split()
+        # Check both directions
+        match = df_intinfo[
+            ((df_intinfo['resid1'] == resid1) & (df_intinfo['resid2'] == resid2)) |
+            ((df_intinfo['resid1'] == resid2) & (df_intinfo['resid2'] == resid1))
+        ]
+        if not match.empty:
+            matching_rows.append(match)
+
+    result_df = pd.concat(matching_rows)
+
+    return(result_df,residues)
+
+def ap_dwpath(request,dyn_id,rank,sink,trajid):
+    """
+    If the "one-path" option is selected in AP analysis, parse the would-be download XXXXpaths.csv 
+    file and filter residues
+    not in our path
+    """
+
+    (df,paths_residues) = prepare_single_path(dyn_id,rank,sink,trajid)
+
+    # Convert the DataFrame to CSV format (don’t forget `index=False`!)
+    csv_data = df.to_csv(index=False)
+
+    # Create the HTTP response (here comes the CSV gift!)
+    response = HttpResponse(csv_data, content_type='text/csv')
+    
+    # Set the file name for the download! 
+    namefile = "path%s_sink%s_rep%s.csv" %(rank,sink,trajid)
+    response['Content-Disposition'] = 'attachment; filename="%s"' % namefile
+
+    return response  # Send it back with love! 
+
 def ap_load_data(request,dyn_id):
     """
     Compute and return allosteric communication data of specified characteristics
@@ -4805,13 +4972,22 @@ def ap_load_data(request,dyn_id):
 
     # Retrieve data from request
     numpath = request.POST.get('numpaths')
+    pathrank = request.POST.get('pathrank')
+    pathsink = request.POST.get('pathsink')
+    pathrep = request.POST.get('pathrep')
 
     # Open file with specified options
-    infile = settings.MEDIA_ROOT + 'Precomputed/allosteric_path/dyn%s/%spaths.csv'%(dyn_id,numpath)
-    if os.path.exists(infile):
-        df = pd.read_csv(infile)
+    # If active option is top paths
+    if numpath:
+        infile = settings.MEDIA_ROOT + 'Precomputed/allosteric_path/dyn%s/%spaths.csv'%(dyn_id,numpath)
+        paths_residues = []
+        if os.path.exists(infile):
+            df = pd.read_csv(infile)
+        else: 
+            return HttpResponse(json.dumps({'filenotfound' : 1}), content_type='view/'+dyn_id)
+    # If inidividual path, it gets complicated....
     else: 
-        return HttpResponse(json.dumps({'filenotfound' : 1}), content_type='view/'+dyn_id)
+        (df,paths_residues) = prepare_single_path(dyn_id, pathrank, pathsink, pathrep)
 
     # Take maximum and minimum values
     df.rename(columns = {'frequency' : 'weight'}, inplace = True)
@@ -4828,7 +5004,7 @@ def ap_load_data(request,dyn_id):
     
     # Get a color for each weight value
     df_s['cyldiam'] = df_s['weight'].apply(
-        lambda x: get_cyldiam(x, max_w, min_w)
+        lambda x: get_cyldiam(x, max_w, 0)
     )
 
     # Set format for Residue columns: we'll want to show both generic numbering and residue number
@@ -4885,10 +5061,52 @@ def ap_load_data(request,dyn_id):
         classes="dataframe ap_table display compact dataTable",
         )
 
+    # Retrieve sink atoms, and send them as an NGL selection line
+    sinks_ngl = []
+    sinks_line = ''
+    sink_gennum = ["2x39", "3x54", "5x65", "6x36", "8x47"]
+    gennum_file = settings.MEDIA_ROOT + 'Precomputed/gennum/dyn%s.json'%(dyn_id)
+    # If generic numbering file for this dynamic actually exists
+    if os.path.exists(gennum_file):
+        gennum_dict = json_dict(gennum_file)
+        for sink in sink_gennum:
+            # extract label from generic numbering file, and convert into an NGL selection line
+            if sink in gennum_dict['gpcr']:
+                (sink_resid, sink_chain, sink_resname) = gennum_dict['gpcr'][sink].split('-')
+                sink_line = "(:%s and %s and %s)" % (sink_chain, sink_resid, sink_resname)
+                sinks_ngl.append(sink_line)
+        sinks_line = ' or '.join(sinks_ngl)
+
+    ap_dict['sinks'] = sinks_line
+
     # Remove unneeded column titles
     html_top = html_top.replace('>cbx<','><')
     html_top = html_top.replace('>sels<','><')
     ap_dict['table'] = html_top
+
+    # Load allpahts info, for plots
+    infile = settings.MEDIA_ROOT + 'Precomputed/allosteric_path/dyn%s/paths_data.csv'%(dyn_id)
+    df_paths = pd.read_csv(infile)
+
+    # Load residue data, for plots
+    if numpath:
+        infile = settings.MEDIA_ROOT + 'Precomputed/allosteric_path/dyn%s/%sresids.csv'%(dyn_id,numpath)
+        df_resids = pd.read_csv(infile)
+        my_num = int(numpath)
+    # If individual plot mode, load 100paths file and filter out
+    else:
+        infile = settings.MEDIA_ROOT + 'Precomputed/allosteric_path/dyn%s/100resids.csv'%(dyn_id)
+        df_resids = pd.read_csv(infile)
+        # Filter the DataFrame to keep only the rows where 'residue' is in your list
+        df_resids = df_resids[df_resids['resid'].isin(paths_residues)]
+        # Set all counts to 1 for this path (we are dealing with only one path)
+        df_resids['count'] = 1
+        my_num = 1
+
+    # Create histogram
+    ap_dict['plot_resids'] = ap_plot_resids(df_resids)
+    ap_dict['plot_paths_u'] = ap_plot_paths(df_paths,my_num,'u_path_length')
+    ap_dict['plot_paths_w'] = ap_plot_paths(df_paths,my_num,'w_path_length')
 
     return HttpResponse(json.dumps(ap_dict), content_type='view/'+dyn_id)
 

@@ -471,7 +471,7 @@ ul.dropdown-menu.inner{
 }
 
 /*Allosteric analysis*/
-#analysis_ac {
+#analysis_ac #analysis_ap {
   margin-top:10px;
   margin-bottom:15px;
 }
@@ -598,6 +598,31 @@ label.ac_option, label.ap_option {
 .ac_legend_max, .ap_legend_max {
   top: 0%;
   text-align: right;
+}
+
+.ap_row {
+  margin-bottom: 15px;
+}
+
+.ap_select {
+  margin-left: 25px;
+}
+
+#ap_slider {
+  margin-top: 10px;
+}
+
+.ap_input {
+  margin-bottom: 10px;
+}
+
+/* .ap_seldivs {
+  display: flex;
+} */
+
+.ital_label {
+  font-style: italic;
+  font-weight: 100;
 }
 
 .bl {

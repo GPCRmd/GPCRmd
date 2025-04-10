@@ -28,7 +28,6 @@ def pmidtoabstract(pmid):
     """
 
     url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id="+ pmid + "&retmode=XML&rettype=abstract" 
-    print(url)
     #   headers = {"accept": "application/x-bibtex"}
     r = requests.get(url) #, headers = headers)
     pubmed = r.text
@@ -58,7 +57,7 @@ class Command(BaseCommand):
             try:
                 pmid = doitopmid(ref.doi)
                 abstract = pmidtoabstract(pmid)
-                if not ref.doi in gpcrmd_refs_dois:
+                if not ref.doi in gpcrmd_refs_dois and "/" in ref.doi:
                     entry = Article(doi = ref.doi, 
                                     authors = ref.authors, 
                                     title = ref.title, 

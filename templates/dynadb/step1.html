@@ -107,7 +107,7 @@
               </label>
             </div>
             <div class="col-md-6">
-              {% if model_id or saved  %}
+              {% if model_id or saved %}
               <textarea cols="40" maxlength="200" id="id_description" name="description" rows="2" placeholder=""
                 class="input_step" value="{{description}}">{{description}}</textarea>
               {% else %}
@@ -157,6 +157,28 @@
             <br>
           </div>
 
+          <div class="row">
+            <div class="col-md-3 label_div">
+              <label for="id_state_type">
+                <p>State Type:</p>
+              </label>
+            </div>
+            <div class="col-md-6 height-col">
+              <select required id="id_state_type" name="state_type" placeholder=""
+                class="input_step select_input">
+                
+                {% if model_id or saved %}
+                  <option value="{{state.0}}" selected>{{state.1}}</option>
+                {%endif%}
+                {% for i in fdbMF.Meta.model.STATE_TYPE %}
+                  {% if i.1 != state.1 %}
+                    <option value="{{i.0}}"> {{i.1}}</option>
+                  {%endif%}
+                {% endfor %}
+              </select>
+            </div>
+            <br>
+          </div>
           <!-- Secret field for submitting our own simulations-->
           <div class="row hidden_sections" id="hidden_field">
             <div class="col-md-3 label_div">
@@ -320,7 +342,7 @@
                 class="input_step select_input" placeholder="  ">
                 {% for i in qDST.values %}
                 {%if model_id and solvent.0 == i.id%}
-                <option value="{{i.id}}" selcted> {{i.type_name}}</option>
+                <option value="{{i.id}}" selected> {{i.type_name}}</option>
                 {% else %}
                 <option value="{{i.id}}"> {{i.type_name}}</option>
                 {% endif %}

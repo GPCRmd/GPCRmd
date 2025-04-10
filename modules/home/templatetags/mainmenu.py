@@ -25,6 +25,7 @@ def mainmenu():
         'menu_template': 'home/mainmenu_' + settings.SITE_NAME + '.html',
         'documentation_url': settings.DOCUMENTATION_URL,
         'prog_maintenance':settings.MAINTENANCE_PROG,
+        'new_notice':settings.NEW_NOTICE,
     }
     data.update(logo_dict)
     return data

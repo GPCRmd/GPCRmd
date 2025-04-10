@@ -107,14 +107,14 @@ def gpcrmd_home(request):
         dyn_id=dyn["dyn_id"]
         pdbid=dyn["pdb_namechain"].split(".")[0]
         if pdbid:
-            if pdbid != "HOMO" or pdbid != "AlphaFold":
+            if pdbid != "HOMO" or pdbid != "ALPHA":
                 pdb_id_set.add(pdbid)
         fam_slug=dyn["fam_slug"]
         if not fam_slug:
             fam_slug=dyn["fam_slug2"]
         fam=False
         if fam_slug:
-            if pdbid != "HOMO" or pdbid != "AlphaFold":
+            if pdbid != "HOMO" or pdbid != "ALPHA":
                 subtype_set.add(fam_slug)
                 fam_set.add(fam_slug[:-4])
             fam_code=fam_slug.split("_")[0]
@@ -373,14 +373,14 @@ def gpcrtree(request):
         dyn_id=dyn["dyn_id"]
         pdbid=dyn["pdb_namechain"].split(".")[0]
         if pdbid:
-            if pdbid != "HOMO" or pdbid != "AlphaFold":
+            if pdbid != "HOMO" or pdbid != "ALPHA":
                 pdb_id_set.add(pdbid)
         fam_slug=dyn["fam_slug"]
         if not fam_slug:
             fam_slug=dyn["fam_slug2"]
         fam=False
         if fam_slug:
-            if pdbid != "HOMO" or pdbid != "AlphaFold":
+            if pdbid != "HOMO" or pdbid != "ALPHA":
                 subtype_set.add(fam_slug)
                 fam_set.add(fam_slug[:-4])
             fam_code=fam_slug.split("_")[0]

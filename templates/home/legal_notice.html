@@ -1,0 +1,563 @@
+<head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", { packages: ["corechart"], "language": "en" });
+    </script>
+    <script>document.domain = document.domain;</script>
+    {% extends "home/base.html" %}
+    {% load static %}
+    {% block addon_css %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    {% endblock %}
+  </head>
+
+  <body>
+
+    {% block content %}
+    <style>
+        li {
+            font-size: 20px;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: bold;
+        }
+    </style>
+      <!-- Below is the link that users can use to open Preferences Center to change their preferences. Do not modify the ID parameter. Place it where appropriate, style it as needed. -->
+    <br>
+    <br>
+    <div class="wholePanel row">
+        <div id="legal_notice" class="container">
+            <strong><h1>Legal notice</h1></strong>
+            <br>
+            <p><strong>Last updated: Mar 25, 2025 </strong></p>
+            <section id="general_info">
+                <p>
+                    We are GPCRmd ("we," "us," or "our"), <strong>a free and open web server for personal, academic and 
+                        non-commercial use that enables users to visualize, analyze, and share G-Protein Coupled Receptors 
+                        Molecular Dynamics (GPCR MD) data</strong>. For commercial use, specific agreements may 
+                        be established. This service, with DNS address gpcrmd.org (and www.gpcrmd.org), is registered in Spain 
+                        at Parc de Recerca Biomèdica de Barcelona (PRBB), Dr. Aiguader, 88, 08003 Barcelona, Spain.
+                </p>
+                <p>
+                    We operate the website <a href="https://www.gpcrmd.org" target="_blank">https://www.gpcrmd.org</a> 
+                    (the "Site"), as well as any other related products 
+                    and services that refer or link to these terms (the "Terms") (collectively, the "Services").
+                </p>
+                <p>
+                    You can contact us by email at <a href="mailto:info@gpcrmd.org">info@gpcrmd.org</a>.
+                </p>
+                <p>
+                    Please note that these Terms are subject by GPCRmd’s privacy policies and other policies linked at 
+                    the bottom of the Site. 
+                    They are also subject to additional terms found on specific pages of the Site. By using the Site, 
+                    you agree to these Terms. 
+                    We will notify you in advance of any scheduled changes to the Services via the Site. The modified 
+                    Terms will become effective once posted on the Site. 
+                    By continuing to use the Services after the effective date of any changes, you agree to be bound 
+                    by the updated terms.
+                </p>
+                <p>
+                    <strong>IF YOU DO NOT AGREE WITH ALL OF THESE TERMS, THEN YOU ARE EXPRESSLY PROHIBITED FROM USING THE 
+                        SERVICES AND YOU MUST DISCONTINUE USE IMMEDIATELY.</strong>
+                </p>
+                <br>
+            </section>
+            <section id="user_account">
+                <h2>User account</h2>
+                <p>You can access to almost everything of the Site without registering with GPCRmd. The need for a user 
+                    account is to allow users to contribute to our 
+                    database by uploading and sharing their own data ("Submissions") or to use specific API tools. Registration 
+                    is required to ensure data integrity and prevent fraudulent uses of the web..</p>
+                <p>
+                    Your workplace affiliation data will be publicly available only after the publication of your submissions 
+                    and will be archived for bibliographical purposes. Email addresses and passwords will not be disclosed to 
+                    third parties 
+                    unless required by law.
+                </p>
+                <p>
+                    For more information, please refer to the 
+                    <a href="https://gpcrmd-docs.readthedocs.io/en/latest/accounts.html#gpcrmd-account-menu" target="_blank">documentation</a>.
+                </p>        
+                <br>
+
+                <h3>Uploaded data</h3>
+                <p>
+                    As a registered user, you will be able to access the <a href="https://www.gpcrmd.org/accounts/memberpage/" target="_blank">GPCRmd Simulation Submission tool</a>. 
+                    At any time, you will have the ability 
+                    to modify all submitted data. The data provided will be stored by the GPCR Drug Discovery group, 
+                    Research Programme on Biomedical Informatics (GRIB) at Universitat Pompeu Fabra (UPF), for the purpose of facilitating the 
+                    submission of molecular dynamics data into the database and verifying the corresponding citations associated with the 
+                    information stored in the database.
+                </p>
+                <p>
+                    To protect data before it is published in a journal or until the user decides to make it public, 
+                    <strong>GPCRmd</strong> incorporates a <em>Secure Protocol Access</em> feature. This allows only 
+                    the submission owner to control access until the data is published online. Once the user 
+                    chooses to "Close" the submission, it becomes publicly available.  
+                </p>
+                <p>
+                    While we implement regular data backups, you are solely responsible for maintaining copies of any data you upload 
+                    or generate while using the Services.
+                </p>
+                <p>
+                    We shall not be liable for any loss, corruption, or accidental deletion of such data. By using our Services, 
+                    you acknowledge and agree to waive any claims against us arising from data loss or corruption.
+                </p>
+                <br>
+            </section>
+            <section id="prohibited_activities">
+                <h2>Prohibited activities</h2>
+                <p>
+                    You may not access or use the Services for any purpose other than that for which we make the Services available. The Services may 
+                    not be used in connection with any commercial endeavours except those that are specifically endorsed or approved by us.
+                </p>
+
+                <p>As a user of the Services, you agree not to:</p>
+
+                <ul>
+                    <li>Systematically retrieve data or other content from the Services to create or compile, directly or indirectly, a collection, compilation, database, or directory without written permission from us.</li>
+                    <li>Trick, defraud, or mislead us and other users, especially in any attempt to learn sensitive account information such as user passwords.</li>
+                    <li>Circumvent, disable, or otherwise interfere with security-related features of the Services, including features that prevent or restrict the use or copying of any Content or enforce limitations on the use of the Services and/or the Content contained therein.</li>
+                    <li>Disparage, tarnish, or otherwise harm, in our opinion, us and/or the Services.</li>
+                    <li>Use any information obtained from the Services in order to harass, abuse, or harm another person.</li>
+                    <li>Make improper use of our support services or submit false reports of abuse or misconduct.</li>
+                    <li>Use the Services in a manner inconsistent with any applicable laws or regulations.</li>
+                    <li>Upload or transmit (or attempt to upload or to transmit) viruses, Trojan horses, or other material, including excessive use of capital letters and spamming (continuous posting of repetitive text), that interferes with any party’s uninterrupted use and enjoyment of the Services or modifies, impairs, disrupts, alters, or interferes with the use, features, functions, operation, or maintenance of the Services.</li>
+                    <li>Engage in any automated use of the system, such as using scripts to send comments or messages, or using any data mining, robots, or similar data gathering and extraction tools.</li>
+                    <li>Delete the copyright or other proprietary rights notice from any Content.</li>
+                    <li>Attempt to impersonate another user or person or use the username of another user.</li>
+                    <li>Upload or transmit (or attempt to upload or to transmit) any material that acts as a passive or active information collection or transmission mechanism, including without limitation, clear graphics interchange formats ('gifs'), 1×1 pixels, web bugs, cookies, or other similar devices (sometimes referred to as 'spyware' or 'passive collection mechanisms' or 'pcms').</li>
+                    <li>Interfere with, disrupt, or create an undue burden on the Services or the networks or services connected to the Services.</li>
+                    <li>Harass, annoy, intimidate, or threaten any of our employees or agents engaged in providing any portion of the Services to you.</li>
+                    <li>Attempt to bypass any measures of the Services designed to prevent or restrict access to the Services, or any portion of the Services.</li>
+                    <li>Except as permitted by applicable law, decipher, decompile, disassemble, or reverse engineer any of the software comprising or in any way making up a part of the Services.</li>
+                    <li>Except as may be the result of standard search engine or Internet browser usage, use, launch, develop, or distribute any automated system, including without limitation, any spider, robot, cheat utility, scraper, or offline reader that accesses the Services, or use or launch any unauthorised script or other software.</li>
+                    <li>Make any unauthorised use of the Services, including collecting usernames and/or email addresses of users by electronic or other means for the purpose of sending unsolicited email, or creating user accounts by automated means or under false pretences.</li>
+                    <li>Use the Services as part of any effort to compete with us or otherwise use the Services and/or the Content for any revenue-generating endeavour or commercial enterprise.</li>
+                    <li>Use the Services to advertise or offer to sell goods and services.</li>
+                </ul>
+                <br>
+
+            </section>
+            <section id="intellectual_rights">
+                <h2>Intellectual property rights</h2>
+
+                <h3>Our intellectual property</h3>
+                <p>
+                    We are the owner or the licensee of all intellectual property rights in our Services, including all 
+                    source code, databases, functionality, software, website designs, audio, video, text, photographs, 
+                    and graphics in the Services (collectively, the "Content"), as well as the trademarks, service marks,
+                     and logos contained therein (the "Marks").
+                </p>
+
+                <p>
+                    The Content provided in or through the Services contains two types of datasets 
+                    (<a href="https://www.gpcrmd.org/dynadb/datasets/" target="_blank">https://www.gpcrmd.org/dynadb/datasets/</a>):
+                </p>
+
+                <ul>
+                    <li>
+                        <strong>GPCRmd dataset:</strong> This Content, provided by the GPCRmd community 
+                        (partners of the GPCRmd project), is generally free and open for personal, academic, and non-commercial use. 
+                        If you require a license for commercial use, excluding dataset redistribution, please contact us at: <a href="mailto:info@gpcrmd.org">info@gpcrmd.org</a>.
+                    </li>
+                    <li>
+                        <strong>Individual contributions dataset:</strong> This Content comes from users who have shared their data by 
+                        uploading it to GPCRmd. It is exclusively free and open for personal, academic, and non-commercial use.
+                    </li>
+                </ul>
+
+                <p>
+                    This license is primarily focused on:
+                </p>
+                <ul>
+                    <li>Protecting our international status.</li>
+                    <li>Securing funding to sustain the service and preserve its free and open access for non-commercial use.</li>
+                </ul>
+
+                <p>
+                    Unless stated otherwise, all information stored in GPCRmd is copyrighted by the partners of the GPCRmd project. 
+                    Any use of GPCRmd data or services should be properly acknowledged. This can be done by citing the relevant 
+                    publication by the GPCRmd project partners and, preferably, by including the following statement:
+                </p>
+
+                <blockquote>
+                    "We acknowledge the use of the GPCRmd database (<a href="https://www.gpcrmd.org" target="_blank">https://www.gpcrmd.org</a>)."
+                </blockquote>
+
+                <p>
+                    In the case of using Individual Contributions, citing the corresponding publication is also required to properly 
+                    acknowledge the principal authors of the data. If you are unsure about the correct citation, please contact us, 
+                    and we will assist you in citing it properly. Additionally, if the references of the submissions are unclear, 
+                    citing only the GPCRmd publication (like mentioned above) is acceptable.
+                </p>
+
+                <br>
+                <h3>Your use of our services</h3>
+                <p>
+                    Subject to your compliance with these Terms, including the "PROHIBITED ACTIVITIES" section below, we grant you a 
+                    non-exclusive, non-transferable, revocable licence to:
+                </p>
+                <ul>
+                    <li>Access the Services; and</li>
+                    <li>Download or print a copy of any portion of the Content to which you have properly gained access.</li>
+                    <li>The entire risk regarding the quality and performance of the data lies with you. While we are not 
+                        responsible for defective data, we encourage you to contact us, and we will make every effort to address and rectify any issues.</li>
+                </ul>
+                <p>
+                    Any download of large datasets must be requested in advance due to the necessary verification process and the secure data-sharing methods 
+                    required to ensure the Site's stability and integrity.
+                </p>
+                <br>
+                <h4>User representations</h4>
+
+                <p>By using the Services, you represent and warrant that:</p>
+                <ul>
+                    <li>You have the legal capacity and agree to comply with these Terms;</li>
+                    <li>You will not use the Services for any illegal or unauthorized purpose; and</li>
+                    <li>Your use of the Services will not violate any applicable law or regulation.</li>
+                </ul>
+            
+                <p>
+                    Except as set out in this section or elsewhere in our Terms, no part of the Services and no Content or Marks may be copied, 
+                    reproduced, aggregated, republished, uploaded, posted, publicly displayed, encoded, translated, transmitted, distributed, sold, licensed, 
+                    or otherwise exploited for any commercial purpose whatsoever, without our express prior written permission.
+                </p>
+                <p>
+                    If you wish to make any use of the Services, Content, or Marks other than as set out in this section or elsewhere in our Terms, 
+                    please address your request to: <a href="mailto:info@gpcrmd.org">info@gpcrmd.org</a>. If we ever grant you the permission to post, reproduce, 
+                    or publicly display any part of our Services or Content, you must identify us as the owners or licensors of the Services, Content, or Marks and 
+                    ensure that any copyright or proprietary notice appears or is visible on posting, reproducing, or displaying our Content.
+                </p>
+                <p>
+                    We reserve all rights not expressly granted to you in and to the Services, Content, and Marks.
+                </p>
+                <p>
+                    Any breach of these Intellectual Property Rights will constitute a material breach of our Terms and your right to use our Services 
+                    will terminate immediately.
+                </p>
+                <br>
+                <h3>Your submissions and contributions</h3>
+                <p>
+                    Please review this section and the "PROHIBITED ACTIVITIES" section below carefully prior to using our Services to understand the 
+                    (a) rights you give us and (b) obligations you have when you upload any content through the Services.
+                </p>
+                
+                <p>
+                    By uploading any information at the Services ("Submissions", "Contributions"), you agree that these 
+                    Submissions may be used and disseminated for any lawful purpose, commercial or otherwise, with proper acknowledgment to you.
+                </p>
+                
+                <p>
+                    Any Submission that is publicly posted shall also be treated as a Contribution.
+                </p>
+                <p>
+                    You understand that Contributions may be viewable by other users of the Services.
+                </p>
+                <br>
+                <h4>You are responsible for what you post or upload</h4>
+                <p>
+                    By sending us Submissions through any part of the Services or making Contributions accessible through the Services, you:
+                </p>
+                <ul>
+                    <li>Confirm that you have read and agree with our "PROHIBITED ACTIVITIES" and will not publish, upload, or transmit through 
+                        the Services any Submission nor post any Contribution that is illegal, harassing, hateful, harmful, defamatory, obscene, 
+                        bullying, abusive, discriminatory, threatening to any person or group, sexually explicit, false, inaccurate, deceitful,
+                         or misleading.</li>
+                    <li>Warrant that any such Submission and/or Contributions are original to you or that you have the necessary rights and 
+                        licences to submit such Submissions and/or Contributions and that you have full authority to grant us the above-mentioned
+                         rights in relation to your Submissions and/or Contributions.</li>
+                </ul>
+                <p>
+                    You are solely responsible for your Submissions and/or Contributions and you expressly agree to reimburse us for any and all 
+                    losses that we may suffer 
+                    because of your breach of (a) this section, (b) any third party’s intellectual property rights, or (c) applicable law.
+                </p>
+                <br>
+                <h4>We may remove or edit your content</h4>
+                <p>We have the right, in our sole and absolute discretion:</p>
+                <ul>
+                    <li>To edit, or otherwise change any Contributions with the properly notice;</li>
+                    <li>To re-categorise any Contributions to place them in more appropriate locations on the Services;</li>
+                </ul>
+                <p>
+                    Although we have no obligation to monitor any Contributions, we shall have the right to remove or edit any Contributions at 
+                    any time without notice if 
+                    in our reasonable opinion we consider such Contributions harmful or in breach of these Terms. 
+                </p>
+                <br>
+                <h3>Copyright Infringement</h3>
+                <p>
+                    We respect the intellectual property rights of others. If you believe that any material available on or through our Services 
+                    infringes upon any copyright you own or control, please notify us immediately using the contact information (a <strong>
+                        “Notification”</strong>).
+                </p>
+                <p>
+                    A copy of your Notification will be forwarded to the person who posted or stored the material in question.
+                </p>
+                <p>
+                    Please be aware that, under applicable law, you may be held liable for damages if you make material misrepresentations in a 
+                    Notification. 
+                    If you are unsure whether the material available on or linked to by the Services infringes your copyright, we strongly 
+                    recommend consulting an attorney before submitting a claim.
+                </p>  
+                <br>
+                <h3>Term and termination</h3>
+
+                <p>
+                    These Terms shall remain in full force and effect while you use the Services. 
+                </p>
+            
+                <p>
+                    WITHOUT LIMITING ANY OTHER PROVISION OF THESE TERMS, WE RESERVE THE RIGHT TO, 
+                    IN OUR SOLE DISCRETION AND WITHOUT NOTICE OR LIABILITY, DENY ACCESS TO AND USE OF 
+                    THE SERVICES (INCLUDING BLOCKING CERTAIN IP ADDRESSES), TO ANY PERSON FOR ANY REASON 
+                    OR FOR NO REASON, INCLUDING WITHOUT LIMITATION FOR BREACH OF ANY REPRESENTATION, 
+                    WARRANTY, OR COVENANT CONTAINED IN THESE TERMS OR OF ANY APPLICABLE LAW OR REGULATION. 
+                </p>
+            
+                <p>
+                    WE MAY TERMINATE YOUR USE OR PARTICIPATION IN THE SERVICES OR DELETE ANY CONTENT OR 
+                    INFORMATION THAT YOU UPLOADED AT ANY TIME, WITHOUT WARNING, IN OUR SOLE DISCRETION.
+                </p>
+            
+                <p>
+                    If we terminate or suspend your account for any reason, you are prohibited from 
+                    registering and creating a new account under your name, a fake or borrowed name, 
+                    or the name of any third party, even if you may be acting on behalf of the third party.
+                </p>
+                <br>
+            </section> 
+
+            <section id="privacy_policy">
+                <h2>Privacy policy</h2>
+                <p>
+                    We care about data privacy and security. Please review our 
+                    <a href="https://gpcrmd.org/privacy-policy" target="_blank">Privacy Policy</a>. 
+                    By using the Services, you agree to be bound by our Privacy Policy, which is incorporated into these Terms.
+                </p>
+                <p>
+                    Please be advised that the Services are hosted in Spain. If you access the Services from any other region of the world 
+                    with laws or other requirements governing personal data collection, use, or disclosure that differ from applicable laws in 
+                    Spain, 
+                    then through your continued use of the Services, you are transferring your data to Spain, and you expressly consent to have 
+                    your 
+                    data transferred to and processed in Spain.
+                </p>
+                <br>
+            </section>
+            <section id="electronic-communications">
+                <h2>Electronic Communications</h2>
+                <p>
+                    Visiting the Services, sending us emails, and completing online forms constitute electronic communications. 
+                    You consent to receive electronic communications and agree that all agreements, notices, disclosures, and other 
+                    communications we provide electronically, via email and on the Services, satisfy any legal requirement that such 
+                    communication be in writing.
+                </p>
+                <br>
+            </section>
+            <section id="services-management">
+                <h2>Services Management</h2>
+                <p>
+                    We reserve the right, but not the obligation, to:
+                </p>
+                <ul>
+                    <li>Monitor the Services for violations of these Terms.</li>
+                    <li>Take appropriate legal action against anyone who, in our sole discretion, violates the law or these Terms, including, 
+                        without limitation, reporting such users to law enforcement authorities.</li>
+                    <li>Refuse, restrict access to, limit the availability of, or disable (to the extent technologically feasible) any of your
+                        Contributions or any portion thereof, at our sole discretion and without limitation.</li>
+                    <li>Remove from the Services or otherwise disable all files and content that are excessive in size or burdensome to our 
+                        systems, at our sole discretion and without limitation, notice, or liability.</li>
+                    <li>Manage the Services in a manner designed to protect our rights and property and to facilitate their proper functioning.</li>
+                </ul>
+                <br>
+            </section>
+            <section id="maintenance">
+                <h2>Service Modifications and Availability</h2>
+                <p>
+                    We reserve the right to change, modify, or remove the contents of the Services at any time or for any reason, 
+                    but with prior notification on the Site specifying the period during which maintenance will be performed. 
+                </p>
+                <p>
+                    We cannot guarantee the Services will be available at all times. We may experience hardware, software, or other problems or 
+                    need to perform 
+                    maintenance related to the Services, resulting in interruptions, delays, or errors. You agree that we have no liability 
+                    whatsoever 
+                    for any loss, damage, or inconvenience caused by your inability to access or use the Services during any downtime or 
+                    discontinuance of the Services. 
+                </p>
+                <p>
+                    If you find any error, you can contact us at 
+                    <a href="mailto:info@gpcrmd.org">info@gpcrmd.org</a>. 
+                </p>
+                <p>
+                    To track changes and modifications, we maintain a 
+                    <a href="https://gpcrmd-docs.readthedocs.io/en/latest/changelog.html" target="_blank">changelog page</a>.
+                </p>
+                <br>
+            </section>
+            <section id="disclaimers">
+                <h2>Disclaimers</h2>
+                <h3>Website disclaimer</h3>
+                <p>
+                    The information provided by GPCRmd ("we," "us," or "our") on 
+                    <a href="https://www.gpcrmd.org/" target="_blank">https://www.gpcrmd.org/</a> (the "Site") 
+                    is for general informational purposes only. All information on the Site is provided in good faith; however, 
+                    we make no representations or warranties of any kind, express or implied, regarding the accuracy, adequacy, 
+                    validity, reliability, availability, or completeness of any content on the Site.
+                </p>
+                <p>
+                    <strong>UNDER NO CIRCUMSTANCES SHALL WE BE LIABLE TO YOU FOR ANY LOSS OR DAMAGE OF ANY KIND INCURRED 
+                    AS A RESULT OF YOUR USE OF THE SITE OR RELIANCE ON ANY INFORMATION PROVIDED ON THE SITE. 
+                    YOUR USE OF THE SITE AND RELIANCE ON ANY CONTENT IS SOLELY AT YOUR OWN RISK.</strong>
+                </p>
+                <br>
+                <h3>External link disclaimer</h3>
+                <p>
+                    The Site may contain links to external websites, content originating from third parties, 
+                    or advertisements linking to third-party websites or services. These external links are not investigated, 
+                    monitored, or checked by us for accuracy, adequacy, validity, reliability, availability, or completeness.
+                </p>
+                <p>
+                    <strong>WE DO NOT WARRANT, ENDORSE, GUARANTEE, OR ASSUME RESPONSIBILITY FOR THE ACCURACY OR RELIABILITY 
+                    OF ANY INFORMATION PROVIDED BY THIRD-PARTY WEBSITES LINKED THROUGH THE SITE OR FEATURED IN ANY BANNER OR 
+                    OTHER ADVERTISING. WE ARE NOT A PARTY TO, NOR WILL WE BE RESPONSIBLE FOR, MONITORING ANY TRANSACTION 
+                    BETWEEN YOU AND THIRD-PARTY PROVIDERS OF PRODUCTS OR SERVICES.</strong>
+                </p>
+                <br>
+            </section>
+            <section id="limitations-liability">
+                <h2>Limitations of liability</h2>
+                <p>
+                    IN NO EVENT WILL WE BE LIABLE TO YOU OR ANY THIRD PARTY FOR ANY DIRECT, INDIRECT, CONSEQUENTIAL, EXEMPLARY, INCIDENTAL, 
+                    SPECIAL, OR PUNITIVE DAMAGES, INCLUDING LOST PROFIT, LOST REVENUE, LOSS OF DATA, OR OTHER DAMAGES ARISING FROM YOUR USE 
+                    OF THE SERVICES, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+                </p>
+                <br>
+            </section>
+            <section id="corrections">
+                <h2>Corrections</h2>
+                <p>
+                    There may be information on the Services that contains typographical errors, inaccuracies, or omissions, including 
+                    descriptions, 
+                    availability, and various other information. We reserve the right to correct any errors, inaccuracies, or omissions 
+                    and to change or update the information on the Services at any time.
+                </p>
+                <br>
+            </section>
+            <section id="third_party">
+                <h2>Third-party websites and content</h2>
+                <p>
+                    The Services may contain (or you may be sent via the Site) links to other websites ("Third-Party Websites") as well as 
+                    articles, 
+                    text, graphics, pictures, designs, sound, video, information, applications, software, and other content or items 
+                    belonging to or originating from third parties ("Third-Party Content"). Such Third-Party Websites and Third-Party Content 
+                    are not 
+                    investigated, monitored, or checked for accuracy, appropriateness, or completeness by us, and we are not responsible for 
+                    any Third-Party 
+                    Websites accessed through the Services or any Third-Party Content posted on, available through, or installed from the 
+                    Services, including 
+                    the content, accuracy, offensiveness, opinions, reliability, privacy practices, or other policies of or contained in the 
+                    Third-Party 
+                    Websites or the Third-Party Content.
+                </p>
+                <p>
+                    Inclusion of, linking to, or permitting the use or installation of any Third-Party Websites or any Third-Party Content does 
+                    not imply approval 
+                    or endorsement thereof by us. If you decide to leave the Services and access the Third-Party Websites or to use or install
+                     any Third-Party 
+                    Content, you do so at your own risk, and you should be aware these Terms no longer govern. You should review the applicable 
+                    terms and 
+                    policies, including privacy and data gathering practices, of any website to which you navigate from the Services or relating 
+                    to any applications 
+                    you use or install from the Services.
+                </p>
+                <br>
+            </section>
+            <section id="governing_law">
+                <h2>Governing law</h2>
+                <p>
+                    These Terms are governed by and interpreted following the laws of Spain. If your habitual residence is in the EU, you 
+                    additionally possess the protection provided to you by obligatory provisions of the law in your country to residence. 
+                    GPCRmd and yourself both agree to submit to the non-exclusive jurisdiction of the courts of Barcelona, which means that 
+                    you may make a claim to defend your consumer protection rights in regards to these Terms in Spain, or in the EU country 
+                    in which you reside.
+                </p>
+                <br>
+            </section>
+            <section id="dispute-resolution">
+                <h2>Dispute resolution</h2>
+            
+                <h3>Informal negotiations</h3>
+                <p>
+                    To expedite resolution and control the cost of any dispute, controversy, or claim related to these Terms (each a 'Dispute' 
+                    and collectively, the 'Disputes') brought by either you or us (individually, a 'Party' and collectively, the 'Parties'), 
+                    the Parties agree to first attempt to negotiate any Dispute (except those Disputes expressly provided below) informally for 
+                    at least thirty (30) days before initiating arbitration. Such informal negotiations commence upon written notice from one 
+                    Party to the other Party.
+                </p>
+                <br>
+                <h3>Binding arbitration</h3>
+                <p>
+                    Any dispute arising from the relationships between the Parties to these Terms shall be determined by one arbitrator who will
+                     be chosen in accordance with the Arbitration and Internal Rules of the European Court of Arbitration, which is part of the 
+                     European Centre of Arbitration, based in Strasbourg. These rules, in force at the time the application for arbitration is 
+                     filed, will apply, and the adoption of this clause constitutes acceptance of those rules. The seat of arbitration shall be 
+                     Barcelona, Spain. The language of the proceedings shall be English. Applicable rules of substantive law shall be the law of
+                      Spain.
+                </p>
+                <br>
+                <h3>Restrictions</h3>
+                <p>
+                    The Parties agree that any arbitration shall be limited to the Dispute between the Parties individually. To the full extent 
+                    permitted by law:
+                </p>
+                <ul>
+                    <li>No arbitration shall be joined with any other proceeding;</li>
+                    <li>There is no right or authority for any Dispute to be arbitrated on a class-action basis or to utilise class action 
+                        procedures;</li>
+                    <li>There is no right or authority for any Dispute to be brought in a purported representative capacity on behalf of the 
+                        general public or any other persons.</li>
+                </ul>
+                <br>
+                <h3>Exceptions to informal negotiations and arbitration</h3>
+                <p>
+                    The Parties agree that the following Disputes are not subject to the above provisions concerning informal negotiations and 
+                    binding arbitration:
+                </p>
+                <ul>
+                    <li>Any Disputes seeking to enforce or protect, or concerning the validity of, any of the intellectual property rights of a 
+                        Party;</li>
+                    <li>Any Dispute related to, or arising from, allegations of theft, piracy, invasion of privacy, or unauthorised use;</li>
+                    <li>Any claim for injunctive relief.</li>
+                </ul>
+                <p>
+                    If this provision is found to be illegal or unenforceable, then neither Party will elect to arbitrate any Dispute falling 
+                    within that portion of this provision found to be illegal or unenforceable, and such Dispute shall be decided by a court of 
+                    competent jurisdiction within the courts listed for jurisdiction above. The Parties agree to submit to the personal 
+                    jurisdiction of that court.
+                </p>
+                <br>
+            </section>
+            <section id="contact">
+                <h2>Contact</h2>
+                <p>
+                    In order to resolve a complaint regarding the Services or to receive further information regarding use of the Services, 
+                    please contact us at: <a href="mailto:info@gpcrmd.org">info@gpcrmd.org</a>        
+                </p>
+            </section>
+        </div>
+
+    </div>
+
+
+{% endblock content %}
+
+
+{% block addon_js %}
+{% endblock %}
+
+
+</body>

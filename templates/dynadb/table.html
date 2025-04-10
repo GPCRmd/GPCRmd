@@ -129,18 +129,18 @@
 <div id = "colmenu" class="colSelection col-md-12" style="position: fixed;z-index: 10;background: white;padding-bottom: 10px;">
     <p>Show columns: </p>
     <a class="searchCols textlink toggle-vis " data-column="1">Dynamic id</a> - 
-    <a class="searchCols textlink toggle-vis active" data-column="2">Receptor</a> - 
-    <a class="searchCols textlink toggle-vis " data-column="3">Uniprot entry name</a> - 
-    <a class="searchCols textlink toggle-vis active" data-column="4">Uniprot id</a> - 
-    <a class="searchCols textlink toggle-vis " data-column="5">Family</a> - 
-    <a class="searchCols textlink toggle-vis active" data-column="6">Class</a> - 
-    <a class="searchCols textlink toggle-vis active" data-column="7">PDB id</a> -
-    <a class="searchCols textlink toggle-vis active" data-column="8">State</a> - 
-    <a class="searchCols textlink toggle-vis " data-column="9">Species</a> -
-    <a class="searchCols textlink toggle-vis active" data-column="10">Model type</a> -
-    <a class="searchCols textlink toggle-vis " data-column="11">Source type</a> -
-    <a class="searchCols textlink toggle-vis " data-column="12">Ligand(s)</a> -
-    <a class="searchCols textlink toggle-vis " data-column="13">Model name</a> -
+    <a class="searchCols textlink toggle-vis active" data-column="2">Receptor</a> -
+    <a class="searchCols textlink toggle-vis active" data-column="3">Model name</a> - 
+    <a class="searchCols textlink toggle-vis " data-column="4">Uniprot entry name</a> - 
+    <a class="searchCols textlink toggle-vis active" data-column="5">Uniprot id</a> - 
+    <a class="searchCols textlink toggle-vis " data-column="6">Family</a> - 
+    <a class="searchCols textlink toggle-vis " data-column="7">Class</a> - 
+    <a class="searchCols textlink toggle-vis active" data-column="8">PDB id</a> -
+    <a class="searchCols textlink toggle-vis active" data-column="9">State</a> - 
+    <a class="searchCols textlink toggle-vis " data-column="10">Species</a> -
+    <a class="searchCols textlink toggle-vis " data-column="11">Model type</a> -
+    <a class="searchCols textlink toggle-vis " data-column="12">Source type</a> -
+    <a class="searchCols textlink toggle-vis " data-column="13">Ligand(s)</a> -
     <a class="searchCols textlink toggle-vis " data-column="14">Num. of atoms</a> -
     <a class="searchCols textlink toggle-vis " data-column="15">Membrane composition</a> -
     <a class="searchCols textlink toggle-vis " data-column="16">Simulation time</a> -
@@ -156,6 +156,7 @@
             <th> </th>
             <th>Dynamic id</th>
             <th>Receptor</th>
+            <th>Model name</th>
             <th>Uniprot entry name</th>
             <th>Uniprot ID</th>
             <th>Family</th>
@@ -166,7 +167,6 @@
             <th>Model type</th>
             <th>Source type</th>
             <th>Ligand(s)</th>
-            <th>Model name</th>
             <th>Num. of atoms</th>
             <th>Membrane composition</th>
             <th><span data-toggle="tooltip" title="Accumulated simulation time (µs)">Accum. sim. time (µs)</th>
@@ -195,6 +195,9 @@
                 {% else %}
                     <a  class='searchLink' title="Check receptor info" href="/dynadb/protein/id/{{data.prot_id}}/">{{data.prot_name}}</a>
                 {% endif %}
+            </td>
+            <td class="modelname">
+                {% autoescape off %}{{data.modelname | limitlength:60}}{% endautoescape %}
             </td>
             <td class="uniprotentryname">
                 {% for up in data.uprot_entry %}
@@ -231,9 +234,6 @@
                         {% endif %}
                     {% endfor %}
                 {% endif %}
-            </td>
-            <td class="modelname">
-                {% autoescape off %}{{data.modelname | limitlength:60}}{% endautoescape %}
             </td>
             <td class="numofatoms">{{data.atom_num}}</td>
             <td class="membranecomposition">

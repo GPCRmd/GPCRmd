@@ -12,9 +12,9 @@
         <h4 class="orangeTit" >Your data is being submitted. This may take a few {% if step == '4' %} minutes, depending on the size of the uploaded files{% else %} seconds{% endif %}... </h4>
         <img id="loading_icon" src="/static/view/images/loading-gear.gif"/>
       </div>
-      {% if step == '5' %}
+      {% comment %} {% if step == '5' %}
       <a id="id_skip" name="skip" class="btn btn-warning btn-lg btn-block" href="../../submission_summary/{{submission_id}}" /> Skip step </a>
-      {% endif %}
+      {% endif %} {% endcomment %}
       <input id="id_submit" name="submit" type="submit" value="Submit " form="mainform" class="btn btn-success btn-lg btn-block has-spinner"  />
 
     </div>

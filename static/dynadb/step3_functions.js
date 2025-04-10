@@ -380,6 +380,7 @@ class seg_entry {
             <option value="4"> Threading</option>
             <option value="5"> MD</option>
             <option value="7"> Electron microscopy</option>
+            <option value="8"> AlphaFold</option>
             <option value="6"> Other Computational  Methods</option>
           </select>
         </div>

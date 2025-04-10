@@ -45,7 +45,18 @@
             </div>
           </div>
           <br>
-
+          <div class="row input_row">
+            <div class="col-md-12 center_div">
+              {% if pub_page != "" %}
+              <p style="text-align: center;">
+                GPCRmd publication page: <a class="textlink"
+                href=/dynadb/publications/{{pub_page}}>{{pub_page}}
+                </a>
+              </p>
+              {%endif%}
+            </div>
+          </div>
+          <br>
           {% if SUMMARY %}
           <div style="text-align:center;height:30px;margin-top:red">
             <a id="id_download_pdb" style="color:red" name="download_pdb" noreferrer noopener href="{{urlsummary}}?"
